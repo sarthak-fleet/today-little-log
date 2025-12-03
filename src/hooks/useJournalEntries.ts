@@ -1,38 +1,44 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './useAuth';
 
 export interface JournalEntry {
-  date: string; // YYYY-MM-DD format
+  id: string;
+  date: string;
   content: string;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 }
-
-const STORAGE_KEY = 'daily-journal-entries';
 
 export function useJournalEntries() {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const { user } = useAuth();
 
-  // Load entries from localStorage on mount
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setEntries(parsed);
-      } catch (e) {
-        console.error('Failed to parse journal entries:', e);
-      }
+  const fetchEntries = useCallback(async () => {
+    if (!user) {
+      setEntries([]);
+      setIsLoaded(true);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('journal_entries')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('date', { ascending: false });
+
+    if (error) {
+      console.error('Failed to fetch entries:', error);
+    } else {
+      setEntries(data || []);
     }
     setIsLoaded(true);
-  }, []);
+  }, [user]);
 
-  // Save entries to localStorage whenever they change
   useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-    }
-  }, [entries, isLoaded]);
+    fetchEntries();
+  }, [fetchEntries]);
 
   const getTodayKey = () => {
     return new Date().toISOString().split('T')[0];
@@ -42,39 +48,56 @@ export function useJournalEntries() {
     return entries.find(entry => entry.date === getTodayKey());
   };
 
-  const saveEntry = (content: string, date?: string) => {
+  const saveEntry = async (content: string, date?: string) => {
+    if (!user) return;
+
     const targetDate = date || getTodayKey();
-    const now = new Date().toISOString();
-    
-    setEntries(prev => {
-      const existingIndex = prev.findIndex(entry => entry.date === targetDate);
-      
-      if (existingIndex >= 0) {
-        // Update existing entry
-        const updated = [...prev];
-        updated[existingIndex] = {
-          ...updated[existingIndex],
-          content,
-          updatedAt: now,
-        };
-        return updated;
-      } else {
-        // Create new entry
-        return [
-          {
-            date: targetDate,
-            content,
-            createdAt: now,
-            updatedAt: now,
-          },
-          ...prev,
-        ].sort((a, b) => b.date.localeCompare(a.date));
+    const existingEntry = entries.find(e => e.date === targetDate);
+
+    if (existingEntry) {
+      // Update existing entry
+      const { error } = await supabase
+        .from('journal_entries')
+        .update({ content })
+        .eq('id', existingEntry.id);
+
+      if (error) {
+        console.error('Failed to update entry:', error);
+        return;
       }
-    });
+    } else {
+      // Create new entry
+      const { error } = await supabase
+        .from('journal_entries')
+        .insert({
+          user_id: user.id,
+          date: targetDate,
+          content,
+        });
+
+      if (error) {
+        console.error('Failed to create entry:', error);
+        return;
+      }
+    }
+
+    await fetchEntries();
   };
 
-  const deleteEntry = (date: string) => {
-    setEntries(prev => prev.filter(entry => entry.date !== date));
+  const deleteEntry = async (id: string) => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('journal_entries')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Failed to delete entry:', error);
+      return;
+    }
+
+    await fetchEntries();
   };
 
   const getRecentEntries = (count: number = 10): JournalEntry[] => {
