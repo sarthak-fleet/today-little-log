@@ -6,10 +6,11 @@ import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useAuth } from '@/hooks/useAuth';
 import { Feather, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const Index = () => {
   const { getTodayEntry, getRecentEntries, saveEntry, isLoaded } = useJournalEntries();
-  const { user, loading, signOut } = useAuth();
+  const { user, profile, loading, signOut } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -53,15 +54,22 @@ const Index = () => {
               </p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={signOut}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            Sign out
-          </Button>
+          <div className="flex items-center gap-3">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.name || 'User'} />
+              <AvatarFallback className="text-xs">
+                {profile?.name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={signOut}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -98,7 +106,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="py-8 text-center">
         <p className="text-xs text-muted-foreground font-sans">
-          Your thoughts, safely stored in your browser
+          Your thoughts, securely stored
         </p>
       </footer>
     </div>
