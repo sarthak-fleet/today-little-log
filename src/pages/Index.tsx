@@ -7,9 +7,21 @@ import { useAuth } from '@/hooks/useAuth';
 import { Feather, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { EntryType } from '@/hooks/useJournalEntries';
 
 const Index = () => {
-  const { getTodayEntry, getRecentEntries, saveEntry, isLoaded } = useJournalEntries();
+  const { 
+    getTodayEntry, 
+    getWeeklyEntry, 
+    getMonthlyEntry, 
+    getRecentEntries, 
+    saveEntry, 
+    updateEntry,
+    deleteEntry,
+    isLoaded,
+    isSunday,
+    isLastDayOfMonth,
+  } = useJournalEntries();
   const { user, profile, loading, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -34,7 +46,13 @@ const Index = () => {
   }
 
   const todayEntry = getTodayEntry();
+  const weeklyEntry = getWeeklyEntry();
+  const monthlyEntry = getMonthlyEntry();
   const pastEntries = getRecentEntries(20);
+
+  const handleSave = (content: string, entryType: EntryType) => {
+    saveEntry(content, undefined, entryType);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -79,7 +97,11 @@ const Index = () => {
         <section className="mb-12">
           <TodayPrompt
             todayEntry={todayEntry}
-            onSave={(content) => saveEntry(content)}
+            weeklyEntry={weeklyEntry}
+            monthlyEntry={monthlyEntry}
+            isSunday={isSunday()}
+            isLastDayOfMonth={isLastDayOfMonth()}
+            onSave={handleSave}
           />
         </section>
 
@@ -99,7 +121,11 @@ const Index = () => {
 
         {/* Past Entries */}
         <section>
-          <PastEntries entries={pastEntries} />
+          <PastEntries 
+            entries={pastEntries} 
+            onUpdate={updateEntry}
+            onDelete={deleteEntry}
+          />
         </section>
       </main>
 

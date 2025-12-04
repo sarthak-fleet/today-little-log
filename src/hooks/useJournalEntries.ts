@@ -2,10 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
+export type EntryType = 'daily' | 'weekly' | 'monthly';
+
 export interface JournalEntry {
   id: string;
   date: string;
   content: string;
+  entry_type: EntryType;
   created_at: string;
   updated_at: string;
 }
@@ -31,7 +34,7 @@ export function useJournalEntries() {
     if (error) {
       console.error('Failed to fetch entries:', error);
     } else {
-      setEntries(data || []);
+      setEntries((data as JournalEntry[]) || []);
     }
     setIsLoaded(true);
   }, [user]);
@@ -44,18 +47,56 @@ export function useJournalEntries() {
     return new Date().toISOString().split('T')[0];
   };
 
-  const getTodayEntry = (): JournalEntry | undefined => {
-    return entries.find(entry => entry.date === getTodayKey());
+  const getWeekKey = () => {
+    const today = new Date();
+    const sunday = new Date(today);
+    sunday.setDate(today.getDate() - today.getDay());
+    return sunday.toISOString().split('T')[0];
   };
 
-  const saveEntry = async (content: string, date?: string) => {
+  const getMonthKey = () => {
+    const today = new Date();
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`;
+  };
+
+  const isSunday = () => new Date().getDay() === 0;
+
+  const isLastDayOfMonth = () => {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    return tomorrow.getDate() === 1;
+  };
+
+  const getTodayEntry = (): JournalEntry | undefined => {
+    return entries.find(entry => entry.date === getTodayKey() && entry.entry_type === 'daily');
+  };
+
+  const getWeeklyEntry = (): JournalEntry | undefined => {
+    return entries.find(entry => entry.date === getWeekKey() && entry.entry_type === 'weekly');
+  };
+
+  const getMonthlyEntry = (): JournalEntry | undefined => {
+    return entries.find(entry => entry.date === getMonthKey() && entry.entry_type === 'monthly');
+  };
+
+  const saveEntry = async (content: string, date?: string, entryType: EntryType = 'daily') => {
     if (!user) return;
 
-    const targetDate = date || getTodayKey();
-    const existingEntry = entries.find(e => e.date === targetDate);
+    let targetDate = date;
+    if (!targetDate) {
+      if (entryType === 'weekly') {
+        targetDate = getWeekKey();
+      } else if (entryType === 'monthly') {
+        targetDate = getMonthKey();
+      } else {
+        targetDate = getTodayKey();
+      }
+    }
+
+    const existingEntry = entries.find(e => e.date === targetDate && e.entry_type === entryType);
 
     if (existingEntry) {
-      // Update existing entry
       const { error } = await supabase
         .from('journal_entries')
         .update({ content })
@@ -66,19 +107,35 @@ export function useJournalEntries() {
         return;
       }
     } else {
-      // Create new entry
       const { error } = await supabase
         .from('journal_entries')
         .insert({
           user_id: user.id,
           date: targetDate,
           content,
+          entry_type: entryType,
         });
 
       if (error) {
         console.error('Failed to create entry:', error);
         return;
       }
+    }
+
+    await fetchEntries();
+  };
+
+  const updateEntry = async (id: string, content: string) => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('journal_entries')
+      .update({ content })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Failed to update entry:', error);
+      return;
     }
 
     await fetchEntries();
@@ -101,8 +158,9 @@ export function useJournalEntries() {
   };
 
   const getRecentEntries = (count: number = 10): JournalEntry[] => {
+    const todayKey = getTodayKey();
     return entries
-      .filter(entry => entry.date !== getTodayKey())
+      .filter(entry => !(entry.date === todayKey && entry.entry_type === 'daily'))
       .slice(0, count);
   };
 
@@ -110,9 +168,14 @@ export function useJournalEntries() {
     entries,
     isLoaded,
     getTodayEntry,
+    getWeeklyEntry,
+    getMonthlyEntry,
     getRecentEntries,
     saveEntry,
+    updateEntry,
     deleteEntry,
     getTodayKey,
+    isSunday,
+    isLastDayOfMonth,
   };
 }
