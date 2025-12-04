@@ -5,13 +5,15 @@ import { PastEntries } from '@/components/PastEntries';
 import { CalendarView } from '@/components/CalendarView';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useAuth } from '@/hooks/useAuth';
-import { Feather, LogOut, List, CalendarDays } from 'lucide-react';
+import { Feather, LogOut, List, CalendarDays, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
 import { EntryType } from '@/hooks/useJournalEntries';
 
 const Index = () => {
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [searchQuery, setSearchQuery] = useState('');
   const { 
     entries,
     getTodayEntry, 
@@ -52,6 +54,19 @@ const Index = () => {
   const weeklyEntry = getWeeklyEntry();
   const monthlyEntry = getMonthlyEntry();
   const pastEntries = getRecentEntries(20);
+
+  // Filter entries based on search query
+  const filteredPastEntries = searchQuery
+    ? pastEntries.filter(entry => 
+        entry.content.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : pastEntries;
+
+  const filteredAllEntries = searchQuery
+    ? entries.filter(entry => 
+        entry.content.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : entries;
 
   const handleSave = (content: string, entryType: EntryType) => {
     saveEntry(content, undefined, entryType);
@@ -115,9 +130,6 @@ const Index = () => {
           </div>
           <div className="relative flex justify-center">
             <div className="bg-background px-4 flex items-center gap-4">
-              <span className="text-sm text-muted-foreground font-sans">
-                Looking back
-              </span>
               <div className="flex gap-1 border rounded-lg p-1">
                 <Button
                   variant={viewMode === 'list' ? 'secondary' : 'ghost'}
@@ -140,17 +152,44 @@ const Index = () => {
           </div>
         </div>
 
+        {/* Search Bar */}
+        <div className="mb-6 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search entries..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 pr-10"
+          />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+              onClick={() => setSearchQuery('')}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+
+        {searchQuery && (
+          <p className="text-sm text-muted-foreground mb-4">
+            Found {viewMode === 'list' ? filteredPastEntries.length : filteredAllEntries.length} entries matching "{searchQuery}"
+          </p>
+        )}
+
         {/* Past Entries */}
         <section>
           {viewMode === 'list' ? (
             <PastEntries
-            entries={pastEntries} 
+              entries={filteredPastEntries} 
               onUpdate={updateEntry}
               onDelete={deleteEntry}
             />
           ) : (
             <CalendarView
-              entries={entries}
+              entries={filteredAllEntries}
               onUpdate={updateEntry}
               onDelete={deleteEntry}
             />
