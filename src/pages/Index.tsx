@@ -1,16 +1,19 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TodayPrompt } from '@/components/TodayPrompt';
 import { PastEntries } from '@/components/PastEntries';
+import { CalendarView } from '@/components/CalendarView';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useAuth } from '@/hooks/useAuth';
-import { Feather, LogOut } from 'lucide-react';
+import { Feather, LogOut, List, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { EntryType } from '@/hooks/useJournalEntries';
 
 const Index = () => {
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const { 
+    entries,
     getTodayEntry, 
     getWeeklyEntry, 
     getMonthlyEntry, 
@@ -105,27 +108,53 @@ const Index = () => {
           />
         </section>
 
-        {/* Divider */}
-        {pastEntries.length > 0 && (
-          <div className="relative my-12">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border/50"></div>
-            </div>
-            <div className="relative flex justify-center">
-              <span className="bg-background px-4 text-sm text-muted-foreground font-sans">
+        {/* Divider with View Toggle */}
+        <div className="relative my-12">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-border/50"></div>
+          </div>
+          <div className="relative flex justify-center">
+            <div className="bg-background px-4 flex items-center gap-4">
+              <span className="text-sm text-muted-foreground font-sans">
                 Looking back
               </span>
+              <div className="flex gap-1 border rounded-lg p-1">
+                <Button
+                  variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  className="h-7 px-2"
+                  onClick={() => setViewMode('list')}
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'calendar' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  className="h-7 px-2"
+                  onClick={() => setViewMode('calendar')}
+                >
+                  <CalendarDays className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
-        )}
+        </div>
 
         {/* Past Entries */}
         <section>
-          <PastEntries 
+          {viewMode === 'list' ? (
+            <PastEntries
             entries={pastEntries} 
-            onUpdate={updateEntry}
-            onDelete={deleteEntry}
-          />
+              onUpdate={updateEntry}
+              onDelete={deleteEntry}
+            />
+          ) : (
+            <CalendarView
+              entries={entries}
+              onUpdate={updateEntry}
+              onDelete={deleteEntry}
+            />
+          )}
         </section>
       </main>
 
