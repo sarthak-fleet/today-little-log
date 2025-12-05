@@ -1,8 +1,7 @@
-import { useState, useRef, useCallback } from 'react';
-import { Trash2, GripVertical } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Trash2, Plus, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
 
 interface TimeBlock {
   id: string;
@@ -13,60 +12,70 @@ interface TimeBlock {
 }
 
 const COLORS = [
-  'hsl(var(--primary))',
-  'hsl(220, 70%, 60%)',
+  'hsl(220, 70%, 55%)',
   'hsl(160, 60%, 45%)',
   'hsl(340, 65%, 55%)',
   'hsl(45, 80%, 50%)',
   'hsl(280, 60%, 55%)',
+  'hsl(200, 70%, 50%)',
 ];
 
-const HOUR_HEIGHT = 60; // pixels per hour
+const HOUR_HEIGHT = 48;
 
 export const ScheduleMaker = () => {
   const [blocks, setBlocks] = useState<TimeBlock[]>([]);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState<number | null>(null);
-  const [dragEnd, setDragEnd] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [dragState, setDragState] = useState<{
+    isDragging: boolean;
+    startY: number;
+    startHour: number;
+    currentHour: number;
+  } | null>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
 
   const hours = Array.from({ length: 24 }, (_, i) => i);
 
-  const getHourFromY = useCallback((clientY: number): number => {
+  const getHourFromY = (clientY: number): number => {
     if (!timelineRef.current) return 0;
     const rect = timelineRef.current.getBoundingClientRect();
-    const y = Math.max(0, Math.min(clientY - rect.top, rect.height));
+    const y = clientY - rect.top + timelineRef.current.scrollTop;
     const hour = Math.max(0, Math.min(24, y / HOUR_HEIGHT));
-    return Math.round(hour * 4) / 4; // Snap to 15-minute intervals
-  }, []);
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('.time-block')) return;
-    e.preventDefault();
-    const hour = getHourFromY(e.clientY);
-    setIsDragging(true);
-    setDragStart(hour);
-    setDragEnd(hour);
+    return Math.round(hour * 4) / 4;
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    const hour = getHourFromY(e.clientY);
-    setDragEnd(hour);
-  };
-
-  const handleMouseUp = () => {
-    if (!isDragging || dragStart === null || dragEnd === null) {
-      setIsDragging(false);
-      setDragStart(null);
-      setDragEnd(null);
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if ((e.target as HTMLElement).closest('.time-block') || 
+        (e.target as HTMLElement).closest('button') ||
+        (e.target as HTMLElement).closest('input')) {
       return;
     }
+    
+    e.preventDefault();
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    
+    const hour = getHourFromY(e.clientY);
+    setDragState({
+      isDragging: true,
+      startY: e.clientY,
+      startHour: hour,
+      currentHour: hour,
+    });
+  };
 
-    const start = Math.min(dragStart, dragEnd);
-    const end = Math.max(dragStart, dragEnd);
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!dragState?.isDragging) return;
+    e.preventDefault();
+    const hour = getHourFromY(e.clientY);
+    setDragState(prev => prev ? { ...prev, currentHour: hour } : null);
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (!dragState?.isDragging) return;
+    
+    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    
+    const start = Math.min(dragState.startHour, dragState.currentHour);
+    const end = Math.max(dragState.startHour, dragState.currentHour);
 
     if (end - start >= 0.25) {
       const newBlock: TimeBlock = {
@@ -76,13 +85,11 @@ export const ScheduleMaker = () => {
         title: '',
         color: COLORS[blocks.length % COLORS.length],
       };
-      setBlocks([...blocks, newBlock]);
+      setBlocks(prev => [...prev, newBlock]);
       setEditingId(newBlock.id);
     }
 
-    setIsDragging(false);
-    setDragStart(null);
-    setDragEnd(null);
+    setDragState(null);
   };
 
   const updateBlockTitle = (id: string, title: string) => {
@@ -94,6 +101,18 @@ export const ScheduleMaker = () => {
     if (editingId === id) setEditingId(null);
   };
 
+  const addQuickBlock = (hour: number) => {
+    const newBlock: TimeBlock = {
+      id: crypto.randomUUID(),
+      startHour: hour,
+      endHour: hour + 1,
+      title: '',
+      color: COLORS[blocks.length % COLORS.length],
+    };
+    setBlocks(prev => [...prev, newBlock]);
+    setEditingId(newBlock.id);
+  };
+
   const formatTime = (hour: number): string => {
     const h = Math.floor(hour);
     const m = Math.round((hour - h) * 60);
@@ -102,114 +121,149 @@ export const ScheduleMaker = () => {
     return `${displayHour}:${m.toString().padStart(2, '0')} ${period}`;
   };
 
-  const selectionStart = dragStart !== null && dragEnd !== null ? Math.min(dragStart, dragEnd) : null;
-  const selectionEnd = dragStart !== null && dragEnd !== null ? Math.max(dragStart, dragEnd) : null;
+  const selectionStart = dragState ? Math.min(dragState.startHour, dragState.currentHour) : null;
+  const selectionEnd = dragState ? Math.max(dragState.startHour, dragState.currentHour) : null;
 
   return (
     <div className="flex flex-col lg:flex-row gap-6">
       {/* Timeline */}
-      <div className="flex-1 relative">
+      <div className="flex-1">
         <div
           ref={timelineRef}
-          className="relative bg-card border border-border rounded-lg overflow-hidden select-none"
-          style={{ height: 24 * HOUR_HEIGHT }}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
+          className="relative bg-card border border-border rounded-lg overflow-auto touch-none"
+          style={{ height: 'min(70vh, 600px)' }}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={() => setDragState(null)}
         >
-          {/* Hour lines */}
-          {hours.map((hour) => (
-            <div
-              key={hour}
-              className="absolute w-full border-t border-border/50 flex items-start"
-              style={{ top: hour * HOUR_HEIGHT, height: HOUR_HEIGHT }}
-            >
-              <span className="text-xs text-muted-foreground px-2 py-1 bg-background/80 rounded-br">
-                {formatTime(hour)}
-              </span>
-            </div>
-          ))}
-
-          {/* Drag selection preview */}
-          {isDragging && selectionStart !== null && selectionEnd !== null && (
-            <div
-              className="absolute left-12 right-2 bg-primary/30 border-2 border-dashed border-primary rounded-md pointer-events-none z-10"
-              style={{
-                top: selectionStart * HOUR_HEIGHT,
-                height: (selectionEnd - selectionStart) * HOUR_HEIGHT,
-              }}
-            />
-          )}
-
-          {/* Time blocks */}
-          {blocks.map((block) => (
-            <div
-              key={block.id}
-              className="time-block absolute left-12 right-2 rounded-md shadow-md cursor-pointer transition-shadow hover:shadow-lg group"
-              style={{
-                top: block.startHour * HOUR_HEIGHT + 2,
-                height: (block.endHour - block.startHour) * HOUR_HEIGHT - 4,
-                backgroundColor: block.color,
-              }}
-              onClick={() => setEditingId(block.id)}
-            >
-              <div className="h-full p-2 flex flex-col text-white">
-                <div className="flex items-center justify-between gap-2">
-                  <GripVertical className="h-4 w-4 opacity-50" />
-                  <span className="text-xs opacity-75">
-                    {formatTime(block.startHour)} - {formatTime(block.endHour)}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-white hover:text-white hover:bg-white/20"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteBlock(block.id);
-                    }}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
-                {editingId === block.id ? (
-                  <Input
-                    autoFocus
-                    placeholder="Add title..."
-                    value={block.title}
-                    onChange={(e) => updateBlockTitle(block.id, e.target.value)}
-                    onBlur={() => setEditingId(null)}
-                    onKeyDown={(e) => e.key === 'Enter' && setEditingId(null)}
-                    className="mt-1 h-7 bg-background border-border text-foreground placeholder:text-muted-foreground text-sm"
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                ) : (
-                  <span className="font-medium mt-1 truncate">
-                    {block.title || 'Untitled'}
-                  </span>
-                )}
+          <div style={{ height: 24 * HOUR_HEIGHT, position: 'relative' }}>
+            {/* Hour rows */}
+            {hours.map((hour) => (
+              <div
+                key={hour}
+                className="absolute w-full border-t border-border/40 flex items-start group"
+                style={{ top: hour * HOUR_HEIGHT, height: HOUR_HEIGHT }}
+              >
+                <span className="text-xs text-muted-foreground px-2 py-1 w-16 flex-shrink-0 bg-muted/30">
+                  {formatTime(hour)}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 opacity-0 group-hover:opacity-100 ml-auto mr-2 mt-1"
+                  onClick={() => addQuickBlock(hour)}
+                >
+                  <Plus className="h-3 w-3" />
+                </Button>
               </div>
-            </div>
-          ))}
+            ))}
+
+            {/* Drag selection preview */}
+            {dragState && selectionStart !== null && selectionEnd !== null && selectionEnd > selectionStart && (
+              <div
+                className="absolute left-16 right-2 bg-primary/30 border-2 border-dashed border-primary rounded-md pointer-events-none z-20"
+                style={{
+                  top: selectionStart * HOUR_HEIGHT,
+                  height: (selectionEnd - selectionStart) * HOUR_HEIGHT,
+                }}
+              >
+                <span className="absolute inset-0 flex items-center justify-center text-sm font-medium text-primary">
+                  {formatTime(selectionStart)} - {formatTime(selectionEnd)}
+                </span>
+              </div>
+            )}
+
+            {/* Time blocks */}
+            {blocks.map((block) => {
+              const blockHeight = (block.endHour - block.startHour) * HOUR_HEIGHT - 4;
+              const isSmall = blockHeight < 60;
+              
+              return (
+                <div
+                  key={block.id}
+                  className="time-block absolute left-16 right-2 rounded-md shadow-md z-10"
+                  style={{
+                    top: block.startHour * HOUR_HEIGHT + 2,
+                    height: blockHeight,
+                    backgroundColor: block.color,
+                  }}
+                >
+                  <div className={`h-full p-2 flex ${isSmall ? 'flex-row items-center gap-2' : 'flex-col'}`}>
+                    {/* Title area */}
+                    <div className="flex-1 min-w-0">
+                      {editingId === block.id ? (
+                        <Input
+                          autoFocus
+                          placeholder="Enter name..."
+                          value={block.title}
+                          onChange={(e) => updateBlockTitle(block.id, e.target.value)}
+                          onBlur={() => setEditingId(null)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') setEditingId(null);
+                            e.stopPropagation();
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          className="h-7 text-sm bg-background border-input"
+                        />
+                      ) : (
+                        <div 
+                          className="flex items-center gap-1 cursor-pointer group/title"
+                          onClick={() => setEditingId(block.id)}
+                        >
+                          <span className="font-semibold text-white truncate text-sm">
+                            {block.title || 'Click to add name'}
+                          </span>
+                          <Pencil className="h-3 w-3 text-white/70 opacity-0 group-hover/title:opacity-100 flex-shrink-0" />
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Time and delete */}
+                    <div className={`flex items-center gap-1 ${isSmall ? '' : 'mt-1'}`}>
+                      <span className="text-xs text-white/80">
+                        {formatTime(block.startHour)} - {formatTime(block.endHour)}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5 text-white/70 hover:text-white hover:bg-white/20 ml-auto"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteBlock(block.id);
+                        }}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
+        <p className="text-xs text-muted-foreground mt-2">
+          Drag on empty area to create blocks, or click + button
+        </p>
       </div>
 
       {/* Schedule Summary */}
       <div className="lg:w-72 space-y-4">
         <div className="bg-card border border-border rounded-lg p-4">
-          <h3 className="font-semibold mb-3">Your Schedule</h3>
+          <h3 className="font-semibold mb-3">Schedule Summary</h3>
           {blocks.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Drag on the timeline to create time blocks
+              No blocks yet. Create your first one!
             </p>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-2 max-h-80 overflow-auto">
               {blocks
                 .sort((a, b) => a.startHour - b.startHour)
                 .map((block) => (
                   <div
                     key={block.id}
-                    className="flex items-center gap-2 p-2 rounded-md bg-muted/50"
+                    className="flex items-center gap-2 p-2 rounded-md bg-muted/50 cursor-pointer hover:bg-muted"
+                    onClick={() => setEditingId(block.id)}
                   >
                     <div
                       className="w-3 h-3 rounded-full flex-shrink-0"
@@ -226,8 +280,11 @@ export const ScheduleMaker = () => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                      onClick={() => deleteBlock(block.id)}
+                      className="h-6 w-6 text-muted-foreground hover:text-destructive flex-shrink-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteBlock(block.id);
+                      }}
                     >
                       <Trash2 className="h-3 w-3" />
                     </Button>
