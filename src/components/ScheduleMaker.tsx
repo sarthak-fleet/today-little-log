@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { Trash2, Plus, Pencil } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Trash2, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -20,76 +20,88 @@ const COLORS = [
   'hsl(200, 70%, 50%)',
 ];
 
-const HOUR_HEIGHT = 48;
+const HOUR_HEIGHT = 60;
+const SLOT_HEIGHT = HOUR_HEIGHT / 4; // 15-minute slots
 
 export const ScheduleMaker = () => {
   const [blocks, setBlocks] = useState<TimeBlock[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [dragState, setDragState] = useState<{
-    isDragging: boolean;
-    startY: number;
-    startHour: number;
-    currentHour: number;
-  } | null>(null);
+  const [dragging, setDragging] = useState<{ startSlot: number; endSlot: number } | null>(null);
+  const [isMouseDown, setIsMouseDown] = useState(false);
   const timelineRef = useRef<HTMLDivElement>(null);
 
   const hours = Array.from({ length: 24 }, (_, i) => i);
+  const slots = Array.from({ length: 96 }, (_, i) => i); // 96 x 15-min slots
 
-  const getHourFromY = (clientY: number): number => {
+  const getSlotFromY = (clientY: number): number => {
     if (!timelineRef.current) return 0;
     const rect = timelineRef.current.getBoundingClientRect();
-    const y = clientY - rect.top + timelineRef.current.scrollTop;
-    const hour = Math.max(0, Math.min(24, y / HOUR_HEIGHT));
-    return Math.round(hour * 4) / 4;
+    const scrollTop = timelineRef.current.scrollTop;
+    const y = clientY - rect.top + scrollTop;
+    return Math.max(0, Math.min(95, Math.floor(y / SLOT_HEIGHT)));
   };
 
-  const handlePointerDown = (e: React.PointerEvent) => {
-    if ((e.target as HTMLElement).closest('.time-block') || 
-        (e.target as HTMLElement).closest('button') ||
-        (e.target as HTMLElement).closest('input')) {
-      return;
-    }
-    
-    e.preventDefault();
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    
-    const hour = getHourFromY(e.clientY);
-    setDragState({
-      isDragging: true,
-      startY: e.clientY,
-      startHour: hour,
-      currentHour: hour,
-    });
-  };
+  const slotToHour = (slot: number) => slot / 4;
 
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!dragState?.isDragging) return;
-    e.preventDefault();
-    const hour = getHourFromY(e.clientY);
-    setDragState(prev => prev ? { ...prev, currentHour: hour } : null);
-  };
+  // Handle mouse events on document for reliable drag
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isMouseDown || !dragging) return;
+      const slot = getSlotFromY(e.clientY);
+      setDragging(prev => prev ? { ...prev, endSlot: slot } : null);
+    };
 
-  const handlePointerUp = (e: React.PointerEvent) => {
-    if (!dragState?.isDragging) return;
-    
-    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
-    
-    const start = Math.min(dragState.startHour, dragState.currentHour);
-    const end = Math.max(dragState.startHour, dragState.currentHour);
+    const handleMouseUp = () => {
+      if (dragging && isMouseDown) {
+        const startSlot = Math.min(dragging.startSlot, dragging.endSlot);
+        const endSlot = Math.max(dragging.startSlot, dragging.endSlot);
+        
+        if (endSlot > startSlot) {
+          const newBlock: TimeBlock = {
+            id: crypto.randomUUID(),
+            startHour: slotToHour(startSlot),
+            endHour: slotToHour(endSlot + 1),
+            title: '',
+            color: COLORS[blocks.length % COLORS.length],
+          };
+          setBlocks(prev => [...prev, newBlock]);
+          setEditingId(newBlock.id);
+        }
+      }
+      setDragging(null);
+      setIsMouseDown(false);
+    };
 
-    if (end - start >= 0.25) {
-      const newBlock: TimeBlock = {
-        id: crypto.randomUUID(),
-        startHour: start,
-        endHour: end,
-        title: '',
-        color: COLORS[blocks.length % COLORS.length],
-      };
-      setBlocks(prev => [...prev, newBlock]);
-      setEditingId(newBlock.id);
+    if (isMouseDown) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
     }
 
-    setDragState(null);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isMouseDown, dragging, blocks.length]);
+
+  const handleSlotClick = (slot: number) => {
+    if (dragging) return;
+    // Create a 15-min block on click
+    const newBlock: TimeBlock = {
+      id: crypto.randomUUID(),
+      startHour: slotToHour(slot),
+      endHour: slotToHour(slot + 1),
+      title: '',
+      color: COLORS[blocks.length % COLORS.length],
+    };
+    setBlocks(prev => [...prev, newBlock]);
+    setEditingId(newBlock.id);
+  };
+
+  const handleSlotMouseDown = (e: React.MouseEvent, slot: number) => {
+    if ((e.target as HTMLElement).closest('.time-block')) return;
+    e.preventDefault();
+    setIsMouseDown(true);
+    setDragging({ startSlot: slot, endSlot: slot });
   };
 
   const updateBlockTitle = (id: string, title: string) => {
@@ -101,18 +113,6 @@ export const ScheduleMaker = () => {
     if (editingId === id) setEditingId(null);
   };
 
-  const addQuickBlock = (hour: number) => {
-    const newBlock: TimeBlock = {
-      id: crypto.randomUUID(),
-      startHour: hour,
-      endHour: hour + 1,
-      title: '',
-      color: COLORS[blocks.length % COLORS.length],
-    };
-    setBlocks(prev => [...prev, newBlock]);
-    setEditingId(newBlock.id);
-  };
-
   const formatTime = (hour: number): string => {
     const h = Math.floor(hour);
     const m = Math.round((hour - h) * 60);
@@ -121,8 +121,8 @@ export const ScheduleMaker = () => {
     return `${displayHour}:${m.toString().padStart(2, '0')} ${period}`;
   };
 
-  const selectionStart = dragState ? Math.min(dragState.startHour, dragState.currentHour) : null;
-  const selectionEnd = dragState ? Math.max(dragState.startHour, dragState.currentHour) : null;
+  const selectionStart = dragging ? Math.min(dragging.startSlot, dragging.endSlot) : null;
+  const selectionEnd = dragging ? Math.max(dragging.startSlot, dragging.endSlot) : null;
 
   return (
     <div className="flex flex-col lg:flex-row gap-6">
@@ -130,67 +130,69 @@ export const ScheduleMaker = () => {
       <div className="flex-1">
         <div
           ref={timelineRef}
-          className="relative bg-card border border-border rounded-lg overflow-auto touch-none"
+          className="relative bg-card border border-border rounded-lg overflow-auto"
           style={{ height: 'min(70vh, 600px)' }}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={() => setDragState(null)}
         >
           <div style={{ height: 24 * HOUR_HEIGHT, position: 'relative' }}>
-            {/* Hour rows */}
+            {/* Hour labels */}
             {hours.map((hour) => (
               <div
                 key={hour}
-                className="absolute w-full border-t border-border/40 flex items-start group"
+                className="absolute left-0 w-14 text-xs text-muted-foreground px-2 py-1 bg-muted/30 border-b border-border/30"
                 style={{ top: hour * HOUR_HEIGHT, height: HOUR_HEIGHT }}
               >
-                <span className="text-xs text-muted-foreground px-2 py-1 w-16 flex-shrink-0 bg-muted/30">
-                  {formatTime(hour)}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 opacity-0 group-hover:opacity-100 ml-auto mr-2 mt-1"
-                  onClick={() => addQuickBlock(hour)}
-                >
-                  <Plus className="h-3 w-3" />
-                </Button>
+                {formatTime(hour)}
               </div>
             ))}
 
-            {/* Drag selection preview */}
-            {dragState && selectionStart !== null && selectionEnd !== null && selectionEnd > selectionStart && (
+            {/* Clickable 15-min slots */}
+            {slots.map((slot) => (
               <div
-                className="absolute left-16 right-2 bg-primary/30 border-2 border-dashed border-primary rounded-md pointer-events-none z-20"
+                key={slot}
+                className="absolute left-14 right-0 border-b border-border/20 hover:bg-primary/10 cursor-pointer transition-colors"
+                style={{ 
+                  top: slot * SLOT_HEIGHT, 
+                  height: SLOT_HEIGHT,
+                  borderBottomStyle: slot % 4 === 3 ? 'solid' : 'dashed',
+                  borderBottomColor: slot % 4 === 3 ? 'hsl(var(--border))' : undefined,
+                }}
+                onMouseDown={(e) => handleSlotMouseDown(e, slot)}
+                onClick={() => !dragging && handleSlotClick(slot)}
+              />
+            ))}
+
+            {/* Drag selection preview */}
+            {dragging && selectionStart !== null && selectionEnd !== null && (
+              <div
+                className="absolute left-14 right-2 bg-primary/40 border-2 border-primary rounded-md pointer-events-none z-20"
                 style={{
-                  top: selectionStart * HOUR_HEIGHT,
-                  height: (selectionEnd - selectionStart) * HOUR_HEIGHT,
+                  top: selectionStart * SLOT_HEIGHT,
+                  height: (selectionEnd - selectionStart + 1) * SLOT_HEIGHT,
                 }}
               >
-                <span className="absolute inset-0 flex items-center justify-center text-sm font-medium text-primary">
-                  {formatTime(selectionStart)} - {formatTime(selectionEnd)}
+                <span className="absolute inset-0 flex items-center justify-center text-sm font-medium text-primary-foreground bg-primary/60 rounded">
+                  {formatTime(slotToHour(selectionStart))} - {formatTime(slotToHour(selectionEnd + 1))}
                 </span>
               </div>
             )}
 
             {/* Time blocks */}
             {blocks.map((block) => {
-              const blockHeight = (block.endHour - block.startHour) * HOUR_HEIGHT - 4;
-              const isSmall = blockHeight < 60;
+              const top = block.startHour * HOUR_HEIGHT + 1;
+              const height = (block.endHour - block.startHour) * HOUR_HEIGHT - 2;
+              const isSmall = height < 50;
               
               return (
                 <div
                   key={block.id}
-                  className="time-block absolute left-16 right-2 rounded-md shadow-md z-10"
+                  className="time-block absolute left-14 right-2 rounded-md shadow-md z-10 overflow-hidden"
                   style={{
-                    top: block.startHour * HOUR_HEIGHT + 2,
-                    height: blockHeight,
+                    top,
+                    height,
                     backgroundColor: block.color,
                   }}
                 >
                   <div className={`h-full p-2 flex ${isSmall ? 'flex-row items-center gap-2' : 'flex-col'}`}>
-                    {/* Title area */}
                     <div className="flex-1 min-w-0">
                       {editingId === block.id ? (
                         <Input
@@ -201,33 +203,34 @@ export const ScheduleMaker = () => {
                           onBlur={() => setEditingId(null)}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') setEditingId(null);
-                            e.stopPropagation();
                           }}
                           onClick={(e) => e.stopPropagation()}
-                          className="h-7 text-sm bg-background border-input"
+                          className="h-6 text-sm bg-background border-input"
                         />
                       ) : (
                         <div 
                           className="flex items-center gap-1 cursor-pointer group/title"
-                          onClick={() => setEditingId(block.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingId(block.id);
+                          }}
                         >
-                          <span className="font-semibold text-white truncate text-sm">
-                            {block.title || 'Click to add name'}
+                          <span className="font-semibold text-white truncate text-sm drop-shadow">
+                            {block.title || 'Click to name'}
                           </span>
-                          <Pencil className="h-3 w-3 text-white/70 opacity-0 group-hover/title:opacity-100 flex-shrink-0" />
+                          <Pencil className="h-3 w-3 text-white/80 opacity-0 group-hover/title:opacity-100 flex-shrink-0" />
                         </div>
                       )}
                     </div>
                     
-                    {/* Time and delete */}
-                    <div className={`flex items-center gap-1 ${isSmall ? '' : 'mt-1'}`}>
-                      <span className="text-xs text-white/80">
+                    <div className={`flex items-center gap-1 ${isSmall ? '' : 'mt-auto'}`}>
+                      <span className="text-xs text-white/90 drop-shadow">
                         {formatTime(block.startHour)} - {formatTime(block.endHour)}
                       </span>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-5 w-5 text-white/70 hover:text-white hover:bg-white/20 ml-auto"
+                        className="h-5 w-5 text-white/80 hover:text-white hover:bg-white/20 ml-auto"
                         onClick={(e) => {
                           e.stopPropagation();
                           deleteBlock(block.id);
@@ -243,7 +246,7 @@ export const ScheduleMaker = () => {
           </div>
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          Drag on empty area to create blocks, or click + button
+          Click for 15-min block, or drag to select time range
         </p>
       </div>
 
@@ -253,7 +256,7 @@ export const ScheduleMaker = () => {
           <h3 className="font-semibold mb-3">Schedule Summary</h3>
           {blocks.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No blocks yet. Create your first one!
+              Click on timeline to add blocks
             </p>
           ) : (
             <div className="space-y-2 max-h-80 overflow-auto">
