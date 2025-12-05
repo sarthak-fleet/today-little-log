@@ -36,13 +36,14 @@ export const ScheduleMaker = () => {
   const getHourFromY = useCallback((clientY: number): number => {
     if (!timelineRef.current) return 0;
     const rect = timelineRef.current.getBoundingClientRect();
-    const y = clientY - rect.top;
+    const y = Math.max(0, Math.min(clientY - rect.top, rect.height));
     const hour = Math.max(0, Math.min(24, y / HOUR_HEIGHT));
     return Math.round(hour * 4) / 4; // Snap to 15-minute intervals
   }, []);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('.time-block')) return;
+    e.preventDefault();
     const hour = getHourFromY(e.clientY);
     setIsDragging(true);
     setDragStart(hour);
@@ -51,6 +52,7 @@ export const ScheduleMaker = () => {
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging) return;
+    e.preventDefault();
     const hour = getHourFromY(e.clientY);
     setDragEnd(hour);
   };
@@ -58,6 +60,8 @@ export const ScheduleMaker = () => {
   const handleMouseUp = () => {
     if (!isDragging || dragStart === null || dragEnd === null) {
       setIsDragging(false);
+      setDragStart(null);
+      setDragEnd(null);
       return;
     }
 
@@ -176,7 +180,7 @@ export const ScheduleMaker = () => {
                     onChange={(e) => updateBlockTitle(block.id, e.target.value)}
                     onBlur={() => setEditingId(null)}
                     onKeyDown={(e) => e.key === 'Enter' && setEditingId(null)}
-                    className="mt-1 h-7 bg-white/20 border-white/30 text-white placeholder:text-white/60 text-sm"
+                    className="mt-1 h-7 bg-background border-border text-foreground placeholder:text-muted-foreground text-sm"
                     onClick={(e) => e.stopPropagation()}
                   />
                 ) : (
