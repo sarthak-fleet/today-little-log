@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { Trash2, Pencil, GripVertical } from 'lucide-react';
+import { Trash2, Pencil, GripVertical, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface TimeBlock {
   id: string;
@@ -18,6 +19,12 @@ const COLORS = [
   'hsl(45, 80%, 50%)',
   'hsl(280, 60%, 55%)',
   'hsl(200, 70%, 50%)',
+  'hsl(0, 70%, 55%)',
+  'hsl(30, 80%, 50%)',
+  'hsl(180, 60%, 45%)',
+  'hsl(300, 50%, 50%)',
+  'hsl(120, 50%, 45%)',
+  'hsl(250, 60%, 60%)',
 ];
 
 const HOUR_HEIGHT = 60;
@@ -186,6 +193,10 @@ export const ScheduleMaker = () => {
     setBlocks(blocks.map(b => b.id === id ? { ...b, title } : b));
   };
 
+  const updateBlockColor = (id: string, color: string) => {
+    setBlocks(blocks.map(b => b.id === id ? { ...b, color } : b));
+  };
+
   const deleteBlock = (id: string) => {
     setBlocks(blocks.filter(b => b.id !== id));
     if (editingId === id) setEditingId(null);
@@ -331,10 +342,34 @@ export const ScheduleMaker = () => {
                       <span className="text-xs text-white/90 drop-shadow">
                         {formatTime(block.startHour)} - {formatTime(block.endHour)}
                       </span>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-5 w-5 text-white/80 hover:text-white hover:bg-white/20 ml-auto"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Palette className="h-3 w-3" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-2 bg-popover border border-border z-50" onClick={(e) => e.stopPropagation()}>
+                          <div className="grid grid-cols-4 gap-1">
+                            {COLORS.map((color) => (
+                              <button
+                                key={color}
+                                className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 ${block.color === color ? 'border-foreground' : 'border-transparent'}`}
+                                style={{ backgroundColor: color }}
+                                onClick={() => updateBlockColor(block.id, color)}
+                              />
+                            ))}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-5 w-5 text-white/80 hover:text-white hover:bg-white/20 ml-auto"
+                        className="h-5 w-5 text-white/80 hover:text-white hover:bg-white/20"
                         onClick={(e) => {
                           e.stopPropagation();
                           deleteBlock(block.id);
@@ -372,10 +407,27 @@ export const ScheduleMaker = () => {
                     className="flex items-center gap-2 p-2 rounded-md bg-muted/50 cursor-pointer hover:bg-muted"
                     onClick={() => setEditingId(block.id)}
                   >
-                    <div
-                      className="w-3 h-3 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: block.color }}
-                    />
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button
+                          className="w-4 h-4 rounded-full flex-shrink-0 border border-border hover:scale-110 transition-transform"
+                          style={{ backgroundColor: block.color }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-2 bg-popover border border-border z-50" onClick={(e) => e.stopPropagation()}>
+                        <div className="grid grid-cols-4 gap-1">
+                          {COLORS.map((color) => (
+                            <button
+                              key={color}
+                              className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 ${block.color === color ? 'border-foreground' : 'border-transparent'}`}
+                              style={{ backgroundColor: color }}
+                              onClick={() => updateBlockColor(block.id, color)}
+                            />
+                          ))}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">
                         {block.title || 'Untitled'}
