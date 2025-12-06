@@ -23,14 +23,24 @@ const COLORS = [
 const HOUR_HEIGHT = 60;
 const SLOT_HEIGHT = HOUR_HEIGHT / 4; // 15-minute slots
 
+const STORAGE_KEY = 'schedule-blocks';
+
 export const ScheduleMaker = () => {
-  const [blocks, setBlocks] = useState<TimeBlock[]>([]);
+  const [blocks, setBlocks] = useState<TimeBlock[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dragging, setDragging] = useState<{ startSlot: number; endSlot: number } | null>(null);
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [dragBlock, setDragBlock] = useState<{ id: string; offsetSlots: number } | null>(null);
   const [resizing, setResizing] = useState<{ id: string; edge: 'top' | 'bottom' } | null>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
+
+  // Sync to localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(blocks));
+  }, [blocks]);
 
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const slots = Array.from({ length: 96 }, (_, i) => i); // 96 x 15-min slots
@@ -345,7 +355,7 @@ export const ScheduleMaker = () => {
       </div>
 
       {/* Schedule Summary */}
-      <div className="lg:w-72 space-y-4">
+      <div className="lg:w-auto lg:min-w-64 lg:max-w-sm space-y-4">
         <div className="bg-card border border-border rounded-lg p-4">
           <h3 className="font-semibold mb-3">Schedule Summary</h3>
           {blocks.length === 0 ? (
