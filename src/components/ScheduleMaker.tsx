@@ -29,6 +29,7 @@ export const ScheduleMaker = () => {
   const [dragging, setDragging] = useState<{ startSlot: number; endSlot: number } | null>(null);
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [dragBlock, setDragBlock] = useState<{ id: string; offsetSlots: number } | null>(null);
+  const [resizing, setResizing] = useState<{ id: string; edge: 'top' | 'bottom' } | null>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
 
   const hours = Array.from({ length: 24 }, (_, i) => i);
@@ -49,6 +50,28 @@ export const ScheduleMaker = () => {
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isMouseDown) return;
+      
+      // Resizing block
+      if (resizing) {
+        const slot = getSlotFromY(e.clientY);
+        const block = blocks.find(b => b.id === resizing.id);
+        if (!block) return;
+        
+        if (resizing.edge === 'top') {
+          const endSlot = hourToSlot(block.endHour);
+          const newStartSlot = Math.max(0, Math.min(endSlot - 1, slot));
+          setBlocks(prev => prev.map(b => 
+            b.id === resizing.id ? { ...b, startHour: slotToHour(newStartSlot) } : b
+          ));
+        } else {
+          const startSlot = hourToSlot(block.startHour);
+          const newEndSlot = Math.max(startSlot + 1, Math.min(96, slot + 1));
+          setBlocks(prev => prev.map(b => 
+            b.id === resizing.id ? { ...b, endHour: slotToHour(newEndSlot) } : b
+          ));
+        }
+        return;
+      }
       
       // Dragging existing block
       if (dragBlock) {
@@ -97,6 +120,7 @@ export const ScheduleMaker = () => {
       }
       setDragging(null);
       setDragBlock(null);
+      setResizing(null);
       setIsMouseDown(false);
     };
 
@@ -109,7 +133,7 @@ export const ScheduleMaker = () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isMouseDown, dragging, dragBlock, blocks]);
+  }, [isMouseDown, dragging, dragBlock, resizing, blocks]);
 
   const handleSlotClick = (slot: number) => {
     if (dragging || dragBlock) return;
@@ -139,6 +163,13 @@ export const ScheduleMaker = () => {
     const blockStartSlot = hourToSlot(block.startHour);
     setIsMouseDown(true);
     setDragBlock({ id: block.id, offsetSlots: slot - blockStartSlot });
+  };
+
+  const handleResizeStart = (e: React.MouseEvent, blockId: string, edge: 'top' | 'bottom') => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsMouseDown(true);
+    setResizing({ id: blockId, edge });
   };
 
   const updateBlockTitle = (id: string, title: string) => {
@@ -219,17 +250,34 @@ export const ScheduleMaker = () => {
               const height = (block.endHour - block.startHour) * HOUR_HEIGHT - 2;
               const isSmall = height < 50;
               const isDragging = dragBlock?.id === block.id;
+              const isResizing = resizing?.id === block.id;
               
               return (
                 <div
                   key={block.id}
-                  className={`time-block absolute left-14 right-2 rounded-md shadow-md z-10 overflow-hidden transition-shadow ${isDragging ? 'shadow-lg ring-2 ring-primary cursor-grabbing' : ''}`}
+                  className={`time-block absolute left-14 right-2 rounded-md shadow-md z-10 overflow-visible transition-shadow ${isDragging || isResizing ? 'shadow-lg ring-2 ring-primary' : ''} ${isDragging ? 'cursor-grabbing' : ''}`}
                   style={{
                     top,
                     height,
                     backgroundColor: block.color,
                   }}
                 >
+                  {/* Top resize handle */}
+                  <div 
+                    className="absolute -top-1 left-0 right-0 h-3 cursor-ns-resize group flex items-center justify-center"
+                    onMouseDown={(e) => handleResizeStart(e, block.id, 'top')}
+                  >
+                    <div className="w-10 h-1 rounded-full bg-white/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                  
+                  {/* Bottom resize handle */}
+                  <div 
+                    className="absolute -bottom-1 left-0 right-0 h-3 cursor-ns-resize group flex items-center justify-center"
+                    onMouseDown={(e) => handleResizeStart(e, block.id, 'bottom')}
+                  >
+                    <div className="w-10 h-1 rounded-full bg-white/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+
                   <div className={`h-full p-2 flex ${isSmall ? 'flex-row items-center gap-2' : 'flex-col'}`}>
                     {/* Drag handle */}
                     <div 
