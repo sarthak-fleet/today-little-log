@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Trash2, Pencil } from 'lucide-react';
+import { Trash2, Pencil, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -28,6 +28,7 @@ export const ScheduleMaker = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dragging, setDragging] = useState<{ startSlot: number; endSlot: number } | null>(null);
   const [isMouseDown, setIsMouseDown] = useState(false);
+  const [dragBlock, setDragBlock] = useState<{ id: string; offsetSlots: number } | null>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
 
   const hours = Array.from({ length: 24 }, (_, i) => i);
@@ -42,17 +43,43 @@ export const ScheduleMaker = () => {
   };
 
   const slotToHour = (slot: number) => slot / 4;
+  const hourToSlot = (hour: number) => Math.round(hour * 4);
 
   // Handle mouse events on document for reliable drag
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (!isMouseDown || !dragging) return;
-      const slot = getSlotFromY(e.clientY);
-      setDragging(prev => prev ? { ...prev, endSlot: slot } : null);
+      if (!isMouseDown) return;
+      
+      // Dragging existing block
+      if (dragBlock) {
+        const slot = getSlotFromY(e.clientY);
+        const block = blocks.find(b => b.id === dragBlock.id);
+        if (!block) return;
+        
+        const duration = block.endHour - block.startHour;
+        const durationSlots = hourToSlot(duration);
+        let newStartSlot = slot - dragBlock.offsetSlots;
+        
+        // Clamp to bounds
+        newStartSlot = Math.max(0, Math.min(96 - durationSlots, newStartSlot));
+        
+        setBlocks(prev => prev.map(b => 
+          b.id === dragBlock.id 
+            ? { ...b, startHour: slotToHour(newStartSlot), endHour: slotToHour(newStartSlot + durationSlots) }
+            : b
+        ));
+        return;
+      }
+      
+      // Creating new block via drag
+      if (dragging) {
+        const slot = getSlotFromY(e.clientY);
+        setDragging(prev => prev ? { ...prev, endSlot: slot } : null);
+      }
     };
 
     const handleMouseUp = () => {
-      if (dragging && isMouseDown) {
+      if (dragging && isMouseDown && !dragBlock) {
         const startSlot = Math.min(dragging.startSlot, dragging.endSlot);
         const endSlot = Math.max(dragging.startSlot, dragging.endSlot);
         
@@ -69,6 +96,7 @@ export const ScheduleMaker = () => {
         }
       }
       setDragging(null);
+      setDragBlock(null);
       setIsMouseDown(false);
     };
 
@@ -81,10 +109,10 @@ export const ScheduleMaker = () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isMouseDown, dragging, blocks.length]);
+  }, [isMouseDown, dragging, dragBlock, blocks]);
 
   const handleSlotClick = (slot: number) => {
-    if (dragging) return;
+    if (dragging || dragBlock) return;
     // Create a 15-min block on click
     const newBlock: TimeBlock = {
       id: crypto.randomUUID(),
@@ -102,6 +130,15 @@ export const ScheduleMaker = () => {
     e.preventDefault();
     setIsMouseDown(true);
     setDragging({ startSlot: slot, endSlot: slot });
+  };
+
+  const handleBlockDragStart = (e: React.MouseEvent, block: TimeBlock) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const slot = getSlotFromY(e.clientY);
+    const blockStartSlot = hourToSlot(block.startHour);
+    setIsMouseDown(true);
+    setDragBlock({ id: block.id, offsetSlots: slot - blockStartSlot });
   };
 
   const updateBlockTitle = (id: string, title: string) => {
@@ -162,7 +199,7 @@ export const ScheduleMaker = () => {
             ))}
 
             {/* Drag selection preview */}
-            {dragging && selectionStart !== null && selectionEnd !== null && (
+            {dragging && !dragBlock && selectionStart !== null && selectionEnd !== null && (
               <div
                 className="absolute left-14 right-2 bg-primary/40 border-2 border-primary rounded-md pointer-events-none z-20"
                 style={{
@@ -181,11 +218,12 @@ export const ScheduleMaker = () => {
               const top = block.startHour * HOUR_HEIGHT + 1;
               const height = (block.endHour - block.startHour) * HOUR_HEIGHT - 2;
               const isSmall = height < 50;
+              const isDragging = dragBlock?.id === block.id;
               
               return (
                 <div
                   key={block.id}
-                  className="time-block absolute left-14 right-2 rounded-md shadow-md z-10 overflow-hidden"
+                  className={`time-block absolute left-14 right-2 rounded-md shadow-md z-10 overflow-hidden transition-shadow ${isDragging ? 'shadow-lg ring-2 ring-primary cursor-grabbing' : ''}`}
                   style={{
                     top,
                     height,
@@ -193,7 +231,15 @@ export const ScheduleMaker = () => {
                   }}
                 >
                   <div className={`h-full p-2 flex ${isSmall ? 'flex-row items-center gap-2' : 'flex-col'}`}>
-                    <div className="flex-1 min-w-0">
+                    {/* Drag handle */}
+                    <div 
+                      className="absolute left-0 top-0 bottom-0 w-6 flex items-center justify-center cursor-grab hover:bg-white/20 transition-colors"
+                      onMouseDown={(e) => handleBlockDragStart(e, block)}
+                    >
+                      <GripVertical className="h-4 w-4 text-white/70" />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0 ml-5">
                       {editingId === block.id ? (
                         <Input
                           autoFocus
@@ -223,7 +269,7 @@ export const ScheduleMaker = () => {
                       )}
                     </div>
                     
-                    <div className={`flex items-center gap-1 ${isSmall ? '' : 'mt-auto'}`}>
+                    <div className={`flex items-center gap-1 ${isSmall ? '' : 'mt-auto ml-5'}`}>
                       <span className="text-xs text-white/90 drop-shadow">
                         {formatTime(block.startHour)} - {formatTime(block.endHour)}
                       </span>
@@ -246,7 +292,7 @@ export const ScheduleMaker = () => {
           </div>
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          Click for 15-min block, or drag to select time range
+          Click for 15-min block, drag to select range, or drag blocks to move them
         </p>
       </div>
 
