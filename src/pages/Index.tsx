@@ -112,18 +112,25 @@ const Index = () => {
           <div className="flex items-center gap-3">
             <Popover>
               <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-muted-foreground hover:text-foreground gap-2"
-                >
-                  <Cake className="h-4 w-4" />
-                  {dayOfLife && (
-                    <span className="font-display font-semibold text-foreground">
+                {dayOfLife ? (
+                  <button className="flex flex-col items-end text-right hover:opacity-80 transition-opacity cursor-pointer">
+                    <span className="font-display font-bold text-2xl text-foreground leading-tight">
                       Day {dayOfLife.toLocaleString()}
                     </span>
-                  )}
-                </Button>
+                    <span className="text-xs text-muted-foreground">
+                      ~{daysRemaining?.toLocaleString()} remaining
+                    </span>
+                  </button>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-muted-foreground hover:text-foreground gap-2"
+                  >
+                    <Cake className="h-4 w-4" />
+                    <span>Set birthday</span>
+                  </Button>
+                )}
               </PopoverTrigger>
               <PopoverContent className="w-64" align="end">
                 <div className="space-y-3">
@@ -135,7 +142,7 @@ const Index = () => {
                     value={profile?.dob || ''}
                     onChange={(e) => handleDobChange(e.target.value)}
                     max={new Date().toISOString().split('T')[0]}
-                    className="w-full"
+                    className="w-full bg-background border-input"
                   />
                   {dayOfLife && (
                     <div className="space-y-1 pt-1">
