@@ -7,6 +7,7 @@ export interface Profile {
   user_id: string;
   name: string | null;
   avatar_url: string | null;
+  dob: string | null;
 }
 
 export function useAuth() {
@@ -65,11 +66,26 @@ export function useAuth() {
     await supabase.auth.signOut();
   };
 
+  const updateDob = async (dob: string) => {
+    if (!user) return { error: new Error('Not authenticated') };
+    
+    const { error } = await supabase
+      .from('profiles')
+      .update({ dob })
+      .eq('user_id', user.id);
+
+    if (!error && profile) {
+      setProfile({ ...profile, dob });
+    }
+    return { error };
+  };
+
   return {
     user,
     session,
     profile,
     loading,
     signOut,
+    updateDob,
   };
 }

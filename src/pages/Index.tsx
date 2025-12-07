@@ -10,36 +10,30 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { EntryType } from '@/hooks/useJournalEntries';
-import { differenceInDays, parse, isValid } from 'date-fns';
+import { differenceInDays, parseISO, isValid } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
-const DOB_STORAGE_KEY = 'journal-dob';
+const AVERAGE_LIFESPAN_DAYS = 30000;
 
 const Index = () => {
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [searchQuery, setSearchQuery] = useState('');
-  const [dob, setDob] = useState<string>(() => {
-    return localStorage.getItem(DOB_STORAGE_KEY) || '';
-  });
+  const { user, profile, loading, signOut, updateDob } = useAuth();
 
   // Calculate day of life
   const getDayOfLife = () => {
-    if (!dob) return null;
-    const birthDate = parse(dob, 'yyyy-MM-dd', new Date());
+    if (!profile?.dob) return null;
+    const birthDate = parseISO(profile.dob);
     if (!isValid(birthDate)) return null;
-    return differenceInDays(new Date(), birthDate) + 1; // +1 to count birth day as day 1
+    return differenceInDays(new Date(), birthDate) + 1;
   };
 
   const dayOfLife = getDayOfLife();
+  const daysRemaining = dayOfLife ? Math.max(0, AVERAGE_LIFESPAN_DAYS - dayOfLife) : null;
 
-  // Save DOB to localStorage
-  useEffect(() => {
-    if (dob) {
-      localStorage.setItem(DOB_STORAGE_KEY, dob);
-    } else {
-      localStorage.removeItem(DOB_STORAGE_KEY);
-    }
-  }, [dob]);
+  const handleDobChange = async (newDob: string) => {
+    await updateDob(newDob);
+  };
   const { 
     entries,
     getTodayEntry, 
@@ -53,7 +47,6 @@ const Index = () => {
     isSunday,
     isLastDayOfMonth,
   } = useJournalEntries();
-  const { user, profile, loading, signOut } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -133,21 +126,26 @@ const Index = () => {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-64" align="end">
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <label className="text-sm font-medium text-foreground">
                     Date of Birth
                   </label>
                   <Input
                     type="date"
-                    value={dob}
-                    onChange={(e) => setDob(e.target.value)}
+                    value={profile?.dob || ''}
+                    onChange={(e) => handleDobChange(e.target.value)}
                     max={new Date().toISOString().split('T')[0]}
                     className="w-full"
                   />
                   {dayOfLife && (
-                    <p className="text-xs text-muted-foreground pt-1">
-                      Today is day {dayOfLife.toLocaleString()} of your life
-                    </p>
+                    <div className="space-y-1 pt-1">
+                      <p className="text-xs text-muted-foreground">
+                        Today is day <span className="font-semibold text-foreground">{dayOfLife.toLocaleString()}</span> of your life
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        ~<span className="font-semibold text-foreground">{daysRemaining?.toLocaleString()}</span> days remaining
+                      </p>
+                    </div>
                   )}
                 </div>
               </PopoverContent>
