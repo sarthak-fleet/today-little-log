@@ -5,15 +5,41 @@ import { PastEntries } from '@/components/PastEntries';
 import { CalendarView } from '@/components/CalendarView';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useAuth } from '@/hooks/useAuth';
-import { Feather, LogOut, List, CalendarDays, Search, X } from 'lucide-react';
+import { Feather, LogOut, List, CalendarDays, Search, X, Cake } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { EntryType } from '@/hooks/useJournalEntries';
+import { differenceInDays, parse, isValid } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+
+const DOB_STORAGE_KEY = 'journal-dob';
 
 const Index = () => {
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [searchQuery, setSearchQuery] = useState('');
+  const [dob, setDob] = useState<string>(() => {
+    return localStorage.getItem(DOB_STORAGE_KEY) || '';
+  });
+
+  // Calculate day of life
+  const getDayOfLife = () => {
+    if (!dob) return null;
+    const birthDate = parse(dob, 'yyyy-MM-dd', new Date());
+    if (!isValid(birthDate)) return null;
+    return differenceInDays(new Date(), birthDate) + 1; // +1 to count birth day as day 1
+  };
+
+  const dayOfLife = getDayOfLife();
+
+  // Save DOB to localStorage
+  useEffect(() => {
+    if (dob) {
+      localStorage.setItem(DOB_STORAGE_KEY, dob);
+    } else {
+      localStorage.removeItem(DOB_STORAGE_KEY);
+    }
+  }, [dob]);
   const { 
     entries,
     getTodayEntry, 
@@ -91,6 +117,41 @@ const Index = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-foreground gap-2"
+                >
+                  <Cake className="h-4 w-4" />
+                  {dayOfLife && (
+                    <span className="font-display font-semibold text-foreground">
+                      Day {dayOfLife.toLocaleString()}
+                    </span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64" align="end">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                    Date of Birth
+                  </label>
+                  <Input
+                    type="date"
+                    value={dob}
+                    onChange={(e) => setDob(e.target.value)}
+                    max={new Date().toISOString().split('T')[0]}
+                    className="w-full"
+                  />
+                  {dayOfLife && (
+                    <p className="text-xs text-muted-foreground pt-1">
+                      Today is day {dayOfLife.toLocaleString()} of your life
+                    </p>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
             <Avatar className="h-8 w-8">
               <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.name || 'User'} />
               <AvatarFallback className="text-xs">
