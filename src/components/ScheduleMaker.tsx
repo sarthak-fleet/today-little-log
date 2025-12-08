@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Trash2, Pencil, GripVertical, Palette } from 'lucide-react';
+import { Trash2, Pencil, GripVertical, Palette, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -10,6 +10,13 @@ interface TimeBlock {
   endHour: number;
   title: string;
   color: string;
+}
+
+interface ScheduleMakerProps {
+  blocks: TimeBlock[];
+  isLoaded: boolean;
+  onBlocksChange: (blocks: TimeBlock[]) => void;
+  onClearAll: () => void;
 }
 
 const COLORS = [
@@ -30,24 +37,13 @@ const COLORS = [
 const HOUR_HEIGHT = 60;
 const SLOT_HEIGHT = HOUR_HEIGHT / 4; // 15-minute slots
 
-const STORAGE_KEY = 'schedule-blocks';
-
-export const ScheduleMaker = () => {
-  const [blocks, setBlocks] = useState<TimeBlock[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : [];
-  });
+export const ScheduleMaker = ({ blocks, isLoaded, onBlocksChange, onClearAll }: ScheduleMakerProps) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dragging, setDragging] = useState<{ startSlot: number; endSlot: number } | null>(null);
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [dragBlock, setDragBlock] = useState<{ id: string; offsetSlots: number } | null>(null);
   const [resizing, setResizing] = useState<{ id: string; edge: 'top' | 'bottom' } | null>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
-
-  // Sync to localStorage
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(blocks));
-  }, [blocks]);
 
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const slots = Array.from({ length: 96 }, (_, i) => i); // 96 x 15-min slots
@@ -77,13 +73,13 @@ export const ScheduleMaker = () => {
         if (resizing.edge === 'top') {
           const endSlot = hourToSlot(block.endHour);
           const newStartSlot = Math.max(0, Math.min(endSlot - 1, slot));
-          setBlocks(prev => prev.map(b => 
+          onBlocksChange(blocks.map(b => 
             b.id === resizing.id ? { ...b, startHour: slotToHour(newStartSlot) } : b
           ));
         } else {
           const startSlot = hourToSlot(block.startHour);
           const newEndSlot = Math.max(startSlot + 1, Math.min(96, slot + 1));
-          setBlocks(prev => prev.map(b => 
+          onBlocksChange(blocks.map(b => 
             b.id === resizing.id ? { ...b, endHour: slotToHour(newEndSlot) } : b
           ));
         }
@@ -103,7 +99,7 @@ export const ScheduleMaker = () => {
         // Clamp to bounds
         newStartSlot = Math.max(0, Math.min(96 - durationSlots, newStartSlot));
         
-        setBlocks(prev => prev.map(b => 
+        onBlocksChange(blocks.map(b => 
           b.id === dragBlock.id 
             ? { ...b, startHour: slotToHour(newStartSlot), endHour: slotToHour(newStartSlot + durationSlots) }
             : b
@@ -131,7 +127,7 @@ export const ScheduleMaker = () => {
             title: '',
             color: COLORS[blocks.length % COLORS.length],
           };
-          setBlocks(prev => [...prev, newBlock]);
+          onBlocksChange([...blocks, newBlock]);
           setEditingId(newBlock.id);
         }
       }
@@ -150,7 +146,7 @@ export const ScheduleMaker = () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isMouseDown, dragging, dragBlock, resizing, blocks]);
+  }, [isMouseDown, dragging, dragBlock, resizing, blocks, onBlocksChange]);
 
   const handleSlotClick = (slot: number) => {
     if (dragging || dragBlock) return;
@@ -162,7 +158,7 @@ export const ScheduleMaker = () => {
       title: '',
       color: COLORS[blocks.length % COLORS.length],
     };
-    setBlocks(prev => [...prev, newBlock]);
+    onBlocksChange([...blocks, newBlock]);
     setEditingId(newBlock.id);
   };
 
@@ -190,15 +186,15 @@ export const ScheduleMaker = () => {
   };
 
   const updateBlockTitle = (id: string, title: string) => {
-    setBlocks(blocks.map(b => b.id === id ? { ...b, title } : b));
+    onBlocksChange(blocks.map(b => b.id === id ? { ...b, title } : b));
   };
 
   const updateBlockColor = (id: string, color: string) => {
-    setBlocks(blocks.map(b => b.id === id ? { ...b, color } : b));
+    onBlocksChange(blocks.map(b => b.id === id ? { ...b, color } : b));
   };
 
   const deleteBlock = (id: string) => {
-    setBlocks(blocks.filter(b => b.id !== id));
+    onBlocksChange(blocks.filter(b => b.id !== id));
     if (editingId === id) setEditingId(null);
   };
 
@@ -212,6 +208,14 @@ export const ScheduleMaker = () => {
 
   const selectionStart = dragging ? Math.min(dragging.startSlot, dragging.endSlot) : null;
   const selectionEnd = dragging ? Math.max(dragging.startSlot, dragging.endSlot) : null;
+
+  if (!isLoaded) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col lg:flex-row gap-6">
@@ -457,7 +461,7 @@ export const ScheduleMaker = () => {
           <Button
             variant="outline"
             className="w-full"
-            onClick={() => setBlocks([])}
+            onClick={onClearAll}
           >
             Clear All
           </Button>
