@@ -5,7 +5,7 @@ import { PastEntries } from '@/components/PastEntries';
 import { CalendarView } from '@/components/CalendarView';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useAuth } from '@/hooks/useAuth';
-import { Feather, LogOut, List, CalendarDays, Search, X, Cake, BookOpen } from 'lucide-react';
+import { Feather, LogOut, List, CalendarDays, Search, X, Cake, BookOpen, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
@@ -157,6 +157,15 @@ const Index = () => {
                 </div>
               </PopoverContent>
             </Popover>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/schedule')}
+              className="text-muted-foreground hover:text-foreground"
+              title="Schedule"
+            >
+              <Clock className="h-5 w-5" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
