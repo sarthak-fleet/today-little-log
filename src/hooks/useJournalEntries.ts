@@ -13,28 +13,54 @@ export interface JournalEntry {
   updated_at: string;
 }
 
+const STORAGE_KEY = 'journal-entries-data';
+
 export function useJournalEntries() {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const { user } = useAuth();
 
   const fetchEntries = useCallback(async () => {
-    if (!user) {
-      setEntries([]);
-      setIsLoaded(true);
-      return;
-    }
+    if (user) {
+      const { data, error } = await supabase
+        .from('journal_entries')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false });
 
-    const { data, error } = await supabase
-      .from('journal_entries')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('date', { ascending: false });
-
-    if (error) {
-      console.error('Failed to fetch entries:', error);
+      if (error) {
+        console.error('Failed to fetch entries:', error);
+      } else {
+        setEntries((data as JournalEntry[]) || []);
+        
+        // Check for local storage migration
+        const savedEntries = localStorage.getItem(STORAGE_KEY);
+        if (savedEntries && (!data || data.length === 0)) {
+          const localEntries = JSON.parse(savedEntries) as JournalEntry[];
+          for (const entry of localEntries) {
+            await supabase.from('journal_entries').insert({
+              user_id: user.id,
+              date: entry.date,
+              content: entry.content,
+              entry_type: entry.entry_type,
+            });
+          }
+          // Reload after migration
+          const { data: reloadedEntries } = await supabase
+            .from('journal_entries')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('date', { ascending: false });
+          if (reloadedEntries) {
+            setEntries(reloadedEntries as JournalEntry[]);
+          }
+        }
+      }
     } else {
-      setEntries((data as JournalEntry[]) || []);
+      // Guest mode - use localStorage
+      const savedEntries = localStorage.getItem(STORAGE_KEY);
+      setEntries(savedEntries ? JSON.parse(savedEntries) : []);
     }
     setIsLoaded(true);
   }, [user]);
@@ -81,8 +107,8 @@ export function useJournalEntries() {
   };
 
   const saveEntry = async (content: string, date?: string, entryType: EntryType = 'daily') => {
-    if (!user) return;
-
+    setIsSaving(true);
+    
     let targetDate = date;
     if (!targetDate) {
       if (entryType === 'weekly') {
@@ -96,65 +122,110 @@ export function useJournalEntries() {
 
     const existingEntry = entries.find(e => e.date === targetDate && e.entry_type === entryType);
 
-    if (existingEntry) {
-      const { error } = await supabase
-        .from('journal_entries')
-        .update({ content })
-        .eq('id', existingEntry.id);
+    if (user) {
+      if (existingEntry) {
+        const { error } = await supabase
+          .from('journal_entries')
+          .update({ content })
+          .eq('id', existingEntry.id);
 
-      if (error) {
-        console.error('Failed to update entry:', error);
-        return;
+        if (error) {
+          console.error('Failed to update entry:', error);
+          setIsSaving(false);
+          return;
+        }
+      } else {
+        const { error } = await supabase
+          .from('journal_entries')
+          .insert({
+            user_id: user.id,
+            date: targetDate,
+            content,
+            entry_type: entryType,
+          });
+
+        if (error) {
+          console.error('Failed to create entry:', error);
+          setIsSaving(false);
+          return;
+        }
       }
+      await fetchEntries();
     } else {
-      const { error } = await supabase
-        .from('journal_entries')
-        .insert({
-          user_id: user.id,
+      // Guest mode
+      let newEntries: JournalEntry[];
+      if (existingEntry) {
+        newEntries = entries.map(e => 
+          e.id === existingEntry.id 
+            ? { ...e, content, updated_at: new Date().toISOString() } 
+            : e
+        );
+      } else {
+        const newEntry: JournalEntry = {
+          id: crypto.randomUUID(),
           date: targetDate,
           content,
           entry_type: entryType,
-        });
-
-      if (error) {
-        console.error('Failed to create entry:', error);
-        return;
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        newEntries = [newEntry, ...entries];
       }
+      setEntries(newEntries);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newEntries));
     }
-
-    await fetchEntries();
+    
+    setIsSaving(false);
   };
 
   const updateEntry = async (id: string, content: string) => {
-    if (!user) return;
+    setIsSaving(true);
+    
+    if (user) {
+      const { error } = await supabase
+        .from('journal_entries')
+        .update({ content })
+        .eq('id', id);
 
-    const { error } = await supabase
-      .from('journal_entries')
-      .update({ content })
-      .eq('id', id);
-
-    if (error) {
-      console.error('Failed to update entry:', error);
-      return;
+      if (error) {
+        console.error('Failed to update entry:', error);
+        setIsSaving(false);
+        return;
+      }
+      await fetchEntries();
+    } else {
+      const newEntries = entries.map(e => 
+        e.id === id ? { ...e, content, updated_at: new Date().toISOString() } : e
+      );
+      setEntries(newEntries);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newEntries));
     }
-
-    await fetchEntries();
+    
+    setIsSaving(false);
   };
 
   const deleteEntry = async (id: string) => {
-    if (!user) return;
+    setIsSaving(true);
+    
+    if (user) {
+      const { error } = await supabase
+        .from('journal_entries')
+        .delete()
+        .eq('id', id);
 
-    const { error } = await supabase
-      .from('journal_entries')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Failed to delete entry:', error);
-      return;
+      if (error) {
+        console.error('Failed to delete entry:', error);
+        setIsSaving(false);
+        return;
+      }
+      await fetchEntries();
+    } else {
+      const newEntries = entries.filter(e => e.id !== id);
+      setEntries(newEntries);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newEntries));
     }
-
-    await fetchEntries();
+    
+    setIsSaving(false);
   };
 
   const getRecentEntries = (count: number = 10): JournalEntry[] => {
@@ -167,6 +238,8 @@ export function useJournalEntries() {
   return {
     entries,
     isLoaded,
+    isSaving,
+    isLoggedIn: !!user,
     getTodayEntry,
     getWeeklyEntry,
     getMonthlyEntry,
