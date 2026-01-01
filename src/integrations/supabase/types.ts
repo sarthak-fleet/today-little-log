@@ -14,6 +14,80 @@ export type Database = {
   }
   public: {
     Tables: {
+      habit_logs: {
+        Row: {
+          created_at: string
+          date: string
+          habit_id: string
+          id: string
+          updated_at: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          habit_id: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          value?: number
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          habit_id?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_logs_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      habits: {
+        Row: {
+          created_at: string
+          frequency: string
+          id: string
+          target_type: string
+          target_value: number
+          title: string
+          track_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          frequency?: string
+          id?: string
+          target_type?: string
+          target_value?: number
+          title: string
+          track_type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          frequency?: string
+          id?: string
+          target_type?: string
+          target_value?: number
+          title?: string
+          track_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       journal_entries: {
         Row: {
           content: string
