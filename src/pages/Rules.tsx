@@ -2,24 +2,17 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useLifeRules } from '@/hooks/useLifeRules';
-import { Feather, ArrowLeft, Plus, Trash2, GripVertical } from 'lucide-react';
+import { Feather, ArrowLeft, Plus, Trash2, LogIn, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useEffect } from 'react';
 
 const Rules = () => {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
-  const { rules, isLoading, addRule, updateRule, deleteRule } = useLifeRules();
+  const { loading } = useAuth();
+  const { rules, isLoading, isSaving, isLoggedIn, addRule, updateRule, deleteRule } = useLifeRules();
   const [newRule, setNewRule] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
-
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/auth');
-    }
-  }, [user, loading, navigate]);
 
   if (loading || isLoading) {
     return (
@@ -29,10 +22,6 @@ const Rules = () => {
         </div>
       </div>
     );
-  }
-
-  if (!user) {
-    return null;
   }
 
   const handleAddRule = async () => {
@@ -83,8 +72,24 @@ const Rules = () => {
               </p>
             </div>
           </div>
+          <div className="flex items-center gap-2">
+            {isSaving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+          </div>
         </div>
       </header>
+
+      {/* Guest mode notice */}
+      {!isLoggedIn && (
+        <div className="max-w-3xl mx-auto px-4 pt-4">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
+            <LogIn className="h-4 w-4" />
+            <span>Log in to save your rules across devices</span>
+            <Button variant="link" size="sm" className="ml-auto p-0 h-auto" onClick={() => navigate('/auth')}>
+              Sign in
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="max-w-3xl mx-auto px-4 py-8 md:py-12">
