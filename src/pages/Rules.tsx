@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navbar } from '@/components/Navbar';
+import { GuestNotice } from '@/components/GuestNotice';
 import { useAuth } from '@/hooks/useAuth';
 import { useLifeRules } from '@/hooks/useLifeRules';
-import { Feather, ArrowLeft, Plus, Trash2, LogIn, Loader2 } from 'lucide-react';
+import { Feather, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 const Rules = () => {
-  const navigate = useNavigate();
   const { loading } = useAuth();
   const { rules, isLoading, isSaving, isLoggedIn, addRule, updateRule, deleteRule } = useLifeRules();
   const [newRule, setNewRule] = useState('');
@@ -51,48 +51,19 @@ const Rules = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="py-6 px-4 border-b border-border/50">
-        <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/')}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="font-display font-semibold text-foreground text-lg">
-                Rules for Life
-              </h1>
-              <p className="text-xs text-muted-foreground font-sans">
-                Principles to live by
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {isSaving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-          </div>
-        </div>
-      </header>
+      <Navbar isSaving={isSaving} />
 
       {/* Guest mode notice */}
       {!isLoggedIn && (
         <div className="max-w-3xl mx-auto px-4 pt-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
-            <LogIn className="h-4 w-4" />
-            <span>Log in to save your rules across devices</span>
-            <Button variant="link" size="sm" className="ml-auto p-0 h-auto" onClick={() => navigate('/auth')}>
-              Sign in
-            </Button>
-          </div>
+          <GuestNotice message="Log in to save your rules across devices" />
         </div>
       )}
 
       {/* Main Content */}
       <main className="max-w-3xl mx-auto px-4 py-8 md:py-12">
+        <h2 className="text-xl font-display font-semibold text-foreground mb-6">Rules for Life</h2>
+
         {/* Add new rule */}
         <div className="flex gap-2 mb-8">
           <Input

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { Navbar } from '@/components/Navbar';
+import { GuestNotice } from '@/components/GuestNotice';
 import { useHabits, Habit } from '@/hooks/useHabits';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,16 +8,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Plus, Minus, Trash2, LogIn, Loader2, Target, Clock, CheckCircle2 } from 'lucide-react';
+import { Plus, Minus, Trash2, Loader2, Target, CheckCircle2, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 
 const Habits = () => {
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const { habits, isLoaded, isSaving, isLoggedIn, addHabit, deleteHabit, logHabit, getLog } = useHabits();
+  const { habits, isLoaded, isSaving, isLoggedIn, addHabit, updateHabit, deleteHabit, logHabit, getLog } = useHabits();
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newHabit, setNewHabit] = useState<Omit<Habit, 'id'>>({
+  const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
+  const [formData, setFormData] = useState<Omit<Habit, 'id'>>({
     title: '',
     target_type: 'target',
     track_type: 'count',
@@ -27,17 +26,47 @@ const Habits = () => {
 
   const today = format(new Date(), 'yyyy-MM-dd');
 
-  const handleAddHabit = async () => {
-    if (!newHabit.title.trim()) return;
-    await addHabit(newHabit);
-    setNewHabit({
+  const resetForm = () => {
+    setFormData({
       title: '',
       target_type: 'target',
       track_type: 'count',
       frequency: 'daily',
       target_value: 1,
     });
+    setEditingHabit(null);
+  };
+
+  const handleOpenDialog = (habit?: Habit) => {
+    if (habit) {
+      setEditingHabit(habit);
+      setFormData({
+        title: habit.title,
+        target_type: habit.target_type,
+        track_type: habit.track_type,
+        frequency: habit.frequency,
+        target_value: habit.target_value,
+      });
+    } else {
+      resetForm();
+    }
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
     setIsDialogOpen(false);
+    resetForm();
+  };
+
+  const handleSubmit = async () => {
+    if (!formData.title.trim()) return;
+    
+    if (editingHabit) {
+      await updateHabit(editingHabit.id, formData);
+    } else {
+      await addHabit(formData);
+    }
+    handleCloseDialog();
   };
 
   const handleIncrement = (habit: Habit) => {
@@ -77,142 +106,117 @@ const Habits = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="py-4 px-4 border-b border-border/50">
-        <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/')}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-primary" />
-              <h1 className="font-display font-semibold text-foreground text-lg">
-                Habits
-              </h1>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {isSaving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" className="gap-1">
-                  <Plus className="h-4 w-4" />
-                  Add Habit
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create New Habit</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 pt-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Title</Label>
-                    <Input
-                      id="title"
-                      placeholder="e.g., Drink water, Exercise..."
-                      value={newHabit.title}
-                      onChange={(e) => setNewHabit(prev => ({ ...prev, title: e.target.value }))}
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Type</Label>
-                      <Select
-                        value={newHabit.target_type}
-                        onValueChange={(v) => setNewHabit(prev => ({ ...prev, target_type: v as 'target' | 'limit' }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="target">Target (aim for)</SelectItem>
-                          <SelectItem value="limit">Limit (stay under)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Track by</Label>
-                      <Select
-                        value={newHabit.track_type}
-                        onValueChange={(v) => setNewHabit(prev => ({ ...prev, track_type: v as 'count' | 'time' }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="count">Count</SelectItem>
-                          <SelectItem value="time">Time (minutes)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Frequency</Label>
-                      <Select
-                        value={newHabit.frequency}
-                        onValueChange={(v) => setNewHabit(prev => ({ ...prev, frequency: v as 'daily' | 'weekly' }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="daily">Daily</SelectItem>
-                          <SelectItem value="weekly">Weekly</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>{newHabit.target_type === 'target' ? 'Target' : 'Limit'}</Label>
-                      <Input
-                        type="number"
-                        min={1}
-                        value={newHabit.target_value}
-                        onChange={(e) => setNewHabit(prev => ({ ...prev, target_value: parseInt(e.target.value) || 1 }))}
-                      />
-                    </div>
-                  </div>
-
-                  <Button onClick={handleAddHabit} className="w-full" disabled={!newHabit.title.trim()}>
-                    Create Habit
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
-      </header>
+      <Navbar isSaving={isSaving} />
 
       {/* Guest mode notice */}
       {!isLoggedIn && (
         <div className="max-w-3xl mx-auto px-4 pt-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
-            <LogIn className="h-4 w-4" />
-            <span>Log in to save your habits across devices</span>
-            <Button variant="link" size="sm" className="ml-auto p-0 h-auto" onClick={() => navigate('/auth')}>
-              Sign in
-            </Button>
-          </div>
+          <GuestNotice message="Log in to save your habits across devices" />
         </div>
       )}
 
       {/* Main Content */}
       <main className="max-w-3xl mx-auto px-4 py-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-display font-semibold text-foreground">Your Habits</h2>
+          <Dialog open={isDialogOpen} onOpenChange={(open) => open ? handleOpenDialog() : handleCloseDialog()}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="gap-1">
+                <Plus className="h-4 w-4" />
+                Add Habit
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{editingHabit ? 'Edit Habit' : 'Create New Habit'}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    placeholder="e.g., Drink water, Exercise..."
+                    value={formData.title}
+                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Type</Label>
+                    <Select
+                      value={formData.target_type}
+                      onValueChange={(v) => setFormData(prev => ({ ...prev, target_type: v as 'target' | 'limit' }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="target">Target (aim for)</SelectItem>
+                        <SelectItem value="limit">Limit (stay under)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Track by</Label>
+                    <Select
+                      value={formData.track_type}
+                      onValueChange={(v) => setFormData(prev => ({ ...prev, track_type: v as 'count' | 'time' }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="count">Count</SelectItem>
+                        <SelectItem value="time">Time (minutes)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Frequency</Label>
+                    <Select
+                      value={formData.frequency}
+                      onValueChange={(v) => setFormData(prev => ({ ...prev, frequency: v as 'daily' | 'weekly' }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="daily">Daily</SelectItem>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>{formData.target_type === 'target' ? 'Target' : 'Limit'}</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={formData.target_value}
+                      onChange={(e) => setFormData(prev => ({ ...prev, target_value: parseInt(e.target.value) || 1 }))}
+                    />
+                  </div>
+                </div>
+
+                <Button onClick={handleSubmit} className="w-full" disabled={!formData.title.trim()}>
+                  {editingHabit ? 'Save Changes' : 'Create Habit'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+
         {habits.length === 0 ? (
           <div className="text-center py-12">
             <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h2 className="text-lg font-medium text-foreground mb-2">No habits yet</h2>
             <p className="text-muted-foreground mb-4">Create your first habit to start tracking</p>
-            <Button onClick={() => setIsDialogOpen(true)}>
+            <Button onClick={() => handleOpenDialog()}>
               <Plus className="h-4 w-4 mr-2" />
               Add Habit
             </Button>
@@ -236,17 +240,25 @@ const Habits = () => {
                           <CheckCircle2 className="h-4 w-4 text-primary" />
                         )}
                       </CardTitle>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground capitalize">
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-muted-foreground capitalize mr-2">
                           {habit.frequency} {habit.target_type}
                         </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                          onClick={() => handleOpenDialog(habit)}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7 text-muted-foreground hover:text-destructive"
                           onClick={() => deleteHabit(habit.id)}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
                     </div>
