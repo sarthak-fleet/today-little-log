@@ -12,7 +12,7 @@ import { Plus, Minus, Trash2, Loader2, Target, CheckCircle2, Pencil } from 'luci
 import { format } from 'date-fns';
 
 const Habits = () => {
-  const { habits, isLoaded, isSaving, isLoggedIn, addHabit, updateHabit, deleteHabit, logHabit, getLog } = useHabits();
+  const { habits, isLoaded, isSaving, isLoggedIn, addHabit, updateHabit, deleteHabit, logHabit, getLog, getTodayLog } = useHabits();
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
@@ -70,21 +70,27 @@ const Habits = () => {
   };
 
   const handleIncrement = (habit: Habit) => {
-    const current = getLog(habit.id, today);
-    logHabit(habit.id, current + 1, today);
+    const todayValue = getTodayLog(habit.id, today);
+    logHabit(habit.id, todayValue + 1, today);
   };
 
   const handleDecrement = (habit: Habit) => {
-    const current = getLog(habit.id, today);
-    if (current > 0) {
-      logHabit(habit.id, current - 1, today);
+    const todayValue = getTodayLog(habit.id, today);
+    if (todayValue > 0) {
+      logHabit(habit.id, todayValue - 1, today);
     }
   };
 
+  const handleTimeAdd = (habit: Habit, minutes: number) => {
+    const todayValue = getTodayLog(habit.id, today);
+    logHabit(habit.id, todayValue + minutes, today);
+  };
+
   const getProgress = (habit: Habit) => {
-    const current = getLog(habit.id, today);
+    const current = getLog(habit.id, today); // This sums weekly for weekly habits
+    const todayValue = getTodayLog(habit.id, today);
     const percentage = Math.min((current / habit.target_value) * 100, 100);
-    return { current, percentage };
+    return { current, todayValue, percentage };
   };
 
   const formatTime = (minutes: number) => {
@@ -224,7 +230,7 @@ const Habits = () => {
         ) : (
           <div className="space-y-4">
             {habits.map((habit) => {
-              const { current, percentage } = getProgress(habit);
+              const { current, todayValue, percentage } = getProgress(habit);
               const isComplete = habit.target_type === 'target' 
                 ? current >= habit.target_value
                 : current <= habit.target_value;
@@ -276,10 +282,14 @@ const Habits = () => {
                         <div className="flex justify-between mt-1">
                           <span className="text-sm text-muted-foreground">
                             {habit.track_type === 'time' ? formatTime(current) : current}
+                            {habit.frequency === 'weekly' && (
+                              <span className="text-xs ml-1">(today: {habit.track_type === 'time' ? formatTime(todayValue) : todayValue})</span>
+                            )}
                           </span>
                           <span className="text-sm text-muted-foreground">
                             {habit.target_type === 'target' ? 'Goal: ' : 'Limit: '}
                             {habit.track_type === 'time' ? formatTime(habit.target_value) : habit.target_value}
+                            {habit.frequency === 'weekly' && <span className="text-xs">/week</span>}
                           </span>
                         </div>
                       </div>
@@ -291,7 +301,7 @@ const Habits = () => {
                           size="icon"
                           className="h-9 w-9"
                           onClick={() => handleDecrement(habit)}
-                          disabled={current === 0}
+                          disabled={todayValue === 0}
                         >
                           <Minus className="h-4 w-4" />
                         </Button>
@@ -300,14 +310,14 @@ const Habits = () => {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => logHabit(habit.id, current + 5, today)}
+                              onClick={() => handleTimeAdd(habit, 5)}
                             >
                               +5m
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => logHabit(habit.id, current + 15, today)}
+                              onClick={() => handleTimeAdd(habit, 15)}
                             >
                               +15m
                             </Button>

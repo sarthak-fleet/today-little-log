@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { format, startOfWeek, endOfWeek, isWithinInterval, parseISO } from 'date-fns';
 
 export interface Habit {
   id: string;
@@ -251,8 +252,33 @@ export function useHabits() {
     setIsSaving(false);
   }, [user, logs]);
 
-  // Get log for a specific habit and date
+  // Get log value for a specific habit - handles daily/weekly frequency
   const getLog = useCallback((habitId: string, date: string): number => {
+    const habit = habits.find(h => h.id === habitId);
+    if (!habit) return 0;
+
+    if (habit.frequency === 'daily') {
+      // For daily habits, just get today's log
+      const log = logs.find(l => l.habit_id === habitId && l.date === date);
+      return log?.value || 0;
+    } else {
+      // For weekly habits, sum all logs within the current week
+      const targetDate = parseISO(date);
+      const weekStart = startOfWeek(targetDate, { weekStartsOn: 1 }); // Monday
+      const weekEnd = endOfWeek(targetDate, { weekStartsOn: 1 });
+      
+      const weekLogs = logs.filter(l => {
+        if (l.habit_id !== habitId) return false;
+        const logDate = parseISO(l.date);
+        return isWithinInterval(logDate, { start: weekStart, end: weekEnd });
+      });
+      
+      return weekLogs.reduce((sum, l) => sum + l.value, 0);
+    }
+  }, [logs, habits]);
+
+  // Get today's log only (for incrementing/decrementing)
+  const getTodayLog = useCallback((habitId: string, date: string): number => {
     const log = logs.find(l => l.habit_id === habitId && l.date === date);
     return log?.value || 0;
   }, [logs]);
@@ -268,5 +294,6 @@ export function useHabits() {
     deleteHabit,
     logHabit,
     getLog,
+    getTodayLog,
   };
 }
