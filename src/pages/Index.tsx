@@ -1,40 +1,21 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { TodayPrompt } from '@/components/TodayPrompt';
 import { PastEntries } from '@/components/PastEntries';
 import { CalendarView } from '@/components/CalendarView';
+import { Navbar } from '@/components/Navbar';
+import { GuestNotice } from '@/components/GuestNotice';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useAuth } from '@/hooks/useAuth';
-import { Feather, LogOut, List, CalendarDays, Search, X, Cake, BookOpen, Clock, Target, LogIn, Loader2 } from 'lucide-react';
+import { Feather, List, CalendarDays, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { EntryType } from '@/hooks/useJournalEntries';
-import { differenceInDays, parseISO, isValid } from 'date-fns';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-
-const AVERAGE_LIFESPAN_DAYS = 30000;
 
 const Index = () => {
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [searchQuery, setSearchQuery] = useState('');
-  const { user, profile, loading, signOut, updateDob } = useAuth();
-  const navigate = useNavigate();
+  const { loading } = useAuth();
 
-  // Calculate day of life
-  const getDayOfLife = () => {
-    if (!profile?.dob) return null;
-    const birthDate = parseISO(profile.dob);
-    if (!isValid(birthDate)) return null;
-    return differenceInDays(new Date(), birthDate) + 1;
-  };
-
-  const dayOfLife = getDayOfLife();
-  const daysRemaining = dayOfLife ? Math.max(0, AVERAGE_LIFESPAN_DAYS - dayOfLife) : null;
-
-  const handleDobChange = async (newDob: string) => {
-    await updateDob(newDob);
-  };
   const { 
     entries,
     getTodayEntry, 
@@ -85,142 +66,12 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="py-6 px-4 border-b border-border/50">
-        <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Feather className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="font-display font-semibold text-foreground text-lg">
-                Daily Journal
-              </h1>
-              <p className="text-xs text-muted-foreground font-sans">
-                A moment for reflection
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            {isSaving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-            {isLoggedIn && (
-              <Popover>
-                <PopoverTrigger asChild>
-                  {dayOfLife ? (
-                    <button className="flex flex-col items-end text-right hover:opacity-80 transition-opacity cursor-pointer">
-                      <span className="font-display font-bold text-2xl text-foreground leading-tight">
-                        Day {dayOfLife.toLocaleString()}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        ~{daysRemaining?.toLocaleString()} remaining
-                      </span>
-                    </button>
-                  ) : (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-muted-foreground hover:text-foreground gap-2"
-                    >
-                      <Cake className="h-4 w-4" />
-                      <span>Set birthday</span>
-                    </Button>
-                  )}
-                </PopoverTrigger>
-                <PopoverContent className="w-64" align="end">
-                  <div className="space-y-3">
-                    <label className="text-sm font-medium text-foreground">
-                      Date of Birth
-                    </label>
-                    <Input
-                      type="date"
-                      value={profile?.dob || ''}
-                      onChange={(e) => handleDobChange(e.target.value)}
-                      max={new Date().toISOString().split('T')[0]}
-                      className="w-full bg-background border-input"
-                    />
-                    {dayOfLife && (
-                      <div className="space-y-1 pt-1">
-                        <p className="text-xs text-muted-foreground">
-                          Today is day <span className="font-semibold text-foreground">{dayOfLife.toLocaleString()}</span> of your life
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          ~<span className="font-semibold text-foreground">{daysRemaining?.toLocaleString()}</span> days remaining
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </PopoverContent>
-              </Popover>
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/habits')}
-              className="text-muted-foreground hover:text-foreground"
-              title="Habits"
-            >
-              <Target className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/schedule')}
-              className="text-muted-foreground hover:text-foreground"
-              title="Schedule"
-            >
-              <Clock className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/rules')}
-              className="text-muted-foreground hover:text-foreground"
-              title="Rules for Life"
-            >
-              <BookOpen className="h-5 w-5" />
-            </Button>
-            {isLoggedIn ? (
-              <>
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.name || 'User'} />
-                  <AvatarFallback className="text-xs">
-                    {profile?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={signOut}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <LogOut className="h-4 w-4" />
-                </Button>
-              </>
-            ) : (
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => navigate('/auth')}
-                className="gap-1"
-              >
-                <LogIn className="h-4 w-4" />
-                Sign in
-              </Button>
-            )}
-          </div>
-        </div>
-      </header>
+      <Navbar isSaving={isSaving} />
 
       {/* Guest mode notice */}
       {!isLoggedIn && (
         <div className="max-w-3xl mx-auto px-4 pt-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
-            <LogIn className="h-4 w-4" />
-            <span>Log in to save your journal across devices</span>
-            <Button variant="link" size="sm" className="ml-auto p-0 h-auto" onClick={() => navigate('/auth')}>
-              Sign in
-            </Button>
-          </div>
+          <GuestNotice message="Log in to save your journal across devices" />
         </div>
       )}
 
