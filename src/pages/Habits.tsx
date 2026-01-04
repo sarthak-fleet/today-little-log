@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { GuestNotice } from '@/components/GuestNotice';
+import { HabitHistory } from '@/components/HabitHistory';
 import { useHabits, Habit } from '@/hooks/useHabits';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,10 +13,12 @@ import { Plus, Minus, Trash2, Loader2, Target, CheckCircle2, Pencil } from 'luci
 import { format } from 'date-fns';
 
 const Habits = () => {
-  const { habits, isLoaded, isSaving, isLoggedIn, addHabit, updateHabit, deleteHabit, logHabit, getLog, getTodayLog } = useHabits();
+  const { habits, logs, isLoaded, isSaving, isLoggedIn, addHabit, updateHabit, deleteHabit, logHabit, getLog, getTodayLog } = useHabits();
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
+  const [historyHabit, setHistoryHabit] = useState<Habit | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [formData, setFormData] = useState<Omit<Habit, 'id'>>({
     title: '',
     target_type: 'target',
@@ -237,7 +240,14 @@ const Habits = () => {
               const isOverLimit = habit.target_type === 'limit' && current > habit.target_value;
               
               return (
-                <Card key={habit.id} className={`transition-colors ${isComplete && !isOverLimit ? 'border-primary/50 bg-primary/5' : ''} ${isOverLimit ? 'border-destructive/50 bg-destructive/5' : ''}`}>
+                <Card 
+                  key={habit.id} 
+                  className={`transition-colors cursor-pointer hover:shadow-md ${isComplete && !isOverLimit ? 'border-primary/50 bg-primary/5' : ''} ${isOverLimit ? 'border-destructive/50 bg-destructive/5' : ''}`}
+                  onClick={() => {
+                    setHistoryHabit(habit);
+                    setHistoryOpen(true);
+                  }}
+                >
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-base font-medium flex items-center gap-2">
@@ -254,7 +264,7 @@ const Habits = () => {
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                          onClick={() => handleOpenDialog(habit)}
+                          onClick={(e) => { e.stopPropagation(); handleOpenDialog(habit); }}
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
@@ -262,7 +272,7 @@ const Habits = () => {
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                          onClick={() => deleteHabit(habit.id)}
+                          onClick={(e) => { e.stopPropagation(); deleteHabit(habit.id); }}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
@@ -295,7 +305,7 @@ const Habits = () => {
                       </div>
                       
                       {/* Controls */}
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                         <Button
                           variant="outline"
                           size="icon"
@@ -341,6 +351,13 @@ const Habits = () => {
           </div>
         )}
       </main>
+
+      <HabitHistory
+        habit={historyHabit}
+        logs={logs}
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+      />
     </div>
   );
 };
