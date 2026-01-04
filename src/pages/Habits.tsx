@@ -279,70 +279,70 @@ const Habits = () => {
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-4">
-                      {/* Progress bar */}
-                      <div className="flex-1">
-                        <div className="h-2 bg-muted rounded-full overflow-hidden">
-                          <div 
-                            className={`h-full transition-all ${isOverLimit ? 'bg-destructive' : 'bg-primary'}`}
-                            style={{ width: `${Math.min(percentage, 100)}%` }}
-                          />
-                        </div>
-                        <div className="flex justify-between mt-1">
-                          <span className="text-sm text-muted-foreground">
-                            {habit.track_type === 'time' ? formatTime(current) : current}
-                            {habit.frequency === 'weekly' && (
-                              <span className="text-xs ml-1">(today: {habit.track_type === 'time' ? formatTime(todayValue) : todayValue})</span>
-                            )}
-                          </span>
-                          <span className="text-sm text-muted-foreground">
-                            {habit.target_type === 'target' ? 'Goal: ' : 'Limit: '}
-                            {habit.track_type === 'time' ? formatTime(habit.target_value) : habit.target_value}
-                            {habit.frequency === 'weekly' && <span className="text-xs">/week</span>}
-                          </span>
-                        </div>
+                  <CardContent className="pt-0">
+                    {/* Progress bar */}
+                    <div className="mb-3">
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full transition-all ${isOverLimit ? 'bg-destructive' : 'bg-primary'}`}
+                          style={{ width: `${Math.min(percentage, 100)}%` }}
+                        />
                       </div>
-                      
-                      {/* Controls */}
-                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex justify-between mt-1">
+                        <span className="text-sm text-muted-foreground">
+                          {habit.track_type === 'time' ? formatTime(current) : current}
+                          {habit.frequency === 'weekly' && (
+                            <span className="text-xs ml-1">(today: {habit.track_type === 'time' ? formatTime(todayValue) : todayValue})</span>
+                          )}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          {habit.target_type === 'target' ? 'Goal: ' : 'Limit: '}
+                          {habit.track_type === 'time' ? formatTime(habit.target_value) : habit.target_value}
+                          {habit.frequency === 'weekly' && <span className="text-xs">/week</span>}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Controls - responsive layout */}
+                    <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-10 w-10 shrink-0"
+                        onClick={() => handleDecrement(habit)}
+                        disabled={todayValue === 0}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      {habit.track_type === 'time' ? (
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-10 px-3"
+                            onClick={() => handleTimeAdd(habit, 5)}
+                          >
+                            +5m
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-10 px-3"
+                            onClick={() => handleTimeAdd(habit, 15)}
+                          >
+                            +15m
+                          </Button>
+                        </div>
+                      ) : (
                         <Button
                           variant="outline"
                           size="icon"
-                          className="h-9 w-9"
-                          onClick={() => handleDecrement(habit)}
-                          disabled={todayValue === 0}
+                          className="h-10 w-10 shrink-0"
+                          onClick={() => handleIncrement(habit)}
                         >
-                          <Minus className="h-4 w-4" />
+                          <Plus className="h-4 w-4" />
                         </Button>
-                        {habit.track_type === 'time' ? (
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleTimeAdd(habit, 5)}
-                            >
-                              +5m
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleTimeAdd(habit, 15)}
-                            >
-                              +15m
-                            </Button>
-                          </div>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-9 w-9"
-                            onClick={() => handleIncrement(habit)}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
