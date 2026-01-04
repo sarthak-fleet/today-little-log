@@ -8,6 +8,7 @@ import Auth from "./pages/Auth";
 import Schedule from "./pages/Schedule";
 import Rules from "./pages/Rules";
 import Habits from "./pages/Habits";
+import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/schedule" element={<Schedule />} />
           <Route path="/rules" element={<Rules />} />
           <Route path="/habits" element={<Habits />} />
+          <Route path="/install" element={<Install />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
