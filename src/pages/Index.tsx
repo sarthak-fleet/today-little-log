@@ -4,6 +4,7 @@ import { PastEntries } from '@/components/PastEntries';
 import { CalendarView } from '@/components/CalendarView';
 import { Navbar } from '@/components/Navbar';
 import { GuestNotice } from '@/components/GuestNotice';
+import { EmotionLogger } from '@/components/EmotionLogger';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useAuth } from '@/hooks/useAuth';
 import { Feather, List, CalendarDays, Search, X } from 'lucide-react';
@@ -77,6 +78,11 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="max-w-3xl mx-auto px-4 py-8 md:py-12">
+        {/* Emotion Logger */}
+        <section className="mb-8">
+          <EmotionLogger />
+        </section>
+
         {/* Today's Entry */}
         <section className="mb-12">
           <TodayPrompt
