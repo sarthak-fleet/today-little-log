@@ -1,5 +1,5 @@
 import { ScheduleMaker } from '@/components/ScheduleMaker';
-import { Navbar } from '@/components/Navbar';
+import { AppLayout } from '@/components/AppLayout';
 import { GuestNotice } from '@/components/GuestNotice';
 import { useSchedule } from '@/hooks/useSchedule';
 
@@ -7,9 +7,7 @@ const Schedule = () => {
   const { blocks, isLoaded, isSaving, updateBlocks, clearAll, isLoggedIn } = useSchedule();
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar isSaving={isSaving} />
-
+    <AppLayout isSaving={isSaving}>
       <div className="container max-w-5xl mx-auto px-4 py-6">
         {/* Login prompt */}
         {!isLoggedIn && (
@@ -31,7 +29,7 @@ const Schedule = () => {
           onClearAll={clearAll}
         />
       </div>
-    </div>
+    </AppLayout>
   );
 };
 

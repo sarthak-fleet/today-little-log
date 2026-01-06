@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navbar } from '@/components/Navbar';
+import { AppLayout } from '@/components/AppLayout';
 import { GuestNotice } from '@/components/GuestNotice';
 import { useAuth } from '@/hooks/useAuth';
 import { useLifeRules } from '@/hooks/useLifeRules';
@@ -50,9 +50,7 @@ const Rules = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar isSaving={isSaving} />
-
+    <AppLayout isSaving={isSaving}>
       {/* Guest mode notice */}
       {!isLoggedIn && (
         <div className="max-w-3xl mx-auto px-4 pt-4">
@@ -61,7 +59,7 @@ const Rules = () => {
       )}
 
       {/* Main Content */}
-      <main className="max-w-3xl mx-auto px-4 py-8 md:py-12">
+      <div className="max-w-3xl mx-auto px-4 py-8 md:py-12">
         <h2 className="text-xl font-display font-semibold text-foreground mb-6">Rules for Life</h2>
 
         {/* Add new rule */}
@@ -126,8 +124,8 @@ const Rules = () => {
             ))
           )}
         </div>
-      </main>
-    </div>
+      </div>
+    </AppLayout>
   );
 };
 
