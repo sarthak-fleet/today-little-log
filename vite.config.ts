@@ -14,12 +14,14 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === "development" && componentTagger(),
     VitePWA({
-      registerType: "autoUpdate",
+      injectRegister: null,
+      registerType: "prompt",
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "pwa-192x192.png", "pwa-512x512.png"],
       manifest: {
-        name: "Today - Daily Journal & Habits",
-        short_name: "Today",
-        description: "A simple, beautiful daily journal and habit tracker",
+        name: "Significant Hobbies - Journal, Habits, Tasks & Time Tracking",
+        short_name: "Significant Hobbies",
+        description:
+          "Significant Hobbies is a calm, focused daily journal and habit tracker with tasks and time tracking.",
         theme_color: "#1a1a2e",
         background_color: "#1a1a2e",
         display: "standalone",
@@ -49,6 +51,7 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2,ttf,eot}"],
         navigateFallback: "/index.html",
         navigateFallbackAllowlist: [/^(?!\/__).*/],
+        cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
