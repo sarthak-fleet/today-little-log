@@ -46,7 +46,7 @@ export function Navbar({ isSaving = false }: NavbarProps) {
               <Feather className="h-4 w-4 text-primary" />
             </div>
             <span className="font-display font-semibold text-foreground text-lg hidden sm:inline">
-              Journal
+              Significant Hobbies
             </span>
           </button>
 
