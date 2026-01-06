@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { TodayPrompt } from '@/components/TodayPrompt';
 import { PastEntries } from '@/components/PastEntries';
 import { CalendarView } from '@/components/CalendarView';
-import { Navbar } from '@/components/Navbar';
+import { AppLayout } from '@/components/AppLayout';
 import { GuestNotice } from '@/components/GuestNotice';
 import { EmotionLogger } from '@/components/EmotionLogger';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
@@ -66,9 +66,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar isSaving={isSaving} />
-
+    <AppLayout isSaving={isSaving}>
       {/* Guest mode notice */}
       {!isLoggedIn && (
         <div className="max-w-3xl mx-auto px-4 pt-4">
@@ -77,7 +75,7 @@ const Index = () => {
       )}
 
       {/* Main Content */}
-      <main className="max-w-3xl mx-auto px-4 py-8 md:py-12">
+      <div className="max-w-3xl mx-auto px-4 py-8 md:py-12">
         {/* Emotion Logger */}
         <section className="mb-8">
           <EmotionLogger />
@@ -167,7 +165,7 @@ const Index = () => {
             />
           )}
         </section>
-      </main>
+      </div>
 
       {/* Footer */}
       <footer className="py-8 text-center">
@@ -175,7 +173,7 @@ const Index = () => {
           Your thoughts, securely stored
         </p>
       </footer>
-    </div>
+    </AppLayout>
   );
 };
 
