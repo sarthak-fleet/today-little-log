@@ -3,13 +3,14 @@ import { AppLayout } from '@/components/AppLayout';
 import { GuestNotice } from '@/components/GuestNotice';
 import { HabitHistory } from '@/components/HabitHistory';
 import { useHabits, Habit } from '@/hooks/useHabits';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Plus, Minus, Trash2, Loader2, Target, CheckCircle2, Pencil } from 'lucide-react';
+import { Plus, Trash2, Loader2, Target, CheckCircle2, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 
 const Habits = () => {
@@ -19,6 +20,15 @@ const Habits = () => {
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [historyHabit, setHistoryHabit] = useState<Habit | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [logModal, setLogModal] = useState<{
+    open: boolean;
+    habit: Habit | null;
+    value: string;
+  }>({
+    open: false,
+    habit: null,
+    value: '',
+  });
   const [formData, setFormData] = useState<Omit<Habit, 'id'>>({
     title: '',
     target_type: 'target',
@@ -28,6 +38,7 @@ const Habits = () => {
   });
 
   const today = format(new Date(), 'yyyy-MM-dd');
+  const todayLabel = format(new Date(), 'EEEE, MMM d');
 
   const resetForm = () => {
     setFormData({
@@ -72,28 +83,37 @@ const Habits = () => {
     handleCloseDialog();
   };
 
-  const handleIncrement = (habit: Habit) => {
+  const handleOpenLog = (habit: Habit) => {
     const todayValue = getTodayLog(habit.id, today);
-    logHabit(habit.id, todayValue + 1, today);
+    setLogModal({
+      open: true,
+      habit,
+      value: todayValue > 0 ? String(todayValue) : '',
+    });
   };
 
-  const handleDecrement = (habit: Habit) => {
-    const todayValue = getTodayLog(habit.id, today);
-    if (todayValue > 0) {
-      logHabit(habit.id, todayValue - 1, today);
-    }
+  const handleCloseLog = () => {
+    setLogModal({
+      open: false,
+      habit: null,
+      value: '',
+    });
   };
 
-  const handleTimeAdd = (habit: Habit, minutes: number) => {
-    const todayValue = getTodayLog(habit.id, today);
-    logHabit(habit.id, todayValue + minutes, today);
+  const handleSaveLog = async () => {
+    if (!logModal.habit) return;
+    const parsed = Number.parseInt(logModal.value, 10);
+    if (Number.isNaN(parsed) || parsed < 0) return;
+    await logHabit(logModal.habit.id, parsed, today);
+    handleCloseLog();
   };
 
   const getProgress = (habit: Habit) => {
     const current = getLog(habit.id, today);
     const todayValue = getTodayLog(habit.id, today);
-    const percentage = Math.min((current / habit.target_value) * 100, 100);
-    return { current, todayValue, percentage };
+    const percentage = habit.target_value > 0 ? Math.min((current / habit.target_value) * 100, 100) : 0;
+    const remaining = habit.target_value - current;
+    return { current, todayValue, percentage, remaining };
   };
 
   const formatTime = (minutes: number) => {
@@ -104,6 +124,13 @@ const Habits = () => {
     }
     return `${mins}m`;
   };
+
+  const formatValue = (habit: Habit, value: number) =>
+    habit.track_type === 'time' ? formatTime(value) : value.toString();
+
+  const parsedLogValue = Number.parseInt(logModal.value, 10);
+  const isLogValueValid =
+    logModal.value.trim().length > 0 && !Number.isNaN(parsedLogValue) && parsedLogValue >= 0;
 
   if (!isLoaded) {
     return (
@@ -231,38 +258,61 @@ const Habits = () => {
         ) : (
           <div className="space-y-4">
             {habits.map((habit) => {
-              const { current, todayValue, percentage } = getProgress(habit);
-              const isComplete = habit.target_type === 'target' 
-                ? current >= habit.target_value
-                : current <= habit.target_value;
-              const isOverLimit = habit.target_type === 'limit' && current > habit.target_value;
-              
+              const { current, todayValue, percentage, remaining } = getProgress(habit);
+              const isLimit = habit.target_type === 'limit';
+              const isOverLimit = isLimit && current > habit.target_value;
+              const isComplete = !isLimit && current >= habit.target_value;
+              const cardTone = isOverLimit
+                ? 'border-destructive/50 bg-destructive/5'
+                : isLimit
+                  ? 'border-accent/30 bg-accent/5'
+                  : isComplete
+                    ? 'border-primary/50 bg-primary/5'
+                    : 'border-border/50 bg-card';
+              const progressTone = isLimit
+                ? isOverLimit
+                  ? 'bg-destructive'
+                  : 'bg-accent'
+                : 'bg-primary';
+              const summaryText = habit.frequency === 'weekly'
+                ? `Last 7 days: ${formatValue(habit, current)} (today: ${formatValue(habit, todayValue)})`
+                : `Today: ${formatValue(habit, current)}`;
+              const limitStatus = isOverLimit
+                ? `Over by ${formatValue(habit, Math.abs(remaining))}`
+                : `${formatValue(habit, remaining)} left`;
+
               return (
                 <Card 
                   key={habit.id} 
-                  className={`transition-colors cursor-pointer hover:shadow-md ${isComplete && !isOverLimit ? 'border-primary/50 bg-primary/5' : ''} ${isOverLimit ? 'border-destructive/50 bg-destructive/5' : ''}`}
-                  onClick={() => {
-                    setHistoryHabit(habit);
-                    setHistoryOpen(true);
-                  }}
+                  className={`transition-colors hover:shadow-md ${cardTone}`}
                 >
                   <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-base font-medium flex items-center gap-2">
-                        {habit.title}
-                        {isComplete && !isOverLimit && (
-                          <CheckCircle2 className="h-4 w-4 text-primary" />
-                        )}
-                      </CardTitle>
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <CardTitle className="text-base font-medium flex items-center gap-2">
+                          {habit.title}
+                          {isComplete && (
+                            <CheckCircle2 className="h-4 w-4 text-primary" />
+                          )}
+                        </CardTitle>
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <Badge variant="secondary" className="capitalize">
+                            {habit.frequency}
+                          </Badge>
+                          <Badge variant={isLimit ? (isOverLimit ? 'destructive' : 'outline') : 'secondary'}>
+                            {isLimit ? 'Limit' : 'Target'}
+                          </Badge>
+                          <Badge variant="outline">
+                            {habit.track_type === 'time' ? 'Time' : 'Count'}
+                          </Badge>
+                        </div>
+                      </div>
                       <div className="flex items-center gap-1">
-                        <span className="text-xs text-muted-foreground capitalize mr-2">
-                          {habit.frequency} {habit.target_type}
-                        </span>
                         <Button
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                          onClick={(e) => { e.stopPropagation(); handleOpenDialog(habit); }}
+                          onClick={() => handleOpenDialog(habit)}
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
@@ -270,7 +320,7 @@ const Habits = () => {
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                          onClick={(e) => { e.stopPropagation(); deleteHabit(habit.id); }}
+                          onClick={() => deleteHabit(habit.id)}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
@@ -278,69 +328,52 @@ const Habits = () => {
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    {/* Progress bar */}
-                    <div className="mb-3">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">{summaryText}</span>
+                        <span className={`font-medium ${isOverLimit ? 'text-destructive' : 'text-foreground'}`}>
+                          {isLimit
+                            ? limitStatus
+                            : `Goal: ${formatValue(habit, habit.target_value)}${habit.frequency === 'weekly' ? '/7d' : ''}`}
+                        </span>
+                      </div>
                       <div className="h-2 bg-muted rounded-full overflow-hidden">
                         <div 
-                          className={`h-full transition-all ${isOverLimit ? 'bg-destructive' : 'bg-primary'}`}
+                          className={`h-full transition-all ${progressTone}`}
                           style={{ width: `${Math.min(percentage, 100)}%` }}
                         />
                       </div>
-                      <div className="flex justify-between mt-1">
-                        <span className="text-sm text-muted-foreground">
-                          {habit.track_type === 'time' ? formatTime(current) : current}
-                          {habit.frequency === 'weekly' && (
-                            <span className="text-xs ml-1">(today: {habit.track_type === 'time' ? formatTime(todayValue) : todayValue})</span>
-                          )}
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>
+                          {isLimit ? 'Used' : 'Progress'}: {formatValue(habit, current)}
                         </span>
-                        <span className="text-sm text-muted-foreground">
-                          {habit.target_type === 'target' ? 'Goal: ' : 'Limit: '}
-                          {habit.track_type === 'time' ? formatTime(habit.target_value) : habit.target_value}
-                          {habit.frequency === 'weekly' && <span className="text-xs">/week</span>}
+                        <span>
+                          {isLimit ? 'Limit' : 'Goal'}: {formatValue(habit, habit.target_value)}
+                          {habit.frequency === 'weekly' && <span>/7d</span>}
                         </span>
                       </div>
                     </div>
                     
-                    {/* Controls - responsive layout */}
-                    <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                    <div className="mt-4 flex items-center justify-between gap-2">
                       <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-10 w-10 shrink-0"
-                        onClick={() => handleDecrement(habit)}
-                        disabled={todayValue === 0}
+                        size="sm"
+                        className="gap-2"
+                        variant={isLimit ? 'secondary' : 'default'}
+                        onClick={() => handleOpenLog(habit)}
                       >
-                        <Minus className="h-4 w-4" />
+                        <Plus className="h-4 w-4" />
+                        Log
                       </Button>
-                      {habit.track_type === 'time' ? (
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-10 px-3"
-                            onClick={() => handleTimeAdd(habit, 5)}
-                          >
-                            +5m
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-10 px-3"
-                            onClick={() => handleTimeAdd(habit, 15)}
-                          >
-                            +15m
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-10 w-10 shrink-0"
-                          onClick={() => handleIncrement(habit)}
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setHistoryHabit(habit);
+                          setHistoryOpen(true);
+                        }}
+                      >
+                        View logs
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -355,7 +388,58 @@ const Habits = () => {
         logs={logs}
         open={historyOpen}
         onOpenChange={setHistoryOpen}
+        onUpdateLog={logHabit}
       />
+
+      <Dialog open={logModal.open} onOpenChange={(open) => { if (!open) handleCloseLog(); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {logModal.habit ? `Log ${logModal.habit.title}` : 'Log habit'}
+            </DialogTitle>
+          </DialogHeader>
+          {logModal.habit && (
+            <div className="space-y-4 pt-4">
+              <div className="flex items-center justify-between rounded-lg bg-muted/60 p-3 text-sm">
+                <div>
+                  <p className="font-medium text-foreground">{todayLabel}</p>
+                  <p className="text-xs text-muted-foreground capitalize">
+                    {logModal.habit.frequency} habit
+                  </p>
+                </div>
+                <Badge variant={logModal.habit.target_type === 'limit' ? 'outline' : 'secondary'}>
+                  {logModal.habit.target_type === 'limit' ? 'Limit' : 'Target'}{' '}
+                  {formatValue(logModal.habit, logModal.habit.target_value)}
+                </Badge>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="logValue">Log value</Label>
+                <Input
+                  id="logValue"
+                  type="number"
+                  min={0}
+                  value={logModal.value}
+                  onChange={(e) => setLogModal((prev) => ({ ...prev, value: e.target.value }))}
+                  placeholder={logModal.habit.track_type === 'time' ? 'Minutes for today' : 'Total for today'}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {logModal.habit.track_type === 'time'
+                    ? 'Enter the total minutes for today.'
+                    : 'Enter the total count for today.'}
+                </p>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="ghost" onClick={handleCloseLog}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSaveLog} disabled={!isLogValueValid}>
+                  Save log
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 };

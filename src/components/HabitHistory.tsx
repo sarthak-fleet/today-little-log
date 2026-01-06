@@ -1,7 +1,10 @@
+import { useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format, parseISO } from "date-fns";
-import { Calendar, TrendingUp } from "lucide-react";
+import { Calendar, Check, TrendingUp } from "lucide-react";
 import type { Habit, HabitLog } from "@/hooks/useHabits";
 
 interface HabitHistoryProps {
@@ -9,14 +12,36 @@ interface HabitHistoryProps {
   logs: HabitLog[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onUpdateLog: (habitId: string, value: number, date: string) => void;
 }
 
-export function HabitHistory({ habit, logs, open, onOpenChange }: HabitHistoryProps) {
-  if (!habit) return null;
+export function HabitHistory({ habit, logs, open, onOpenChange, onUpdateLog }: HabitHistoryProps) {
+  const habitLogs = useMemo(() => {
+    if (!habit) return [];
+    const filtered = logs.filter((log) => log.habit_id === habit.id);
+    const sorted = [...filtered].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const seen = new Set<string>();
+    const uniqueLogs: HabitLog[] = [];
+    sorted.forEach((log) => {
+      if (seen.has(log.date)) return;
+      seen.add(log.date);
+      uniqueLogs.push(log);
+    });
+    return uniqueLogs;
+  }, [habit, logs]);
 
-  const habitLogs = logs
-    .filter((log) => log.habit_id === habit.id && log.value > 0)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const [editedValues, setEditedValues] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!open) return;
+    const initialValues: Record<string, string> = {};
+    habitLogs.forEach((log) => {
+      initialValues[log.id] = String(log.value);
+    });
+    setEditedValues(initialValues);
+  }, [habitLogs, open]);
+
+  if (!habit) return null;
 
   const totalValue = habitLogs.reduce((sum, log) => sum + log.value, 0);
   const daysLogged = habitLogs.length;
@@ -28,6 +53,18 @@ export function HabitHistory({ habit, logs, open, onOpenChange }: HabitHistoryPr
       return hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
     }
     return value.toString();
+  };
+
+  const handleSaveLog = (log: HabitLog) => {
+    const rawValue = editedValues[log.id];
+    const parsedValue = Number.parseInt(rawValue, 10);
+    if (Number.isNaN(parsedValue) || parsedValue < 0) {
+      setEditedValues((prev) => ({ ...prev, [log.id]: String(log.value) }));
+      return;
+    }
+    if (parsedValue !== log.value) {
+      onUpdateLog(log.habit_id, parsedValue, log.date);
+    }
   };
 
   return (
@@ -61,7 +98,7 @@ export function HabitHistory({ habit, logs, open, onOpenChange }: HabitHistoryPr
               {habitLogs.map((log) => (
                 <div
                   key={log.id}
-                  className="flex items-center justify-between rounded-lg border border-border bg-card p-3"
+                  className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card p-3"
                 >
                   <div className="flex items-center gap-3">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -69,9 +106,35 @@ export function HabitHistory({ habit, logs, open, onOpenChange }: HabitHistoryPr
                       {format(parseISO(log.date), "EEEE, MMM d, yyyy")}
                     </span>
                   </div>
-                  <span className="font-semibold text-primary">
-                    {formatValue(log.value)}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      min={0}
+                      className="h-8 w-24 text-right"
+                      value={editedValues[log.id] ?? String(log.value)}
+                      onChange={(event) =>
+                        setEditedValues((prev) => ({ ...prev, [log.id]: event.target.value }))
+                      }
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                          event.preventDefault();
+                          handleSaveLog(log);
+                        }
+                      }}
+                    />
+                    {habit.track_type === "time" && (
+                      <span className="text-xs text-muted-foreground">min</span>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-primary"
+                      onClick={() => handleSaveLog(log)}
+                      title="Save log"
+                    >
+                      <Check className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>

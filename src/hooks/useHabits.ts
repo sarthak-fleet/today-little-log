@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
-import { format, startOfWeek, endOfWeek, isWithinInterval, parseISO } from 'date-fns';
+import { isWithinInterval, parseISO, subDays } from 'date-fns';
 
 export interface Habit {
   id: string;
@@ -21,6 +21,14 @@ export interface HabitLog {
 
 const HABITS_STORAGE_KEY = 'habits-data';
 const HABIT_LOGS_STORAGE_KEY = 'habit-logs-data';
+
+const dedupeLogs = (inputLogs: HabitLog[]): HabitLog[] => {
+  const map = new Map<string, HabitLog>();
+  inputLogs.forEach((log) => {
+    map.set(`${log.habit_id}-${log.date}`, log);
+  });
+  return Array.from(map.values());
+};
 
 export function useHabits() {
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -92,19 +100,29 @@ export function useHabits() {
       if (logsError) {
         console.error('Failed to load habit logs:', logsError);
       } else {
-        setLogs((logsData || []).map(l => ({
+        const mappedLogs = (logsData || []).map(l => ({
           id: l.id,
           habit_id: l.habit_id,
           date: l.date,
           value: l.value,
-        })));
+        }));
+        setLogs(dedupeLogs(mappedLogs));
       }
     } else {
       // Guest mode - use localStorage
       const savedHabits = localStorage.getItem(HABITS_STORAGE_KEY);
       const savedLogs = localStorage.getItem(HABIT_LOGS_STORAGE_KEY);
       setHabits(savedHabits ? JSON.parse(savedHabits) : []);
-      setLogs(savedLogs ? JSON.parse(savedLogs) : []);
+      if (savedLogs) {
+        const parsedLogs = JSON.parse(savedLogs) as HabitLog[];
+        const dedupedLogs = dedupeLogs(parsedLogs);
+        setLogs(dedupedLogs);
+        if (dedupedLogs.length !== parsedLogs.length) {
+          localStorage.setItem(HABIT_LOGS_STORAGE_KEY, JSON.stringify(dedupedLogs));
+        }
+      } else {
+        setLogs([]);
+      }
     }
     setIsLoaded(true);
   }, [user]);
@@ -262,17 +280,16 @@ export function useHabits() {
       const log = logs.find(l => l.habit_id === habitId && l.date === date);
       return log?.value || 0;
     } else {
-      // For weekly habits, sum all logs within the current week
+      // For weekly habits, use a rolling 7-day window (today + last 6 days).
       const targetDate = parseISO(date);
-      const weekStart = startOfWeek(targetDate, { weekStartsOn: 1 }); // Monday
-      const weekEnd = endOfWeek(targetDate, { weekStartsOn: 1 });
-      
+      const startDate = subDays(targetDate, 6);
+
       const weekLogs = logs.filter(l => {
         if (l.habit_id !== habitId) return false;
         const logDate = parseISO(l.date);
-        return isWithinInterval(logDate, { start: weekStart, end: weekEnd });
+        return isWithinInterval(logDate, { start: startDate, end: targetDate });
       });
-      
+
       return weekLogs.reduce((sum, l) => sum + l.value, 0);
     }
   }, [logs, habits]);
