@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navbar } from '@/components/Navbar';
+import { AppLayout } from '@/components/AppLayout';
 import { GuestNotice } from '@/components/GuestNotice';
 import { HabitHistory } from '@/components/HabitHistory';
 import { useHabits, Habit } from '@/hooks/useHabits';
@@ -90,7 +90,7 @@ const Habits = () => {
   };
 
   const getProgress = (habit: Habit) => {
-    const current = getLog(habit.id, today); // This sums weekly for weekly habits
+    const current = getLog(habit.id, today);
     const todayValue = getTodayLog(habit.id, today);
     const percentage = Math.min((current / habit.target_value) * 100, 100);
     return { current, todayValue, percentage };
@@ -114,9 +114,7 @@ const Habits = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar isSaving={isSaving} />
-
+    <AppLayout isSaving={isSaving}>
       {/* Guest mode notice */}
       {!isLoggedIn && (
         <div className="max-w-3xl mx-auto px-4 pt-4">
@@ -125,7 +123,7 @@ const Habits = () => {
       )}
 
       {/* Main Content */}
-      <main className="max-w-3xl mx-auto px-4 py-6">
+      <div className="max-w-3xl mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-display font-semibold text-foreground">Your Habits</h2>
           <Dialog open={isDialogOpen} onOpenChange={(open) => open ? handleOpenDialog() : handleCloseDialog()}>
@@ -350,7 +348,7 @@ const Habits = () => {
             })}
           </div>
         )}
-      </main>
+      </div>
 
       <HabitHistory
         habit={historyHabit}
@@ -358,7 +356,7 @@ const Habits = () => {
         open={historyOpen}
         onOpenChange={setHistoryOpen}
       />
-    </div>
+    </AppLayout>
   );
 };
 
