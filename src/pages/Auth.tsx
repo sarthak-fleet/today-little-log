@@ -43,7 +43,7 @@ const Auth = () => {
             <Feather className="h-7 w-7 text-primary" />
           </div>
           <h1 className="font-display font-semibold text-2xl text-foreground">
-            Daily Journal
+            Significant Hobbies
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             A moment for reflection
