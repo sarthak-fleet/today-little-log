@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      emotions: {
+        Row: {
+          comment: string | null
+          created_at: string
+          emotion: string
+          id: string
+          logged_at: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          emotion: string
+          id?: string
+          logged_at?: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          emotion?: string
+          id?: string
+          logged_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       habit_logs: {
         Row: {
           created_at: string
