@@ -1,19 +1,27 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Feather, Target, Clock, BookOpen, Moon, Sun } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Feather, Target, Clock, BookOpen, Moon, Sun, CheckSquare, Timer } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarRail,
+  SidebarSeparator,
+  SidebarTrigger,
 } from '@/components/ui/sidebar';
 
 const navItems = [
   { title: 'Journal', url: '/', icon: Feather },
   { title: 'Habits', url: '/habits', icon: Target },
+  { title: 'Tasks', url: '/tasks', icon: CheckSquare },
+  { title: 'Time', url: '/time-tracking', icon: Timer },
   { title: 'Schedule', url: '/schedule', icon: Clock },
   { title: 'Rules', url: '/rules', icon: BookOpen },
 ];
@@ -21,40 +29,45 @@ const navItems = [
 export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    const saved = localStorage.getItem('theme');
-    if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      setIsDark(true);
-    }
-  }, []);
-
+  const { resolvedTheme, setTheme } = useTheme();
+  const isDark = (resolvedTheme ?? 'light') === 'dark';
   const toggleDarkMode = () => {
-    const newDark = !isDark;
-    setIsDark(newDark);
-    if (newDark) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
+    setTheme(isDark ? 'light' : 'dark');
   };
 
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <Sidebar className="border-r border-border/50 hidden md:flex">
-      <SidebarContent className="pt-4">
+    <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar/90">
+      <SidebarHeader className="px-3 py-4">
+        <div className="flex items-center justify-between gap-2">
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 text-sidebar-foreground hover:text-sidebar-foreground/80 transition-colors"
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sidebar-accent text-sidebar-accent-foreground">
+              <Feather className="h-4 w-4" />
+            </div>
+            <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
+              <span className="font-display text-sm font-semibold">Significant Hobbies</span>
+              <span className="text-xs text-sidebar-foreground/60">Life dashboard</span>
+            </div>
+          </button>
+          <SidebarTrigger className="text-sidebar-foreground/70 hover:text-sidebar-foreground" />
+        </div>
+      </SidebarHeader>
+      <SidebarSeparator />
+      <SidebarContent className="pt-2">
         <SidebarGroup>
+          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     onClick={() => navigate(item.url)}
-                    className={`cursor-pointer ${isActive(item.url) ? 'bg-secondary text-secondary-foreground' : ''}`}
+                    isActive={isActive(item.url)}
+                    tooltip={item.title}
                   >
                     <item.icon className="h-4 w-4" />
                     <span>{item.title}</span>
@@ -64,20 +77,22 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        <SidebarGroup className="mt-auto mb-4">
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton onClick={toggleDarkMode} className="cursor-pointer">
-                  {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                  <span>{isDark ? 'Light mode' : 'Dark mode'}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
       </SidebarContent>
+      <SidebarSeparator />
+      <SidebarFooter className="px-2 py-3">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={toggleDarkMode}
+              tooltip={isDark ? 'Light mode' : 'Dark mode'}
+            >
+              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              <span>{isDark ? 'Light mode' : 'Dark mode'}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
   );
 }
