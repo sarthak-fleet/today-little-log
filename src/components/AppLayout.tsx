@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
 import { BottomNav } from './BottomNav';
 import { Navbar } from './Navbar';
@@ -16,9 +16,9 @@ export function AppLayout({ children, isSaving }: AppLayoutProps) {
         <Navbar isSaving={isSaving} />
         <div className="flex flex-1 w-full">
           <AppSidebar />
-          <main className="flex-1 pb-16 md:pb-0">
+          <SidebarInset className="pb-16 md:pb-0">
             {children}
-          </main>
+          </SidebarInset>
         </div>
         <BottomNav />
       </div>
