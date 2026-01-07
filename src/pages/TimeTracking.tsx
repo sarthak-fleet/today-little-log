@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,23 +6,33 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Trash2 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Trash2, Timer, Coffee } from 'lucide-react';
 import { useHabits } from '@/hooks/useHabits';
 import { useTasks } from '@/hooks/useTasks';
 import { useTimeSessions } from '@/hooks/useTimeSessions';
+import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+
+const POMODORO_WORK = 25 * 60; // 25 minutes
+const POMODORO_BREAK = 5 * 60; // 5 minutes
 
 const formatDuration = (totalSeconds: number) => {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
-  return [hours, minutes, seconds].map((value) => String(value).padStart(2, '0')).join(':');
+  if (hours > 0) {
+    return [hours, minutes, seconds].map((value) => String(value).padStart(2, '0')).join(':');
+  }
+  return [minutes, seconds].map((value) => String(value).padStart(2, '0')).join(':');
 };
 
 const TimeTracking = () => {
   const { habits, isLoaded: habitsLoaded } = useHabits();
   const { tasks, isLoaded: tasksLoaded } = useTasks();
   const { sessions, isLoaded: sessionsLoaded, logSession, deleteSession, getTotalTimeToday } = useTimeSessions();
+  const { toast } = useToast();
 
   const [mode, setMode] = useState<'task' | 'habit'>('task');
   const [selectedTaskId, setSelectedTaskId] = useState('');
@@ -31,13 +41,49 @@ const TimeTracking = () => {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const startTimeRef = useRef<string | null>(null);
 
+  // Pomodoro state
+  const [pomodoroEnabled, setPomodoroEnabled] = useState(false);
+  const [pomodoroPhase, setPomodoroPhase] = useState<'work' | 'break'>('work');
+  const [pomodoroCount, setPomodoroCount] = useState(0);
+
+  const pomodoroTarget = pomodoroPhase === 'work' ? POMODORO_WORK : POMODORO_BREAK;
+  const pomodoroRemaining = Math.max(0, pomodoroTarget - elapsedSeconds);
+
+  const handlePomodoroComplete = useCallback(() => {
+    setIsRunning(false);
+    
+    if (pomodoroPhase === 'work') {
+      setPomodoroCount((c) => c + 1);
+      toast({
+        title: "🍅 Pomodoro complete!",
+        description: "Great work! Time for a 5-minute break.",
+      });
+      setPomodoroPhase('break');
+    } else {
+      toast({
+        title: "☕ Break over!",
+        description: "Ready for another focused session?",
+      });
+      setPomodoroPhase('work');
+    }
+    setElapsedSeconds(0);
+  }, [pomodoroPhase, toast]);
+
   useEffect(() => {
     if (!isRunning) return;
     const interval = window.setInterval(() => {
-      setElapsedSeconds((prev) => prev + 1);
+      setElapsedSeconds((prev) => {
+        const next = prev + 1;
+        // Check if pomodoro timer completed
+        if (pomodoroEnabled && next >= pomodoroTarget) {
+          handlePomodoroComplete();
+          return 0;
+        }
+        return next;
+      });
     }, 1000);
     return () => window.clearInterval(interval);
-  }, [isRunning]);
+  }, [isRunning, pomodoroEnabled, pomodoroTarget, handlePomodoroComplete]);
 
   const activeTask = useMemo(() => tasks.find((task) => task.id === selectedTaskId), [tasks, selectedTaskId]);
   const activeHabit = useMemo(
@@ -79,9 +125,23 @@ const TimeTracking = () => {
     handleReset();
   };
 
+  const handleTogglePomodoro = (enabled: boolean) => {
+    setPomodoroEnabled(enabled);
+    if (enabled) {
+      handleReset();
+      setPomodoroPhase('work');
+      setPomodoroCount(0);
+    }
+  };
+
+  const handleSkipBreak = () => {
+    setPomodoroPhase('work');
+    setElapsedSeconds(0);
+    setIsRunning(false);
+  };
+
   const todayTotal = getTotalTimeToday();
 
-  // Get reference label for a session
   const getSessionLabel = (session: { reference_type: 'task' | 'habit'; reference_id: string }) => {
     if (session.reference_type === 'task') {
       return tasks.find((t) => t.id === session.reference_id)?.title ?? 'Deleted task';
@@ -171,18 +231,70 @@ const TimeTracking = () => {
         </Card>
 
         <Card className="border-border/60">
-          <CardHeader>
-            <CardTitle className="text-base">Session timer</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-base">
+              {pomodoroEnabled ? (
+                <span className="flex items-center gap-2">
+                  {pomodoroPhase === 'work' ? (
+                    <>
+                      <Timer className="h-4 w-4 text-primary" />
+                      Focus time
+                    </>
+                  ) : (
+                    <>
+                      <Coffee className="h-4 w-4 text-accent" />
+                      Break time
+                    </>
+                  )}
+                </span>
+              ) : (
+                'Session timer'
+              )}
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="pomodoro-toggle" className="text-xs text-muted-foreground">
+                🍅 Pomodoro
+              </Label>
+              <Switch
+                id="pomodoro-toggle"
+                checked={pomodoroEnabled}
+                onCheckedChange={handleTogglePomodoro}
+              />
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="rounded-xl border border-border/60 bg-muted/40 p-6 text-center">
-              <p className="text-3xl font-semibold tracking-tight font-mono">{formatDuration(elapsedSeconds)}</p>
-              <p className="text-xs text-muted-foreground mt-1">Elapsed time</p>
+            {pomodoroEnabled && (
+              <div className="flex items-center justify-center gap-4 text-sm">
+                <Badge variant={pomodoroPhase === 'work' ? 'default' : 'outline'}>
+                  {pomodoroPhase === 'work' ? '25 min work' : '5 min break'}
+                </Badge>
+                <span className="text-muted-foreground">
+                  🍅 {pomodoroCount} completed
+                </span>
+              </div>
+            )}
+            <div
+              className={`rounded-xl border p-6 text-center transition-colors ${
+                pomodoroEnabled && pomodoroPhase === 'break'
+                  ? 'border-accent/50 bg-accent/10'
+                  : 'border-border/60 bg-muted/40'
+              }`}
+            >
+              <p className="text-4xl font-semibold tracking-tight font-mono">
+                {pomodoroEnabled ? formatDuration(pomodoroRemaining) : formatDuration(elapsedSeconds)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {pomodoroEnabled
+                  ? pomodoroPhase === 'work'
+                    ? 'Time remaining'
+                    : 'Break remaining'
+                  : 'Elapsed time'}
+              </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {!isRunning ? (
-                <Button onClick={handleStart} disabled={!isSelectionReady}>
-                  Start
+                <Button onClick={handleStart} disabled={!isSelectionReady && pomodoroPhase === 'work'}>
+                  {pomodoroPhase === 'break' ? 'Start break' : 'Start'}
                 </Button>
               ) : (
                 <Button onClick={handlePause} variant="secondary">
@@ -192,13 +304,20 @@ const TimeTracking = () => {
               <Button variant="ghost" onClick={handleReset} disabled={elapsedSeconds === 0 && !isRunning}>
                 Reset
               </Button>
-              <Button
-                variant="outline"
-                onClick={handleLogSession}
-                disabled={!isSelectionReady || elapsedSeconds === 0}
-              >
-                Log session
-              </Button>
+              {pomodoroEnabled && pomodoroPhase === 'break' && (
+                <Button variant="ghost" onClick={handleSkipBreak}>
+                  Skip break
+                </Button>
+              )}
+              {(!pomodoroEnabled || pomodoroPhase === 'work') && (
+                <Button
+                  variant="outline"
+                  onClick={handleLogSession}
+                  disabled={!isSelectionReady || elapsedSeconds === 0}
+                >
+                  Log session
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
