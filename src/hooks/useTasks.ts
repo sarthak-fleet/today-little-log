@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './useAuth';
 
 export interface TaskItem {
   id: string;
@@ -9,11 +11,11 @@ export interface TaskItem {
   created_at: string;
 }
 
-const TASKS_STORAGE_KEY = 'tasks-data';
+const GUEST_TASKS_KEY = 'guest-tasks-data';
 
-const readTasks = (): TaskItem[] => {
+const readGuestTasks = (): TaskItem[] => {
   try {
-    const raw = localStorage.getItem(TASKS_STORAGE_KEY);
+    const raw = localStorage.getItem(GUEST_TASKS_KEY);
     if (!raw) return [];
     return JSON.parse(raw) as TaskItem[];
   } catch {
@@ -21,22 +23,52 @@ const readTasks = (): TaskItem[] => {
   }
 };
 
-const writeTasks = (tasks: TaskItem[]) => {
-  localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
+const writeGuestTasks = (tasks: TaskItem[]) => {
+  localStorage.setItem(GUEST_TASKS_KEY, JSON.stringify(tasks));
 };
 
 export function useTasks() {
+  const { user, loading: authLoading } = useAuth();
+  const isLoggedIn = !!user;
+
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
+  // Load tasks
   useEffect(() => {
-    const stored = readTasks();
-    setTasks(stored);
-    setIsLoaded(true);
-  }, []);
+    if (authLoading) return;
+
+    const loadTasks = async () => {
+      if (isLoggedIn) {
+        const { data, error } = await supabase
+          .from('tasks')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (!error && data) {
+          setTasks(
+            data.map((t) => ({
+              id: t.id,
+              title: t.title,
+              notes: t.notes ?? undefined,
+              estimate_minutes: t.estimate_minutes ?? undefined,
+              status: t.status as 'todo' | 'done',
+              created_at: t.created_at,
+            }))
+          );
+        }
+      } else {
+        setTasks(readGuestTasks());
+      }
+      setIsLoaded(true);
+    };
+
+    loadTasks();
+  }, [authLoading, isLoggedIn]);
 
   const addTask = useCallback(
-    (payload: { title: string; notes?: string; estimate_minutes?: number }) => {
+    async (payload: { title: string; notes?: string; estimate_minutes?: number }) => {
       const newTask: TaskItem = {
         id: crypto.randomUUID(),
         title: payload.title,
@@ -45,47 +77,137 @@ export function useTasks() {
         status: 'todo',
         created_at: new Date().toISOString(),
       };
-      const next = [newTask, ...tasks];
-      setTasks(next);
-      writeTasks(next);
+
+      // Optimistic update
+      setTasks((prev) => [newTask, ...prev]);
+
+      if (isLoggedIn && user) {
+        setIsSaving(true);
+        const { error } = await supabase.from('tasks').insert({
+          id: newTask.id,
+          user_id: user.id,
+          title: newTask.title,
+          notes: newTask.notes ?? null,
+          estimate_minutes: newTask.estimate_minutes ?? null,
+          status: newTask.status,
+        });
+        setIsSaving(false);
+
+        if (error) {
+          // Rollback
+          setTasks((prev) => prev.filter((t) => t.id !== newTask.id));
+        }
+      } else {
+        const updated = [newTask, ...tasks];
+        writeGuestTasks(updated);
+      }
     },
-    [tasks],
+    [isLoggedIn, user, tasks]
   );
 
   const updateTask = useCallback(
-    (id: string, updates: Partial<Omit<TaskItem, 'id' | 'created_at'>>) => {
-      const next = tasks.map((task) => (task.id === id ? { ...task, ...updates } : task));
-      setTasks(next);
-      writeTasks(next);
+    async (id: string, updates: Partial<Omit<TaskItem, 'id' | 'created_at'>>) => {
+      const prev = tasks.find((t) => t.id === id);
+      if (!prev) return;
+
+      // Optimistic update
+      setTasks((current) =>
+        current.map((t) => (t.id === id ? { ...t, ...updates } : t))
+      );
+
+      if (isLoggedIn) {
+        setIsSaving(true);
+        const { error } = await supabase
+          .from('tasks')
+          .update({
+            title: updates.title,
+            notes: updates.notes ?? null,
+            estimate_minutes: updates.estimate_minutes ?? null,
+            status: updates.status,
+          })
+          .eq('id', id);
+        setIsSaving(false);
+
+        if (error) {
+          // Rollback
+          setTasks((current) =>
+            current.map((t) => (t.id === id ? prev : t))
+          );
+        }
+      } else {
+        const updated = tasks.map((t) => (t.id === id ? { ...t, ...updates } : t));
+        writeGuestTasks(updated);
+      }
     },
-    [tasks],
+    [isLoggedIn, tasks]
   );
 
   const toggleTask = useCallback(
-    (id: string) => {
-      const next = tasks.map((task) =>
-        task.id === id 
-          ? { ...task, status: (task.status === 'done' ? 'todo' : 'done') as 'todo' | 'done' } 
-          : task,
+    async (id: string) => {
+      const task = tasks.find((t) => t.id === id);
+      if (!task) return;
+
+      const newStatus: 'todo' | 'done' = task.status === 'done' ? 'todo' : 'done';
+
+      // Optimistic update
+      setTasks((current) =>
+        current.map((t) => (t.id === id ? { ...t, status: newStatus } : t))
       );
-      setTasks(next);
-      writeTasks(next);
+
+      if (isLoggedIn) {
+        setIsSaving(true);
+        const { error } = await supabase
+          .from('tasks')
+          .update({ status: newStatus })
+          .eq('id', id);
+        setIsSaving(false);
+
+        if (error) {
+          // Rollback
+          setTasks((current) =>
+            current.map((t) => (t.id === id ? { ...t, status: task.status } : t))
+          );
+        }
+      } else {
+        const updated = tasks.map((t) =>
+          t.id === id ? { ...t, status: newStatus } : t
+        );
+        writeGuestTasks(updated);
+      }
     },
-    [tasks],
+    [isLoggedIn, tasks]
   );
 
   const deleteTask = useCallback(
-    (id: string) => {
-      const next = tasks.filter((task) => task.id !== id);
-      setTasks(next);
-      writeTasks(next);
+    async (id: string) => {
+      const prev = tasks.find((t) => t.id === id);
+      if (!prev) return;
+
+      // Optimistic update
+      setTasks((current) => current.filter((t) => t.id !== id));
+
+      if (isLoggedIn) {
+        setIsSaving(true);
+        const { error } = await supabase.from('tasks').delete().eq('id', id);
+        setIsSaving(false);
+
+        if (error) {
+          // Rollback
+          setTasks((current) => [prev, ...current]);
+        }
+      } else {
+        const updated = tasks.filter((t) => t.id !== id);
+        writeGuestTasks(updated);
+      }
     },
-    [tasks],
+    [isLoggedIn, tasks]
   );
 
   return {
     tasks,
     isLoaded,
+    isSaving,
+    isLoggedIn,
     addTask,
     updateTask,
     toggleTask,

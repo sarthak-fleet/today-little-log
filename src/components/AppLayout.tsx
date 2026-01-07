@@ -12,16 +12,16 @@ interface AppLayoutProps {
 export function AppLayout({ children, isSaving }: AppLayoutProps) {
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex flex-col w-full">
-        <Navbar isSaving={isSaving} />
-        <div className="flex flex-1 w-full">
-          <AppSidebar />
-          <SidebarInset className="pb-16 md:pb-0">
+      <div className="min-h-screen flex w-full">
+        <AppSidebar />
+        <SidebarInset className="flex-1 flex flex-col min-w-0">
+          <Navbar isSaving={isSaving} />
+          <main className="flex-1 overflow-auto pb-20 md:pb-6">
             {children}
-          </SidebarInset>
-        </div>
-        <BottomNav />
+          </main>
+        </SidebarInset>
       </div>
+      <BottomNav />
     </SidebarProvider>
   );
 }
