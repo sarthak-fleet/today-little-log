@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { AppLayout } from '@/components/AppLayout';
+import { GuestNotice } from '@/components/GuestNotice';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -7,11 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Loader2 } from 'lucide-react';
 import { useTasks } from '@/hooks/useTasks';
 
 const Tasks = () => {
-  const { tasks, isLoaded, addTask, toggleTask, deleteTask } = useTasks();
+  const { tasks, isLoaded, isSaving, isLoggedIn, addTask, toggleTask, deleteTask } = useTasks();
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
   const [estimate, setEstimate] = useState('');
@@ -39,15 +40,24 @@ const Tasks = () => {
 
   if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Loading tasks...</div>
-      </div>
+      <AppLayout>
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </AppLayout>
     );
   }
 
   return (
-    <AppLayout>
-      <div className="max-w-3xl mx-auto px-4 py-8 md:py-12">
+    <AppLayout isSaving={isSaving}>
+      {/* Guest mode notice */}
+      {!isLoggedIn && (
+        <div className="max-w-3xl mx-auto px-4 pt-4">
+          <GuestNotice message="Log in to save your tasks across devices" />
+        </div>
+      )}
+
+      <div className="max-w-3xl mx-auto px-4 py-6 md:py-10">
         <div className="flex items-start justify-between gap-4 mb-6">
           <div>
             <h2 className="text-xl font-display font-semibold text-foreground">Task Management</h2>
