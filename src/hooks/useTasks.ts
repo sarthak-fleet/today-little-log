@@ -64,7 +64,9 @@ export function useTasks() {
   const toggleTask = useCallback(
     (id: string) => {
       const next = tasks.map((task) =>
-        task.id === id ? { ...task, status: task.status === 'done' ? 'todo' : 'done' } : task,
+        task.id === id 
+          ? { ...task, status: (task.status === 'done' ? 'todo' : 'done') as 'todo' | 'done' } 
+          : task,
       );
       setTasks(next);
       writeTasks(next);
