@@ -226,6 +226,75 @@ export type Database = {
         }
         Relationships: []
       }
+      tasks: {
+        Row: {
+          created_at: string
+          estimate_minutes: number | null
+          id: string
+          notes: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          estimate_minutes?: number | null
+          id?: string
+          notes?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          estimate_minutes?: number | null
+          id?: string
+          notes?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      time_sessions: {
+        Row: {
+          created_at: string
+          duration_seconds: number
+          ended_at: string | null
+          id: string
+          notes: string | null
+          reference_id: string
+          reference_type: string
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number
+          ended_at?: string | null
+          id?: string
+          notes?: string | null
+          reference_id: string
+          reference_type: string
+          started_at: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number
+          ended_at?: string | null
+          id?: string
+          notes?: string | null
+          reference_id?: string
+          reference_type?: string
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
