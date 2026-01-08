@@ -9,9 +9,11 @@ interface PastEntriesProps {
   entries: JournalEntry[];
   onUpdate: (id: string, content: string) => void;
   onDelete: (id: string) => void;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
 }
 
-export function PastEntries({ entries, onUpdate, onDelete }: PastEntriesProps) {
+export function PastEntries({ entries, onUpdate, onDelete, hasMore, onLoadMore }: PastEntriesProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
 
@@ -183,6 +185,14 @@ export function PastEntries({ entries, onUpdate, onDelete }: PastEntriesProps) {
           </div>
         ))}
       </div>
+
+      {hasMore && onLoadMore && (
+        <div className="text-center pt-4">
+          <Button variant="outline" onClick={onLoadMore}>
+            Load more entries
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

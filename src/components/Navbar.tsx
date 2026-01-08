@@ -1,11 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Feather, LogOut, LogIn, Loader2, Cake } from 'lucide-react';
-import { differenceInDays, parseISO, isValid } from 'date-fns';
+import { Feather, LogOut, LogIn, Loader2, Cake, Moon, Sun } from 'lucide-react';
+import { differenceInDays, parseISO, isValid, format } from 'date-fns';
 
 const AVERAGE_LIFESPAN_DAYS = 30000;
 
@@ -16,8 +17,11 @@ interface NavbarProps {
 export function Navbar({ isSaving = false }: NavbarProps) {
   const navigate = useNavigate();
   const { user, profile, signOut, updateDob } = useAuth();
+  const { resolvedTheme, setTheme } = useTheme();
+  const isDark = (resolvedTheme ?? 'light') === 'dark';
 
   const isLoggedIn = !!user;
+  const today = new Date();
 
   const getDayOfLife = () => {
     if (!profile?.dob) return null;
@@ -33,19 +37,34 @@ export function Navbar({ isSaving = false }: NavbarProps) {
     await updateDob(newDob);
   };
 
+  const toggleDarkMode = () => {
+    setTheme(isDark ? 'light' : 'dark');
+  };
+
   return (
-    <header className="py-4 px-4 border-b border-border/50">
+    <header className="py-3 px-4 border-b border-border/50">
       <div className="max-w-3xl mx-auto flex items-center justify-between md:max-w-none">
-        {/* Left: Logo + Days Remaining */}
+        {/* Left: Date on mobile, Logo + Days on desktop */}
         <div className="flex items-center gap-4">
+          {/* Mobile: Current date */}
+          <div className="flex flex-col md:hidden">
+            <span className="text-sm font-medium text-foreground">
+              {format(today, 'EEEE')}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {format(today, 'MMM d, yyyy')}
+            </span>
+          </div>
+
+          {/* Desktop: Logo */}
           <button 
             onClick={() => navigate('/')}
-            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            className="hidden md:flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
             <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
               <Feather className="h-4 w-4 text-primary" />
             </div>
-            <span className="font-display font-semibold text-foreground text-lg hidden sm:inline">
+            <span className="font-display font-semibold text-foreground text-lg">
               Significant Hobbies
             </span>
           </button>
@@ -56,7 +75,7 @@ export function Navbar({ isSaving = false }: NavbarProps) {
               <PopoverTrigger asChild>
                 {dayOfLife ? (
                   <button className="flex items-center gap-2 text-sm hover:opacity-80 transition-opacity cursor-pointer">
-                    <span className="text-muted-foreground">Day</span>
+                    <span className="text-muted-foreground hidden md:inline">Day</span>
                     <span className="font-display font-bold text-foreground">
                       {dayOfLife.toLocaleString()}
                     </span>
@@ -103,9 +122,19 @@ export function Navbar({ isSaving = false }: NavbarProps) {
           )}
         </div>
 
-        {/* Right: User section */}
+        {/* Right: Dark mode toggle + User section */}
         <div className="flex items-center gap-1">
           {isSaving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground mr-2" />}
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleDarkMode}
+            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            title={isDark ? 'Light mode' : 'Dark mode'}
+          >
+            {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </Button>
 
           {isLoggedIn ? (
             <>
