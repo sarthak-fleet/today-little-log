@@ -1,6 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Feather, Target, Clock, BookOpen, Moon, Sun, CheckSquare, Timer } from 'lucide-react';
-import { useTheme } from 'next-themes';
+import { Feather, Target, Clock, BookOpen, CheckSquare, Timer } from 'lucide-react';
 
 const navItems = [
   { title: 'Journal', url: '/', icon: Feather },
@@ -14,11 +13,6 @@ const navItems = [
 export function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { resolvedTheme, setTheme } = useTheme();
-  const isDark = (resolvedTheme ?? 'light') === 'dark';
-  const toggleDarkMode = () => {
-    setTheme(isDark ? 'light' : 'dark');
-  };
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -29,7 +23,7 @@ export function BottomNav() {
           <button
             key={item.title}
             onClick={() => navigate(item.url)}
-            className={`flex flex-col items-center justify-center min-w-[72px] h-full gap-0.5 transition-colors ${
+            className={`flex flex-col items-center justify-center min-w-[56px] h-full gap-0.5 transition-colors ${
               isActive(item.url) 
                 ? 'text-primary' 
                 : 'text-muted-foreground hover:text-foreground'
@@ -39,13 +33,6 @@ export function BottomNav() {
             <span className="text-[10px] font-medium">{item.title}</span>
           </button>
         ))}
-        <button
-          onClick={toggleDarkMode}
-          className="flex flex-col items-center justify-center min-w-[72px] h-full gap-0.5 text-muted-foreground hover:text-foreground transition-colors"
-        >
-          {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          <span className="text-[10px] font-medium">{isDark ? 'Light' : 'Dark'}</span>
-        </button>
       </div>
     </nav>
   );

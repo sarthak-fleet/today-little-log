@@ -84,6 +84,7 @@ export type Database = {
           created_at: string
           frequency: string
           id: string
+          project_id: string | null
           target_type: string
           target_value: number
           title: string
@@ -95,6 +96,7 @@ export type Database = {
           created_at?: string
           frequency?: string
           id?: string
+          project_id?: string | null
           target_type?: string
           target_value?: number
           title: string
@@ -106,6 +108,7 @@ export type Database = {
           created_at?: string
           frequency?: string
           id?: string
+          project_id?: string | null
           target_type?: string
           target_value?: number
           title?: string
@@ -113,7 +116,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "habits_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       journal_entries: {
         Row: {
@@ -202,6 +213,36 @@ export type Database = {
         }
         Relationships: []
       }
+      projects: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       schedules: {
         Row: {
           blocks: Json
@@ -232,6 +273,7 @@ export type Database = {
           estimate_minutes: number | null
           id: string
           notes: string | null
+          project_id: string | null
           status: string
           title: string
           updated_at: string
@@ -242,6 +284,7 @@ export type Database = {
           estimate_minutes?: number | null
           id?: string
           notes?: string | null
+          project_id?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -252,12 +295,21 @@ export type Database = {
           estimate_minutes?: number | null
           id?: string
           notes?: string | null
+          project_id?: string | null
           status?: string
           title?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       time_sessions: {
         Row: {
@@ -266,6 +318,7 @@ export type Database = {
           ended_at: string | null
           id: string
           notes: string | null
+          project_id: string | null
           reference_id: string
           reference_type: string
           started_at: string
@@ -277,6 +330,7 @@ export type Database = {
           ended_at?: string | null
           id?: string
           notes?: string | null
+          project_id?: string | null
           reference_id: string
           reference_type: string
           started_at: string
@@ -288,12 +342,21 @@ export type Database = {
           ended_at?: string | null
           id?: string
           notes?: string | null
+          project_id?: string | null
           reference_id?: string
           reference_type?: string
           started_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "time_sessions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
