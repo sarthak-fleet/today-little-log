@@ -7,9 +7,10 @@ import { GuestNotice } from '@/components/GuestNotice';
 import { EmotionLogger } from '@/components/EmotionLogger';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useAuth } from '@/hooks/useAuth';
-import { Feather, List, CalendarDays, Search, X } from 'lucide-react';
+import { List, CalendarDays, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
 import { EntryType } from '@/hooks/useJournalEntries';
 
 const Index = () => {
@@ -29,19 +30,11 @@ const Index = () => {
     isLoaded,
     isSaving,
     isLoggedIn,
+    hasMore,
+    loadMore,
     isSunday,
     isLastDayOfMonth,
   } = useJournalEntries();
-
-  if (loading || !isLoaded) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse">
-          <Feather className="h-8 w-8 text-primary" />
-        </div>
-      </div>
-    );
-  }
 
   const todayEntry = getTodayEntry();
   const weeklyEntry = getWeeklyEntry();
@@ -65,10 +58,25 @@ const Index = () => {
     saveEntry(content, undefined, entryType);
   };
 
+  // Loading skeleton for journal content
+  const JournalSkeleton = () => (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <Skeleton className="h-6 w-32" />
+        <Skeleton className="h-32 w-full" />
+      </div>
+      <div className="space-y-3">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-24 w-full" />
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <AppLayout isSaving={isSaving}>
       {/* Guest mode notice */}
-      {!isLoggedIn && (
+      {!loading && !isLoggedIn && (
         <div className="max-w-3xl mx-auto px-4 pt-4">
           <GuestNotice message="Log in to save your journal across devices" />
         </div>
@@ -83,14 +91,18 @@ const Index = () => {
 
         {/* Today's Entry */}
         <section className="mb-12">
-          <TodayPrompt
-            todayEntry={todayEntry}
-            weeklyEntry={weeklyEntry}
-            monthlyEntry={monthlyEntry}
-            isSunday={isSunday()}
-            isLastDayOfMonth={isLastDayOfMonth()}
-            onSave={handleSave}
-          />
+          {loading || !isLoaded ? (
+            <JournalSkeleton />
+          ) : (
+            <TodayPrompt
+              todayEntry={todayEntry}
+              weeklyEntry={weeklyEntry}
+              monthlyEntry={monthlyEntry}
+              isSunday={isSunday()}
+              isLastDayOfMonth={isLastDayOfMonth()}
+              onSave={handleSave}
+            />
+          )}
         </section>
 
         {/* Divider with View Toggle */}
@@ -151,11 +163,19 @@ const Index = () => {
 
         {/* Past Entries */}
         <section>
-          {viewMode === 'list' ? (
+          {loading || !isLoaded ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-24 w-full" />
+              ))}
+            </div>
+          ) : viewMode === 'list' ? (
             <PastEntries
               entries={filteredPastEntries} 
               onUpdate={updateEntry}
               onDelete={deleteEntry}
+              hasMore={hasMore && !searchQuery}
+              onLoadMore={loadMore}
             />
           ) : (
             <CalendarView
