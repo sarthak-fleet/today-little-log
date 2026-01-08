@@ -1,10 +1,8 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Feather, Target, Clock, BookOpen, Moon, Sun, CheckSquare, Timer } from 'lucide-react';
-import { useTheme } from 'next-themes';
+import { Feather, Target, Clock, BookOpen, CheckSquare, Timer } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -29,11 +27,6 @@ const navItems = [
 export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { resolvedTheme, setTheme } = useTheme();
-  const isDark = (resolvedTheme ?? 'light') === 'dark';
-  const toggleDarkMode = () => {
-    setTheme(isDark ? 'light' : 'dark');
-  };
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -78,20 +71,6 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarSeparator />
-      <SidebarFooter className="px-2 py-3">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              onClick={toggleDarkMode}
-              tooltip={isDark ? 'Light mode' : 'Dark mode'}
-            >
-              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              <span>{isDark ? 'Light mode' : 'Dark mode'}</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );

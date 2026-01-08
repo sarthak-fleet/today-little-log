@@ -8,15 +8,23 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Trash2, Timer, Coffee } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Trash2, Timer, Coffee, Plus, FolderPlus } from 'lucide-react';
 import { useHabits } from '@/hooks/useHabits';
 import { useTasks } from '@/hooks/useTasks';
 import { useTimeSessions } from '@/hooks/useTimeSessions';
+import { useProjects } from '@/hooks/useProjects';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
-const POMODORO_WORK = 25 * 60; // 25 minutes
-const POMODORO_BREAK = 5 * 60; // 5 minutes
+// Pomodoro duration options (in seconds)
+const POMODORO_OPTIONS = [
+  { label: '15 min', work: 15 * 60, break: 3 * 60 },
+  { label: '25 min', work: 25 * 60, break: 5 * 60 },
+  { label: '50 min', work: 50 * 60, break: 10 * 60 },
+];
 
 const formatDuration = (totalSeconds: number) => {
   const hours = Math.floor(totalSeconds / 3600);
@@ -32,11 +40,13 @@ const TimeTracking = () => {
   const { habits, isLoaded: habitsLoaded } = useHabits();
   const { tasks, isLoaded: tasksLoaded } = useTasks();
   const { sessions, isLoaded: sessionsLoaded, logSession, deleteSession, getTotalTimeToday } = useTimeSessions();
+  const { projects, isLoaded: projectsLoaded, addProject } = useProjects();
   const { toast } = useToast();
 
   const [mode, setMode] = useState<'task' | 'habit'>('task');
   const [selectedTaskId, setSelectedTaskId] = useState('');
   const [selectedHabitId, setSelectedHabitId] = useState('');
+  const [selectedProjectId, setSelectedProjectId] = useState('');
   const [isRunning, setIsRunning] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const startTimeRef = useRef<string | null>(null);
@@ -45,8 +55,14 @@ const TimeTracking = () => {
   const [pomodoroEnabled, setPomodoroEnabled] = useState(false);
   const [pomodoroPhase, setPomodoroPhase] = useState<'work' | 'break'>('work');
   const [pomodoroCount, setPomodoroCount] = useState(0);
+  const [pomodoroOptionIndex, setPomodoroOptionIndex] = useState(1); // Default to 25 min
 
-  const pomodoroTarget = pomodoroPhase === 'work' ? POMODORO_WORK : POMODORO_BREAK;
+  // New project dialog
+  const [newProjectOpen, setNewProjectOpen] = useState(false);
+  const [newProjectTitle, setNewProjectTitle] = useState('');
+
+  const currentPomodoro = POMODORO_OPTIONS[pomodoroOptionIndex];
+  const pomodoroTarget = pomodoroPhase === 'work' ? currentPomodoro.work : currentPomodoro.break;
   const pomodoroRemaining = Math.max(0, pomodoroTarget - elapsedSeconds);
 
   const handlePomodoroComplete = useCallback(() => {
@@ -56,7 +72,7 @@ const TimeTracking = () => {
       setPomodoroCount((c) => c + 1);
       toast({
         title: "🍅 Pomodoro complete!",
-        description: "Great work! Time for a 5-minute break.",
+        description: `Great work! Time for a ${currentPomodoro.break / 60}-minute break.`,
       });
       setPomodoroPhase('break');
     } else {
@@ -67,14 +83,13 @@ const TimeTracking = () => {
       setPomodoroPhase('work');
     }
     setElapsedSeconds(0);
-  }, [pomodoroPhase, toast]);
+  }, [pomodoroPhase, toast, currentPomodoro.break]);
 
   useEffect(() => {
     if (!isRunning) return;
     const interval = window.setInterval(() => {
       setElapsedSeconds((prev) => {
         const next = prev + 1;
-        // Check if pomodoro timer completed
         if (pomodoroEnabled && next >= pomodoroTarget) {
           handlePomodoroComplete();
           return 0;
@@ -89,6 +104,10 @@ const TimeTracking = () => {
   const activeHabit = useMemo(
     () => habits.find((habit) => habit.id === selectedHabitId),
     [habits, selectedHabitId],
+  );
+  const activeProject = useMemo(
+    () => projects.find((p) => p.id === selectedProjectId),
+    [projects, selectedProjectId],
   );
   const activeLabel = mode === 'task' ? activeTask?.title : activeHabit?.title;
   const isSelectionReady = mode === 'task' ? !!activeTask : !!activeHabit;
@@ -120,6 +139,7 @@ const TimeTracking = () => {
       duration_seconds: elapsedSeconds,
       started_at: startTimeRef.current,
       ended_at: new Date().toISOString(),
+      project_id: selectedProjectId || undefined,
     });
 
     handleReset();
@@ -140,6 +160,13 @@ const TimeTracking = () => {
     setIsRunning(false);
   };
 
+  const handleCreateProject = async () => {
+    if (!newProjectTitle.trim()) return;
+    await addProject(newProjectTitle.trim());
+    setNewProjectTitle('');
+    setNewProjectOpen(false);
+  };
+
   const todayTotal = getTotalTimeToday();
 
   const getSessionLabel = (session: { reference_type: 'task' | 'habit'; reference_id: string }) => {
@@ -149,11 +176,21 @@ const TimeTracking = () => {
     return habits.find((h) => h.id === session.reference_id)?.title ?? 'Deleted habit';
   };
 
-  if (!habitsLoaded || !tasksLoaded || !sessionsLoaded) {
+  const isLoading = !habitsLoaded || !tasksLoaded || !sessionsLoaded || !projectsLoaded;
+
+  if (isLoading) {
     return (
       <AppLayout>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="animate-pulse text-muted-foreground">Loading time tracking...</div>
+        <div className="max-w-3xl mx-auto px-4 py-6 md:py-10 space-y-6">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <Skeleton className="h-7 w-40 mb-2" />
+              <Skeleton className="h-4 w-64" />
+            </div>
+            <Skeleton className="h-6 w-24" />
+          </div>
+          <Skeleton className="h-48 w-full" />
+          <Skeleton className="h-64 w-full" />
         </div>
       </AppLayout>
     );
@@ -176,6 +213,70 @@ const TimeTracking = () => {
             </span>
           </div>
         </div>
+
+        {/* Project Selection */}
+        <Card className="border-border/60">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center justify-between">
+              <span>Project</span>
+              <Dialog open={newProjectOpen} onOpenChange={setNewProjectOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-7 gap-1">
+                    <FolderPlus className="h-4 w-4" />
+                    New
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Create Project</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-4">
+                    <Input
+                      placeholder="Project name"
+                      value={newProjectTitle}
+                      onChange={(e) => setNewProjectTitle(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleCreateProject()}
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" onClick={() => setNewProjectOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleCreateProject} disabled={!newProjectTitle.trim()}>
+                        Create
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a project (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">No project</SelectItem>
+                {projects.map((project) => (
+                  <SelectItem key={project.id} value={project.id}>
+                    <span className="flex items-center gap-2">
+                      <span
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: project.color }}
+                      />
+                      {project.title}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {activeProject && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Working on project: <span className="font-medium text-foreground">{activeProject.title}</span>
+              </p>
+            )}
+          </CardContent>
+        </Card>
 
         <Card className="border-border/60">
           <CardHeader>
@@ -264,9 +365,28 @@ const TimeTracking = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             {pomodoroEnabled && (
-              <div className="flex items-center justify-center gap-4 text-sm">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm">
+                <div className="flex gap-1">
+                  {POMODORO_OPTIONS.map((opt, idx) => (
+                    <Button
+                      key={opt.label}
+                      variant={pomodoroOptionIndex === idx ? 'default' : 'outline'}
+                      size="sm"
+                      className="h-7 px-3"
+                      onClick={() => {
+                        setPomodoroOptionIndex(idx);
+                        handleReset();
+                      }}
+                      disabled={isRunning}
+                    >
+                      {opt.label}
+                    </Button>
+                  ))}
+                </div>
                 <Badge variant={pomodoroPhase === 'work' ? 'default' : 'outline'}>
-                  {pomodoroPhase === 'work' ? '25 min work' : '5 min break'}
+                  {pomodoroPhase === 'work' 
+                    ? `${currentPomodoro.work / 60} min work` 
+                    : `${currentPomodoro.break / 60} min break`}
                 </Badge>
                 <span className="text-muted-foreground">
                   🍅 {pomodoroCount} completed

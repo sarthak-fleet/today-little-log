@@ -10,6 +10,7 @@ export interface TimeSession {
   started_at: string;
   ended_at?: string;
   notes?: string;
+  project_id?: string;
   created_at: string;
 }
 
@@ -80,6 +81,7 @@ export function useTimeSessions() {
       started_at: string;
       ended_at?: string;
       notes?: string;
+      project_id?: string;
     }) => {
       const newSession: TimeSession = {
         id: crypto.randomUUID(),
@@ -89,6 +91,7 @@ export function useTimeSessions() {
         started_at: payload.started_at,
         ended_at: payload.ended_at,
         notes: payload.notes,
+        project_id: payload.project_id,
         created_at: new Date().toISOString(),
       };
 
@@ -106,6 +109,7 @@ export function useTimeSessions() {
           started_at: newSession.started_at,
           ended_at: newSession.ended_at ?? null,
           notes: newSession.notes ?? null,
+          project_id: newSession.project_id ?? null,
         });
         setIsSaving(false);
 

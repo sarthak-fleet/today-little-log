@@ -21,39 +21,54 @@ export function useJournalEntries() {
   const [isSaving, setIsSaving] = useState(false);
   const { user } = useAuth();
 
-  const fetchEntries = useCallback(async () => {
+  const [hasMore, setHasMore] = useState(true);
+  const PAGE_SIZE = 10;
+
+  const fetchEntries = useCallback(async (loadMore = false) => {
     if (user) {
-      const { data, error } = await supabase
+      const currentOffset = loadMore ? entries.length : 0;
+      
+      const { data, error, count } = await supabase
         .from('journal_entries')
-        .select('*')
+        .select('*', { count: 'exact' })
         .eq('user_id', user.id)
-        .order('date', { ascending: false });
+        .order('date', { ascending: false })
+        .range(currentOffset, currentOffset + PAGE_SIZE - 1);
 
       if (error) {
         console.error('Failed to fetch entries:', error);
       } else {
-        setEntries((data as JournalEntry[]) || []);
+        const newEntries = (data as JournalEntry[]) || [];
+        if (loadMore) {
+          setEntries(prev => [...prev, ...newEntries]);
+        } else {
+          setEntries(newEntries);
+        }
+        setHasMore(count ? currentOffset + newEntries.length < count : false);
         
-        // Check for local storage migration
-        const savedEntries = localStorage.getItem(STORAGE_KEY);
-        if (savedEntries && (!data || data.length === 0)) {
-          const localEntries = JSON.parse(savedEntries) as JournalEntry[];
-          for (const entry of localEntries) {
-            await supabase.from('journal_entries').insert({
-              user_id: user.id,
-              date: entry.date,
-              content: entry.content,
-              entry_type: entry.entry_type,
-            });
-          }
-          // Reload after migration
-          const { data: reloadedEntries } = await supabase
-            .from('journal_entries')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('date', { ascending: false });
-          if (reloadedEntries) {
-            setEntries(reloadedEntries as JournalEntry[]);
+        // Check for local storage migration (only on initial load)
+        if (!loadMore) {
+          const savedEntries = localStorage.getItem(STORAGE_KEY);
+          if (savedEntries && (!data || data.length === 0)) {
+            const localEntries = JSON.parse(savedEntries) as JournalEntry[];
+            for (const entry of localEntries) {
+              await supabase.from('journal_entries').insert({
+                user_id: user.id,
+                date: entry.date,
+                content: entry.content,
+                entry_type: entry.entry_type,
+              });
+            }
+            // Reload after migration
+            const { data: reloadedEntries } = await supabase
+              .from('journal_entries')
+              .select('*')
+              .eq('user_id', user.id)
+              .order('date', { ascending: false })
+              .limit(PAGE_SIZE);
+            if (reloadedEntries) {
+              setEntries(reloadedEntries as JournalEntry[]);
+            }
           }
         }
       }
@@ -61,13 +76,14 @@ export function useJournalEntries() {
       // Guest mode - use localStorage
       const savedEntries = localStorage.getItem(STORAGE_KEY);
       setEntries(savedEntries ? JSON.parse(savedEntries) : []);
+      setHasMore(false);
     }
     setIsLoaded(true);
-  }, [user]);
+  }, [user, entries.length]);
 
   useEffect(() => {
-    fetchEntries();
-  }, [fetchEntries]);
+    fetchEntries(false);
+  }, [user]);
 
   const getTodayKey = () => {
     return new Date().toISOString().split('T')[0];
@@ -150,7 +166,7 @@ export function useJournalEntries() {
           return;
         }
       }
-      await fetchEntries();
+      await fetchEntries(false);
     } else {
       // Guest mode
       let newEntries: JournalEntry[];
@@ -192,7 +208,7 @@ export function useJournalEntries() {
         setIsSaving(false);
         return;
       }
-      await fetchEntries();
+      await fetchEntries(false);
     } else {
       const newEntries = entries.map(e => 
         e.id === id ? { ...e, content, updated_at: new Date().toISOString() } : e
@@ -218,7 +234,7 @@ export function useJournalEntries() {
         setIsSaving(false);
         return;
       }
-      await fetchEntries();
+      await fetchEntries(false);
     } else {
       const newEntries = entries.filter(e => e.id !== id);
       setEntries(newEntries);
@@ -235,11 +251,19 @@ export function useJournalEntries() {
       .slice(0, count);
   };
 
+  const loadMore = () => {
+    if (hasMore && isLoaded) {
+      fetchEntries(true);
+    }
+  };
+
   return {
     entries,
     isLoaded,
     isSaving,
     isLoggedIn: !!user,
+    hasMore,
+    loadMore,
     getTodayEntry,
     getWeeklyEntry,
     getMonthlyEntry,
