@@ -11,8 +11,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-  SidebarSeparator,
-  SidebarTrigger,
 } from '@/components/ui/sidebar';
 
 const navItems = [
@@ -31,25 +29,21 @@ export function AppSidebar() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar/90">
+    <Sidebar collapsible="icon" className="border-r-0 bg-sidebar">
       <SidebarHeader className="px-3 py-4">
-        <div className="flex items-center justify-between gap-2">
-          <button
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-sidebar-foreground hover:text-sidebar-foreground/80 transition-colors"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sidebar-accent text-sidebar-accent-foreground">
-              <Feather className="h-4 w-4" />
-            </div>
-            <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
-              <span className="font-display text-sm font-semibold">Significant Hobbies</span>
-              <span className="text-xs text-sidebar-foreground/60">Life dashboard</span>
-            </div>
-          </button>
-          <SidebarTrigger className="text-sidebar-foreground/70 hover:text-sidebar-foreground" />
-        </div>
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center gap-2 text-sidebar-foreground hover:text-sidebar-foreground/80 transition-colors"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sidebar-accent text-sidebar-accent-foreground">
+            <Feather className="h-4 w-4" />
+          </div>
+          <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
+            <span className="font-display text-sm font-semibold">Significant Hobbies</span>
+            <span className="text-xs text-sidebar-foreground/60">Life dashboard</span>
+          </div>
+        </button>
       </SidebarHeader>
-      <SidebarSeparator />
       <SidebarContent className="pt-2">
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
