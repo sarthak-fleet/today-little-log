@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Feather, LogOut, LogIn, Loader2, Cake, Moon, Sun } from 'lucide-react';
+import { LogOut, LogIn, Loader2, Cake, Moon, Sun } from 'lucide-react';
 import { differenceInDays, parseISO, isValid, format } from 'date-fns';
 
 const AVERAGE_LIFESPAN_DAYS = 30000;
@@ -56,18 +56,15 @@ export function Navbar({ isSaving = false }: NavbarProps) {
             </span>
           </div>
 
-          {/* Desktop: Logo */}
-          <button 
-            onClick={() => navigate('/')}
-            className="hidden md:flex items-center gap-2 hover:opacity-80 transition-opacity"
-          >
-            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-              <Feather className="h-4 w-4 text-primary" />
-            </div>
-            <span className="font-display font-semibold text-foreground text-lg">
-              Significant Hobbies
+          {/* Desktop: Current date */}
+          <div className="hidden md:flex flex-col">
+            <span className="text-sm font-medium text-foreground">
+              {format(today, 'EEEE')}
             </span>
-          </button>
+            <span className="text-xs text-muted-foreground">
+              {format(today, 'MMM d, yyyy')}
+            </span>
+          </div>
 
           {/* Days Remaining */}
           {isLoggedIn && (
