@@ -1,9 +1,24 @@
 import { useState, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Check, Pencil } from 'lucide-react';
+import { Check, Pencil, Heart, DollarSign, Users, Briefcase, BookOpen, Sparkles, FolderKanban } from 'lucide-react';
 import { JournalEntry, EntryType } from '@/hooks/useJournalEntries';
 import { EntryEditor } from './EntryEditor';
+
+const CATEGORIES = [
+  { key: 'health', label: 'Health', icon: Heart, placeholder: 'Exercise, meals, sleep, mental health...' },
+  { key: 'finance', label: 'Finance', icon: DollarSign, placeholder: 'Spending, saving, investments...' },
+  { key: 'relationships', label: 'Relationships', icon: Users, placeholder: 'Family, friends, social interactions...' },
+  { key: 'career', label: 'Career', icon: Briefcase, placeholder: 'Work accomplishments, meetings, goals...' },
+  { key: 'knowledge', label: 'Knowledge', icon: BookOpen, placeholder: 'Learning, reading, courses...' },
+  { key: 'novelty', label: 'Novelty', icon: Sparkles, placeholder: 'New experiences, adventures, discoveries...' },
+  { key: 'projects', label: 'Projects', icon: FolderKanban, placeholder: 'Personal projects, hobbies, side work...' },
+] as const;
+
+type CategoryKey = typeof CATEGORIES[number]['key'];
+type CategoryContent = Record<CategoryKey, string>;
+
+const MIN_FILLED_CATEGORIES = 2;
 
 interface TodayPromptProps {
   todayEntry?: JournalEntry;
@@ -14,6 +29,35 @@ interface TodayPromptProps {
   onSave: (content: string, entryType: EntryType) => void;
 }
 
+const parseContent = (content?: string): CategoryContent => {
+  const empty: CategoryContent = {
+    health: '',
+    finance: '',
+    relationships: '',
+    career: '',
+    knowledge: '',
+    novelty: '',
+    projects: '',
+  };
+  
+  if (!content) return empty;
+  
+  try {
+    const parsed = JSON.parse(content);
+    if (typeof parsed === 'object' && parsed !== null) {
+      return { ...empty, ...parsed };
+    }
+  } catch {
+    // Legacy plain text content - put it in a general field or ignore
+  }
+  
+  return empty;
+};
+
+const getFilledCount = (content: CategoryContent): number => {
+  return Object.values(content).filter(v => v.trim().length > 0).length;
+};
+
 export function TodayPrompt({ 
   todayEntry, 
   weeklyEntry, 
@@ -22,23 +66,30 @@ export function TodayPrompt({
   isLastDayOfMonth, 
   onSave 
 }: TodayPromptProps) {
-  const [content, setContent] = useState(todayEntry?.content || '');
-  const [isEditing, setIsEditing] = useState(!todayEntry?.content);
+  const [content, setContent] = useState<CategoryContent>(() => parseContent(todayEntry?.content));
+  const [isEditing, setIsEditing] = useState(() => !todayEntry?.content);
   const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
     if (todayEntry?.content) {
-      setContent(todayEntry.content);
+      setContent(parseContent(todayEntry.content));
     }
   }, [todayEntry?.content]);
 
+  const filledCount = getFilledCount(content);
+  const canSave = filledCount >= MIN_FILLED_CATEGORIES;
+
   const handleSave = () => {
-    if (content.trim()) {
-      onSave(content.trim(), 'daily');
+    if (canSave) {
+      onSave(JSON.stringify(content), 'daily');
       setIsEditing(false);
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2000);
     }
+  };
+
+  const updateCategory = (key: CategoryKey, value: string) => {
+    setContent(prev => ({ ...prev, [key]: value }));
   };
 
   const formatDate = () => {
@@ -59,30 +110,45 @@ export function TodayPrompt({
     <div className="animate-fade-in space-y-6">
       {/* Daily Entry */}
       <div>
-        <div className="mb-8 text-center">
+        <div className="mb-6 text-center">
           <p className="text-sm font-sans uppercase tracking-widest text-journal-date mb-2">
             {formatDate()}
           </p>
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-display font-medium text-foreground leading-tight">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-display font-medium text-foreground leading-tight">
             What did you do today?
           </h1>
+          <p className="text-sm text-muted-foreground mt-2">
+            Fill at least {MIN_FILLED_CATEGORIES} categories ({filledCount}/{CATEGORIES.length} filled)
+          </p>
         </div>
 
         <div className="relative">
-          <div className="journal-paper rounded-xl shadow-card p-6 md:p-8 transition-all duration-300 hover:shadow-glow">
+          <div className="journal-paper rounded-xl shadow-card p-4 md:p-6 transition-all duration-300 hover:shadow-glow">
             {isEditing ? (
               <>
-                <Textarea
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder="Write about your day..."
-                  className="min-h-[200px] md:min-h-[250px] resize-none border-none bg-transparent text-lg font-sans text-journal-ink placeholder:text-muted-foreground/50 focus-visible:ring-0 focus-visible:ring-offset-0 journal-lines"
-                  autoFocus
-                />
-                <div className="mt-4 flex justify-end">
+                <div className="grid gap-4 md:grid-cols-2">
+                  {CATEGORIES.map(({ key, label, icon: Icon, placeholder }) => (
+                    <div key={key} className="space-y-2">
+                      <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                        <Icon className="h-4 w-4 text-muted-foreground" />
+                        {label}
+                      </label>
+                      <Textarea
+                        value={content[key]}
+                        onChange={(e) => updateCategory(key, e.target.value)}
+                        placeholder={placeholder}
+                        className="min-h-[80px] resize-none border-border/50 bg-transparent text-sm font-sans text-journal-ink placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-primary/30"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-6 flex items-center justify-between">
+                  <span className={`text-sm ${canSave ? 'text-primary' : 'text-muted-foreground'}`}>
+                    {canSave ? '✓ Ready to save' : `Fill ${MIN_FILLED_CATEGORIES - filledCount} more`}
+                  </span>
                   <Button
                     onClick={handleSave}
-                    disabled={!content.trim()}
+                    disabled={!canSave}
                     className="gap-2"
                   >
                     <Check className="h-4 w-4" />
@@ -92,10 +158,22 @@ export function TodayPrompt({
               </>
             ) : (
               <>
-                <div className="min-h-[200px] md:min-h-[250px] journal-lines">
-                  <p className="text-lg font-sans text-journal-ink whitespace-pre-wrap leading-8">
-                    {content}
-                  </p>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {CATEGORIES.map(({ key, label, icon: Icon }) => {
+                    const value = content[key];
+                    if (!value.trim()) return null;
+                    return (
+                      <div key={key} className="space-y-1">
+                        <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                          <Icon className="h-4 w-4 text-muted-foreground" />
+                          {label}
+                        </div>
+                        <p className="text-sm text-journal-ink whitespace-pre-wrap pl-6">
+                          {value}
+                        </p>
+                      </div>
+                    );
+                  })}
                 </div>
                 <div className="mt-4 flex items-center justify-between">
                   <span className={`text-sm font-sans transition-opacity duration-300 ${isSaved ? 'opacity-100 text-primary' : 'opacity-0'}`}>
