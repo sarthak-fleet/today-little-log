@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Check, Pencil, Heart, DollarSign, Users, Briefcase, BookOpen, Sparkles, FolderKanban } from 'lucide-react';
+import { Check, Pencil, Heart, DollarSign, Users, Briefcase, BookOpen, Sparkles, FolderKanban, ChevronDown } from 'lucide-react';
 import { JournalEntry, EntryType } from '@/hooks/useJournalEntries';
 import { EntryEditor } from './EntryEditor';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { cn } from '@/lib/utils';
 
 const CATEGORIES = [
   { key: 'health', label: 'Health', icon: Heart, placeholder: 'Exercise, meals, sleep, mental health...' },
@@ -58,6 +60,10 @@ const getFilledCount = (content: CategoryContent): number => {
   return Object.values(content).filter(v => v.trim().length > 0).length;
 };
 
+const getFilledCategories = (content: CategoryContent) => {
+  return CATEGORIES.filter(cat => content[cat.key].trim().length > 0);
+};
+
 export function TodayPrompt({ 
   todayEntry, 
   weeklyEntry, 
@@ -69,6 +75,7 @@ export function TodayPrompt({
   const [content, setContent] = useState<CategoryContent>(() => parseContent(todayEntry?.content));
   const [isEditing, setIsEditing] = useState(() => !todayEntry?.content);
   const [isSaved, setIsSaved] = useState(false);
+  const [openCategory, setOpenCategory] = useState<string | null>(null);
 
   useEffect(() => {
     if (todayEntry?.content) {
@@ -78,6 +85,7 @@ export function TodayPrompt({
 
   const filledCount = getFilledCount(content);
   const canSave = filledCount >= MIN_FILLED_CATEGORIES;
+  const filledCategories = getFilledCategories(content);
 
   const handleSave = () => {
     if (canSave) {
@@ -117,15 +125,18 @@ export function TodayPrompt({
           <h1 className="text-2xl md:text-3xl lg:text-4xl font-display font-medium text-foreground leading-tight">
             What did you do today?
           </h1>
-          <p className="text-sm text-muted-foreground mt-2">
-            Fill at least {MIN_FILLED_CATEGORIES} categories ({filledCount}/{CATEGORIES.length} filled)
-          </p>
+          {isEditing && (
+            <p className="text-sm text-muted-foreground mt-2">
+              Fill at least {MIN_FILLED_CATEGORIES} categories ({filledCount}/{CATEGORIES.length} filled)
+            </p>
+          )}
         </div>
 
         <div className="relative">
           <div className="journal-paper rounded-xl shadow-card p-4 md:p-6 transition-all duration-300 hover:shadow-glow">
             {isEditing ? (
               <>
+                {/* Grid layout for editing */}
                 <div className="grid gap-4 md:grid-cols-2">
                   {CATEGORIES.map(({ key, label, icon: Icon, placeholder }) => (
                     <div key={key} className="space-y-2">
@@ -158,24 +169,44 @@ export function TodayPrompt({
               </>
             ) : (
               <>
-                <div className="grid gap-4 md:grid-cols-2">
-                  {CATEGORIES.map(({ key, label, icon: Icon }) => {
-                    const value = content[key];
-                    if (!value.trim()) return null;
-                    return (
-                      <div key={key} className="space-y-1">
-                        <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                          <Icon className="h-4 w-4 text-muted-foreground" />
-                          {label}
-                        </div>
-                        <p className="text-sm text-journal-ink whitespace-pre-wrap pl-6">
-                          {value}
-                        </p>
-                      </div>
-                    );
-                  })}
+                {/* Accordion-style compact view for saved entries */}
+                <div className="space-y-2">
+                  {filledCategories.length > 0 ? (
+                    filledCategories.map(({ key, label, icon: Icon }) => (
+                      <Collapsible
+                        key={key}
+                        open={openCategory === key}
+                        onOpenChange={(open) => setOpenCategory(open ? key : null)}
+                      >
+                        <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg hover:bg-muted/50 transition-colors group">
+                          <div className="flex items-center gap-3">
+                            <Icon className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm font-medium text-foreground">{label}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground max-w-[200px] truncate hidden sm:block">
+                              {content[key].slice(0, 50)}{content[key].length > 50 ? '...' : ''}
+                            </span>
+                            <ChevronDown className={cn(
+                              "h-4 w-4 text-muted-foreground transition-transform duration-200",
+                              openCategory === key && "rotate-180"
+                            )} />
+                          </div>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="px-3 pb-3">
+                          <p className="text-sm text-journal-ink whitespace-pre-wrap pl-7 pt-2 border-l-2 border-muted ml-2">
+                            {content[key]}
+                          </p>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      No entries yet
+                    </p>
+                  )}
                 </div>
-                <div className="mt-4 flex items-center justify-between">
+                <div className="mt-4 flex items-center justify-between pt-3 border-t border-border/50">
                   <span className={`text-sm font-sans transition-opacity duration-300 ${isSaved ? 'opacity-100 text-primary' : 'opacity-0'}`}>
                     ✓ Saved
                   </span>
