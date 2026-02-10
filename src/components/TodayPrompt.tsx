@@ -8,6 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { cn } from '@/lib/utils';
 
 const CATEGORIES = [
+  { key: 'general', label: 'General', icon: BookOpen, placeholder: 'Anything on your mind...' },
   { key: 'health', label: 'Health', icon: Heart, placeholder: 'Exercise, meals, sleep, mental health...' },
   { key: 'finance', label: 'Finance', icon: DollarSign, placeholder: 'Spending, saving, investments...' },
   { key: 'relationships', label: 'Relationships', icon: Users, placeholder: 'Family, friends, social interactions...' },
@@ -33,6 +34,7 @@ interface TodayPromptProps {
 
 const parseContent = (content?: string): CategoryContent => {
   const empty: CategoryContent = {
+    general: '',
     health: '',
     finance: '',
     relationships: '',
@@ -50,7 +52,8 @@ const parseContent = (content?: string): CategoryContent => {
       return { ...empty, ...parsed };
     }
   } catch {
-    // Legacy plain text content - put it in a general field or ignore
+    // Legacy plain text content - default to general
+    return { ...empty, general: content };
   }
   
   return empty;
