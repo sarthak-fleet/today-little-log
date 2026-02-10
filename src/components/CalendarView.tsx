@@ -87,16 +87,24 @@ export function CalendarView({ entries, onUpdate, onDelete }: CalendarViewProps)
           <Calendar
             mode="single"
             selected={selectedDate}
-            onSelect={setSelectedDate}
+            onSelect={(date) => {
+              // Toggle off if clicking the same date
+              setSelectedDate(prev => prev && date && format(prev, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd') ? undefined : date);
+            }}
             className="pointer-events-auto"
             modifiers={{
               hasEntry: (date) => entryDates.includes(format(date, 'yyyy-MM-dd')),
+              today: (date) => format(date, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd'),
             }}
             modifiersStyles={{
               hasEntry: {
                 fontWeight: 'bold',
                 backgroundColor: 'hsl(var(--primary) / 0.1)',
                 color: 'hsl(var(--primary))',
+              },
+              today: {
+                border: '2px solid hsl(var(--primary))',
+                borderRadius: '0.375rem',
               },
             }}
           />
