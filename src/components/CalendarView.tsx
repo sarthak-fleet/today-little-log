@@ -2,11 +2,30 @@ import { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { JournalEntry, EntryType } from '@/hooks/useJournalEntries';
 import { format } from 'date-fns';
-import { X, Pencil, Trash2, Check, CalendarDays, Calendar as CalendarIcon } from 'lucide-react';
+import { X, Pencil, Trash2, Check, CalendarDays, Calendar as CalendarIcon, Heart, DollarSign, Users, Briefcase, BookOpen, Sparkles, FolderKanban } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+
+const CATEGORY_META: Record<string, { label: string; icon: React.ComponentType<{ className?: string }> }> = {
+  general: { label: 'General', icon: BookOpen },
+  health: { label: 'Health', icon: Heart },
+  finance: { label: 'Finance', icon: DollarSign },
+  relationships: { label: 'Relationships', icon: Users },
+  career: { label: 'Career', icon: Briefcase },
+  knowledge: { label: 'Knowledge', icon: BookOpen },
+  novelty: { label: 'Novelty', icon: Sparkles },
+  projects: { label: 'Projects', icon: FolderKanban },
+};
+
+const parseEntryContent = (content: string): Record<string, string> => {
+  try {
+    const parsed = JSON.parse(content);
+    if (typeof parsed === 'object' && parsed !== null) return parsed;
+  } catch {}
+  return { general: content };
+};
 
 interface CalendarViewProps {
   entries: JournalEntry[];
@@ -142,9 +161,26 @@ export function CalendarView({ entries, onUpdate, onDelete }: CalendarViewProps)
                           </div>
                         </div>
                       ) : (
-                        <p className="text-sm font-sans text-journal-ink whitespace-pre-wrap leading-relaxed">
-                          {entry.content}
-                        </p>
+                        <div className="space-y-2">
+                          {(() => {
+                            const cats = parseEntryContent(entry.content);
+                            const filled = Object.entries(cats).filter(([, v]) => typeof v === 'string' && v.trim().length > 0);
+                            return filled.map(([key, value]) => {
+                              const meta = CATEGORY_META[key];
+                              const Icon = meta?.icon || BookOpen;
+                              const label = meta?.label || key;
+                              return (
+                                <div key={key} className="flex gap-2 text-sm">
+                                  <div className="flex items-center gap-1.5 text-muted-foreground min-w-[110px] flex-shrink-0">
+                                    <Icon className="h-3.5 w-3.5" />
+                                    <span className="font-medium text-xs uppercase tracking-wide">{label}</span>
+                                  </div>
+                                  <p className="text-journal-ink leading-relaxed whitespace-pre-wrap">{value}</p>
+                                </div>
+                              );
+                            });
+                          })()}
+                        </div>
                       )}
                     </div>
                   ))}
