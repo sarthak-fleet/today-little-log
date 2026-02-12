@@ -251,12 +251,12 @@ const TimeTracking = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+            <Select value={selectedProjectId || "__none__"} onValueChange={(v) => setSelectedProjectId(v === "__none__" ? "" : v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a project (optional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No project</SelectItem>
+                <SelectItem value="__none__">No project</SelectItem>
                 {projects.map((project) => (
                   <SelectItem key={project.id} value={project.id}>
                     <span className="flex items-center gap-2">
