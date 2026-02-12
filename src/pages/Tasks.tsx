@@ -39,7 +39,7 @@ const TaskRow = ({
         {!isDragDisabled && (
           <div
             {...provided.dragHandleProps}
-            className="cursor-grab text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+            className="cursor-grab text-muted-foreground/40 hover:text-muted-foreground transition-colors flex items-center"
           >
             <GripVertical className="h-4 w-4" />
           </div>
