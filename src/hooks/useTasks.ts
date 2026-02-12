@@ -8,6 +8,7 @@ export interface TaskItem {
   notes?: string;
   estimate_minutes?: number;
   status: 'todo' | 'done';
+  sort_order: number;
   created_at: string;
 }
 
@@ -44,7 +45,7 @@ export function useTasks() {
         const { data, error } = await supabase
           .from('tasks')
           .select('*')
-          .order('created_at', { ascending: false });
+          .order('sort_order', { ascending: true });
 
         if (!error && data) {
           setTasks(
@@ -54,6 +55,7 @@ export function useTasks() {
               notes: t.notes ?? undefined,
               estimate_minutes: t.estimate_minutes ?? undefined,
               status: t.status as 'todo' | 'done',
+              sort_order: (t as any).sort_order ?? 0,
               created_at: t.created_at,
             }))
           );
@@ -69,17 +71,18 @@ export function useTasks() {
 
   const addTask = useCallback(
     async (payload: { title: string; notes?: string; estimate_minutes?: number }) => {
+      const maxOrder = tasks.length > 0 ? Math.max(...tasks.map(t => t.sort_order)) : 0;
       const newTask: TaskItem = {
         id: crypto.randomUUID(),
         title: payload.title,
         notes: payload.notes,
         estimate_minutes: payload.estimate_minutes,
         status: 'todo',
+        sort_order: maxOrder + 1,
         created_at: new Date().toISOString(),
       };
 
-      // Optimistic update
-      setTasks((prev) => [newTask, ...prev]);
+      setTasks((prev) => [...prev, newTask]);
 
       if (isLoggedIn && user) {
         setIsSaving(true);
@@ -90,15 +93,15 @@ export function useTasks() {
           notes: newTask.notes ?? null,
           estimate_minutes: newTask.estimate_minutes ?? null,
           status: newTask.status,
-        });
+          sort_order: newTask.sort_order,
+        } as any);
         setIsSaving(false);
 
         if (error) {
-          // Rollback
           setTasks((prev) => prev.filter((t) => t.id !== newTask.id));
         }
       } else {
-        const updated = [newTask, ...tasks];
+        const updated = [...tasks, newTask];
         writeGuestTasks(updated);
       }
     },
@@ -110,7 +113,6 @@ export function useTasks() {
       const prev = tasks.find((t) => t.id === id);
       if (!prev) return;
 
-      // Optimistic update
       setTasks((current) =>
         current.map((t) => (t.id === id ? { ...t, ...updates } : t))
       );
@@ -129,7 +131,6 @@ export function useTasks() {
         setIsSaving(false);
 
         if (error) {
-          // Rollback
           setTasks((current) =>
             current.map((t) => (t.id === id ? prev : t))
           );
@@ -149,7 +150,6 @@ export function useTasks() {
 
       const newStatus: 'todo' | 'done' = task.status === 'done' ? 'todo' : 'done';
 
-      // Optimistic update
       setTasks((current) =>
         current.map((t) => (t.id === id ? { ...t, status: newStatus } : t))
       );
@@ -163,7 +163,6 @@ export function useTasks() {
         setIsSaving(false);
 
         if (error) {
-          // Rollback
           setTasks((current) =>
             current.map((t) => (t.id === id ? { ...t, status: task.status } : t))
           );
@@ -183,7 +182,6 @@ export function useTasks() {
       const prev = tasks.find((t) => t.id === id);
       if (!prev) return;
 
-      // Optimistic update
       setTasks((current) => current.filter((t) => t.id !== id));
 
       if (isLoggedIn) {
@@ -192,7 +190,6 @@ export function useTasks() {
         setIsSaving(false);
 
         if (error) {
-          // Rollback
           setTasks((current) => [prev, ...current]);
         }
       } else {
@@ -201,6 +198,29 @@ export function useTasks() {
       }
     },
     [isLoggedIn, tasks]
+  );
+
+  const reorderTasks = useCallback(
+    async (reordered: TaskItem[]) => {
+      const updated = reordered.map((t, i) => ({ ...t, sort_order: i }));
+      setTasks(updated);
+
+      if (isLoggedIn) {
+        setIsSaving(true);
+        // Batch update sort_order for all reordered tasks
+        const promises = updated.map((t) =>
+          supabase
+            .from('tasks')
+            .update({ sort_order: t.sort_order } as any)
+            .eq('id', t.id)
+        );
+        await Promise.all(promises);
+        setIsSaving(false);
+      } else {
+        writeGuestTasks(updated);
+      }
+    },
+    [isLoggedIn]
   );
 
   return {
@@ -212,5 +232,6 @@ export function useTasks() {
     updateTask,
     toggleTask,
     deleteTask,
+    reorderTasks,
   };
 }
