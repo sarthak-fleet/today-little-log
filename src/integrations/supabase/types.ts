@@ -274,6 +274,7 @@ export type Database = {
           id: string
           notes: string | null
           project_id: string | null
+          sort_order: number
           status: string
           title: string
           updated_at: string
@@ -285,6 +286,7 @@ export type Database = {
           id?: string
           notes?: string | null
           project_id?: string | null
+          sort_order?: number
           status?: string
           title: string
           updated_at?: string
@@ -296,6 +298,7 @@ export type Database = {
           id?: string
           notes?: string | null
           project_id?: string | null
+          sort_order?: number
           status?: string
           title?: string
           updated_at?: string
