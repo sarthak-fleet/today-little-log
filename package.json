@@ -13,6 +13,7 @@
   "dependencies": {
     "@fontsource/playfair-display": "^5.2.8",
     "@fontsource/source-sans-pro": "^5.2.5",
+    "@hello-pangea/dnd": "^17.0.0",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
