@@ -1,5 +1,8 @@
 # Welcome to your Lovable project
 
+![AI Generated](https://ai-percentage-pin.vercel.app/api/ai-percentage?value=100)
+![AI PRs Welcome](https://ai-percentage-pin.vercel.app/api/ai-prs?welcome=yes)
+
 ## Project info
 
 **URL**: https://lovable.dev/projects/ec6a44c8-e4ff-4664-9a4f-4c59949a724d
