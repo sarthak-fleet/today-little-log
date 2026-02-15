@@ -39,10 +39,8 @@ const TaskRow = ({
         {!isDragDisabled && (
           <div
             {...provided.dragHandleProps}
-            className="cursor-grab text-muted-foreground/40 hover:text-muted-foreground transition-colors flex items-center"
-          >
-            <GripVertical className="h-4 w-4" />
-          </div>
+            className="cursor-grab w-2 self-stretch flex items-center"
+          />
         )}
         <Checkbox
           checked={task.status === 'done'}
