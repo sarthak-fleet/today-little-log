@@ -2,13 +2,10 @@ import { useMemo, useState } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { GuestNotice } from '@/components/GuestNotice';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Trash2, Loader2, GripVertical, Clock, StickyNote } from 'lucide-react';
+import { Trash2, Loader2, Clock, StickyNote, Plus, ListChecks } from 'lucide-react';
 import { useTasks, TaskItem } from '@/hooks/useTasks';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 
@@ -30,54 +27,57 @@ const TaskRow = ({
       <div
         ref={provided.innerRef}
         {...provided.draggableProps}
-        className={`group flex items-center gap-3 rounded-lg border px-3 py-3 transition-colors ${
+        {...(!isDragDisabled ? provided.dragHandleProps : {})}
+        className={`group flex items-start gap-3 rounded-xl px-4 py-3.5 transition-all duration-200 ${
           snapshot.isDragging
-            ? 'border-primary/40 bg-primary/5 shadow-lg'
-            : 'border-border/50 bg-card hover:border-border'
-        }`}
+            ? 'bg-primary/5 shadow-lg ring-1 ring-primary/20 scale-[1.02]'
+            : task.status === 'done'
+              ? 'bg-muted/30 hover:bg-muted/50'
+              : 'bg-card hover:bg-card/80 shadow-sm hover:shadow-md'
+        } ${!isDragDisabled ? 'cursor-grab active:cursor-grabbing' : ''}`}
       >
-        {!isDragDisabled && (
-          <div
-            {...provided.dragHandleProps}
-            className="cursor-grab w-1 self-stretch flex items-center"
-          />
-        )}
         <Checkbox
           checked={task.status === 'done'}
           onCheckedChange={() => onToggle(task.id)}
-          className="shrink-0"
+          className={`shrink-0 mt-0.5 h-5 w-5 rounded-full border-2 transition-colors ${
+            task.status === 'done'
+              ? 'border-primary/40 data-[state=checked]:bg-primary/60'
+              : 'border-border hover:border-primary/60'
+          }`}
         />
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 space-y-1">
           <p
-            className={`text-sm font-medium leading-tight truncate ${
-              task.status === 'done' ? 'line-through text-muted-foreground' : 'text-foreground'
+            className={`text-[15px] leading-snug ${
+              task.status === 'done'
+                ? 'line-through text-muted-foreground/60'
+                : 'text-foreground font-medium'
             }`}
           >
             {task.title}
           </p>
-          {task.notes && (
-            <p className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5 truncate">
-              <StickyNote className="h-3 w-3 shrink-0" />
-              {task.notes}
-            </p>
-          )}
+          <div className="flex items-center gap-3 flex-wrap">
+            {task.notes && (
+              <span className="flex items-center gap-1 text-xs text-muted-foreground/70 max-w-[200px] truncate">
+                <StickyNote className="h-3 w-3 shrink-0" />
+                {task.notes}
+              </span>
+            )}
+            {task.estimate_minutes !== undefined && task.estimate_minutes > 0 && (
+              <span className="flex items-center gap-1 text-xs text-muted-foreground/70">
+                <Clock className="h-3 w-3 shrink-0" />
+                {task.estimate_minutes}m
+              </span>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          {task.estimate_minutes !== undefined && (
-            <span className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Clock className="h-3 w-3" />
-              {task.estimate_minutes}m
-            </span>
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-muted-foreground/40 opacity-0 group-hover:opacity-100 hover:text-destructive transition-all"
-            onClick={() => onDelete(task.id)}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-muted-foreground/30 opacity-0 group-hover:opacity-100 hover:text-destructive hover:bg-destructive/10 transition-all shrink-0 mt-0.5"
+          onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
       </div>
     )}
   </Draggable>
@@ -89,6 +89,7 @@ const Tasks = () => {
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
   const [estimate, setEstimate] = useState('');
+  const [showExtras, setShowExtras] = useState(false);
   const [activeTab, setActiveTab] = useState('open');
 
   const parsedEstimate = Number.parseInt(estimate, 10);
@@ -104,6 +105,7 @@ const Tasks = () => {
     setTitle('');
     setNotes('');
     setEstimate('');
+    setShowExtras(false);
   };
 
   const taskCounts = useMemo(() => {
@@ -123,19 +125,13 @@ const Tasks = () => {
 
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination || result.source.index === result.destination.index) return;
-
-    // We need to work on the full tasks array
     const sourceTask = filteredTasks[result.source.index];
     const destTask = filteredTasks[result.destination.index];
-
-    // Find indices in the full array
     const fullCopy = [...tasks];
     const srcIdx = fullCopy.findIndex((t) => t.id === sourceTask.id);
     const destIdx = fullCopy.findIndex((t) => t.id === destTask.id);
-
     const [removed] = fullCopy.splice(srcIdx, 1);
     fullCopy.splice(destIdx, 0, removed);
-
     reorderTasks(fullCopy);
   };
 
@@ -153,72 +149,101 @@ const Tasks = () => {
     .filter((t) => t.status === 'todo' && t.estimate_minutes)
     .reduce((sum, t) => sum + (t.estimate_minutes ?? 0), 0);
 
+  const progressPercent = taskCounts.total > 0 ? Math.round((taskCounts.done / taskCounts.total) * 100) : 0;
+
   return (
     <AppLayout isSaving={isSaving}>
       {!isLoggedIn && (
-        <div className="max-w-2xl mx-auto px-4 pt-4">
+        <div className="max-w-xl mx-auto px-4 pt-4">
           <GuestNotice message="Log in to save your tasks across devices" />
         </div>
       )}
 
-      <div className="max-w-2xl mx-auto px-4 py-6 md:py-10 space-y-6">
-        {/* Header */}
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-display font-semibold text-foreground">Tasks</h2>
-            <p className="text-sm text-muted-foreground">
-              {taskCounts.open} open{totalMinutes > 0 && ` · ~${totalMinutes} min`}
-            </p>
+      <div className="max-w-xl mx-auto px-4 py-6 md:py-10 space-y-8">
+        {/* Header with progress */}
+        <div className="space-y-3">
+          <div className="flex items-end justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <ListChecks className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-xl font-display font-semibold text-foreground leading-tight">Tasks</h2>
+                <p className="text-sm text-muted-foreground">
+                  {taskCounts.open} open{totalMinutes > 0 && ` · ~${totalMinutes} min`}
+                </p>
+              </div>
+            </div>
+            <span className="text-xs font-medium text-muted-foreground tabular-nums">
+              {taskCounts.done}/{taskCounts.total}
+            </span>
           </div>
-          <Badge variant="outline" className="text-xs">
-            {taskCounts.done}/{taskCounts.total} done
-          </Badge>
+          {/* Progress bar */}
+          {taskCounts.total > 0 && (
+            <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full rounded-full bg-primary/70 transition-all duration-500 ease-out"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          )}
         </div>
 
-        {/* Add form */}
-        <Card className="border-border/60">
-          <CardContent className="pt-5 space-y-3">
+        {/* Add task — clean inline form */}
+        <div className="space-y-2">
+          <div className="flex gap-2">
             <Input
-              placeholder="What needs to be done?"
+              placeholder="Add a task..."
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
-              className="text-sm"
+              onFocus={() => setShowExtras(true)}
+              className="text-[15px] h-11 bg-card shadow-sm border-border/40 focus:border-primary/40 rounded-xl"
             />
-            <div className="grid gap-3 sm:grid-cols-2">
+            <Button
+              onClick={handleAddTask}
+              disabled={!title.trim() || !isEstimateValid}
+              size="icon"
+              className="h-11 w-11 shrink-0 rounded-xl"
+            >
+              <Plus className="h-5 w-5" />
+            </Button>
+          </div>
+          {showExtras && (
+            <div className="grid gap-2 sm:grid-cols-2 animate-in slide-in-from-top-1 duration-200">
               <Input
                 placeholder="Notes (optional)"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="text-sm"
+                className="text-sm h-9 bg-card/60 border-border/30 rounded-lg"
               />
-              <div className="flex gap-2">
-                <Input
-                  type="number"
-                  min={0}
-                  placeholder="Est. minutes"
-                  value={estimate}
-                  onChange={(e) => setEstimate(e.target.value)}
-                  className="text-sm"
-                />
-                <Button
-                  onClick={handleAddTask}
-                  disabled={!title.trim() || !isEstimateValid}
-                  size="sm"
-                  className="shrink-0"
-                >
-                  Add
-                </Button>
-              </div>
+              <Input
+                type="number"
+                min={0}
+                placeholder="Est. minutes"
+                value={estimate}
+                onChange={(e) => setEstimate(e.target.value)}
+                className="text-sm h-9 bg-card/60 border-border/30 rounded-lg"
+              />
             </div>
-          </CardContent>
-        </Card>
+          )}
+        </div>
 
         {/* Task list */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-4">
-            <TabsTrigger value="open">Open</TabsTrigger>
-            <TabsTrigger value="done">Done</TabsTrigger>
+          <TabsList className="mb-5">
+            <TabsTrigger value="open">
+              Open
+              {taskCounts.open > 0 && (
+                <span className="ml-1.5 text-[11px] tabular-nums opacity-60">{taskCounts.open}</span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="done">
+              Done
+              {taskCounts.done > 0 && (
+                <span className="ml-1.5 text-[11px] tabular-nums opacity-60">{taskCounts.done}</span>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="all">All</TabsTrigger>
           </TabsList>
 
@@ -228,11 +253,11 @@ const Tasks = () => {
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  className="space-y-2"
+                  className="space-y-1.5"
                 >
                   {filteredTasks.length === 0 ? (
-                    <div className="rounded-lg border border-dashed border-border/70 py-10 text-center text-sm text-muted-foreground">
-                      No tasks here yet.
+                    <div className="rounded-xl border border-dashed border-border/50 py-14 text-center">
+                      <p className="text-sm text-muted-foreground/60">No tasks here yet</p>
                     </div>
                   ) : (
                     filteredTasks.map((task, index) => (
