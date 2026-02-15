@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from 'next-themes';
@@ -6,9 +7,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { LogOut, LogIn, Loader2, Cake, Moon, Sun } from 'lucide-react';
-import { differenceInDays, parseISO, isValid, format } from 'date-fns';
+import { differenceInDays, parseISO, isValid, format, getDaysInMonth, endOfMonth, endOfYear, differenceInCalendarDays } from 'date-fns';
 
 const AVERAGE_LIFESPAN_DAYS = 30000;
+
+type TimeView = 'month' | 'year' | 'life';
 
 interface NavbarProps {
   isSaving?: boolean;
@@ -19,6 +22,7 @@ export function Navbar({ isSaving = false }: NavbarProps) {
   const { user, profile, signOut, updateDob } = useAuth();
   const { resolvedTheme, setTheme } = useTheme();
   const isDark = (resolvedTheme ?? 'light') === 'dark';
+  const [timeView, setTimeView] = useState<TimeView>('month');
 
   const isLoggedIn = !!user;
   const today = new Date();
@@ -33,6 +37,54 @@ export function Navbar({ isSaving = false }: NavbarProps) {
   const dayOfLife = getDayOfLife();
   const daysRemaining = dayOfLife ? Math.max(0, AVERAGE_LIFESPAN_DAYS - dayOfLife) : null;
 
+  const getTimeStats = () => {
+    const totalDaysInMonth = getDaysInMonth(today);
+    const dayOfMonth = today.getDate();
+    const daysLeftMonth = totalDaysInMonth - dayOfMonth;
+    const monthPercent = Math.round((dayOfMonth / totalDaysInMonth) * 100);
+
+    const endOfYearDate = endOfYear(today);
+    const daysLeftYear = differenceInCalendarDays(endOfYearDate, today);
+    const dayOfYear = differenceInCalendarDays(today, new Date(today.getFullYear(), 0, 0));
+    const totalDaysInYear = differenceInCalendarDays(endOfYearDate, new Date(today.getFullYear(), 0, 0));
+    const yearPercent = Math.round((dayOfYear / totalDaysInYear) * 100);
+
+    return { daysLeftMonth, monthPercent, daysLeftYear, yearPercent, totalDaysInMonth, dayOfMonth };
+  };
+
+  const stats = getTimeStats();
+
+  const cycleView = () => {
+    if (timeView === 'month') setTimeView('year');
+    else if (timeView === 'year') setTimeView(dayOfLife ? 'life' : 'month');
+    else setTimeView('month');
+  };
+
+  const getTimeDisplay = () => {
+    if (timeView === 'month') {
+      return {
+        label: format(today, 'MMM\'yy'),
+        value: `${stats.daysLeftMonth}d left`,
+        percent: stats.monthPercent,
+      };
+    }
+    if (timeView === 'year') {
+      return {
+        label: `${today.getFullYear()}`,
+        value: `${stats.daysLeftYear}d left`,
+        percent: stats.yearPercent,
+      };
+    }
+    // life
+    return {
+      label: 'Life',
+      value: daysRemaining ? `${daysRemaining.toLocaleString()}d left` : '—',
+      percent: dayOfLife ? Math.round((dayOfLife / AVERAGE_LIFESPAN_DAYS) * 100) : 0,
+    };
+  };
+
+  const display = getTimeDisplay();
+
   const handleDobChange = async (newDob: string) => {
     await updateDob(newDob);
   };
@@ -44,10 +96,9 @@ export function Navbar({ isSaving = false }: NavbarProps) {
   return (
     <header className="py-3 px-4 border-b border-border/50">
       <div className="max-w-3xl mx-auto flex items-center justify-between md:max-w-none">
-        {/* Left: Date on mobile, Logo + Days on desktop */}
+        {/* Left: Date + Time counter */}
         <div className="flex items-center gap-4">
-          {/* Mobile: Current date */}
-          <div className="flex flex-col md:hidden">
+          <div className="flex flex-col">
             <span className="text-sm font-medium text-foreground">
               {format(today, 'EEEE')}
             </span>
@@ -56,42 +107,49 @@ export function Navbar({ isSaving = false }: NavbarProps) {
             </span>
           </div>
 
-          {/* Desktop: Current date */}
-          <div className="hidden md:flex flex-col">
-            <span className="text-sm font-medium text-foreground">
-              {format(today, 'EEEE')}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {format(today, 'MMM d, yyyy')}
-            </span>
-          </div>
+          {/* Time remaining counter */}
+          <button
+            onClick={cycleView}
+            className="flex items-center gap-2 text-sm hover:opacity-80 transition-opacity cursor-pointer group"
+            title="Click to cycle: month → year → life"
+          >
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                {display.label}
+              </span>
+              <span className="font-display font-bold text-foreground">
+                {display.value}
+              </span>
+            </div>
+            <div className="hidden sm:flex items-center gap-1">
+              <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-primary transition-all duration-500"
+                  style={{ width: `${display.percent}%` }}
+                />
+              </div>
+              <span className="text-xs text-muted-foreground">{display.percent}%</span>
+            </div>
+          </button>
+        </div>
 
-          {/* Days Remaining */}
-          {isLoggedIn && (
+        {/* Right: DOB setter (if logged in & no DOB) + Dark mode toggle + User section */}
+        <div className="flex items-center gap-1">
+          {isSaving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground mr-2" />}
+
+          {isLoggedIn && !dayOfLife && (
             <Popover>
               <PopoverTrigger asChild>
-                {dayOfLife ? (
-                  <button className="flex items-center gap-2 text-sm hover:opacity-80 transition-opacity cursor-pointer">
-                    <span className="text-muted-foreground hidden md:inline">Day</span>
-                    <span className="font-display font-bold text-foreground">
-                      {dayOfLife.toLocaleString()}
-                    </span>
-                    <span className="text-muted-foreground hidden sm:inline">
-                      (~{daysRemaining?.toLocaleString()} left)
-                    </span>
-                  </button>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-muted-foreground hover:text-foreground gap-1 h-8"
-                  >
-                    <Cake className="h-4 w-4" />
-                    <span className="hidden sm:inline">Set birthday</span>
-                  </Button>
-                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-foreground gap-1 h-8"
+                >
+                  <Cake className="h-4 w-4" />
+                  <span className="hidden sm:inline">Set birthday</span>
+                </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-64" align="start">
+              <PopoverContent className="w-64" align="end">
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-foreground">
                     Date of Birth
@@ -103,25 +161,10 @@ export function Navbar({ isSaving = false }: NavbarProps) {
                     max={new Date().toISOString().split('T')[0]}
                     className="w-full bg-background border-input"
                   />
-                  {dayOfLife && (
-                    <div className="space-y-1 pt-1">
-                      <p className="text-xs text-muted-foreground">
-                        Today is day <span className="font-semibold text-foreground">{dayOfLife.toLocaleString()}</span> of your life
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        ~<span className="font-semibold text-foreground">{daysRemaining?.toLocaleString()}</span> days remaining
-                      </p>
-                    </div>
-                  )}
                 </div>
               </PopoverContent>
             </Popover>
           )}
-        </div>
-
-        {/* Right: Dark mode toggle + User section */}
-        <div className="flex items-center gap-1">
-          {isSaving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground mr-2" />}
 
           <Button
             variant="ghost"
