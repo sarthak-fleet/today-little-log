@@ -39,7 +39,7 @@ const TaskRow = ({
         {!isDragDisabled && (
           <div
             {...provided.dragHandleProps}
-            className="cursor-grab w-2 self-stretch flex items-center"
+            className="cursor-grab w-1 self-stretch flex items-center"
           />
         )}
         <Checkbox
