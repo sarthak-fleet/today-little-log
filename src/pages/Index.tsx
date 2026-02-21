@@ -18,13 +18,13 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const { loading } = useAuth();
 
-  const { 
+  const {
     entries,
-    getTodayEntry, 
-    getWeeklyEntry, 
-    getMonthlyEntry, 
-    getRecentEntries, 
-    saveEntry, 
+    getTodayEntry,
+    getWeeklyEntry,
+    getMonthlyEntry,
+    getRecentEntries,
+    saveEntry,
     updateEntry,
     deleteEntry,
     isLoaded,
@@ -43,13 +43,13 @@ const Index = () => {
 
   // Filter entries based on search query
   const filteredPastEntries = searchQuery
-    ? pastEntries.filter(entry => 
+    ? pastEntries.filter(entry =>
         entry.content.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : pastEntries;
 
   const filteredAllEntries = searchQuery
-    ? entries.filter(entry => 
+    ? entries.filter(entry =>
         entry.content.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : entries;
@@ -83,7 +83,7 @@ const Index = () => {
       )}
 
       {/* Main Content */}
-      <div className="max-w-3xl mx-auto px-4 py-8 md:py-12">
+      <div className="max-w-3xl mx-auto px-4 py-6 md:py-8">
         {/* Emotion Logger */}
         <section className="mb-8">
           <EmotionLogger />
@@ -171,7 +171,7 @@ const Index = () => {
             </div>
           ) : viewMode === 'list' ? (
             <PastEntries
-              entries={filteredPastEntries} 
+              entries={filteredPastEntries}
               onUpdate={updateEntry}
               onDelete={deleteEntry}
               hasMore={hasMore && !searchQuery}

@@ -67,17 +67,17 @@ const TimeTracking = () => {
 
   const handlePomodoroComplete = useCallback(() => {
     setIsRunning(false);
-    
+
     if (pomodoroPhase === 'work') {
       setPomodoroCount((c) => c + 1);
       toast({
-        title: "🍅 Pomodoro complete!",
+        title: "Pomodoro complete!",
         description: `Great work! Time for a ${currentPomodoro.break / 60}-minute break.`,
       });
       setPomodoroPhase('break');
     } else {
       toast({
-        title: "☕ Break over!",
+        title: "Break over!",
         description: "Ready for another focused session?",
       });
       setPomodoroPhase('work');
@@ -181,7 +181,7 @@ const TimeTracking = () => {
   if (isLoading) {
     return (
       <AppLayout>
-        <div className="max-w-3xl mx-auto px-4 py-6 md:py-10 space-y-6">
+        <div className="max-w-3xl mx-auto px-4 py-6 md:py-8 space-y-6">
           <div className="flex items-start justify-between gap-4">
             <div>
               <Skeleton className="h-7 w-40 mb-2" />
@@ -198,7 +198,7 @@ const TimeTracking = () => {
 
   return (
     <AppLayout>
-      <div className="max-w-3xl mx-auto px-4 py-6 md:py-10 space-y-6">
+      <div className="max-w-3xl mx-auto px-4 py-6 md:py-8 space-y-6">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-xl font-display font-semibold text-foreground">Time Tracking</h2>
@@ -354,7 +354,7 @@ const TimeTracking = () => {
             </CardTitle>
             <div className="flex items-center gap-2">
               <Label htmlFor="pomodoro-toggle" className="text-xs text-muted-foreground">
-                🍅 Pomodoro
+                Pomodoro
               </Label>
               <Switch
                 id="pomodoro-toggle"
@@ -384,12 +384,12 @@ const TimeTracking = () => {
                   ))}
                 </div>
                 <Badge variant={pomodoroPhase === 'work' ? 'default' : 'outline'}>
-                  {pomodoroPhase === 'work' 
-                    ? `${currentPomodoro.work / 60} min work` 
+                  {pomodoroPhase === 'work'
+                    ? `${currentPomodoro.work / 60} min work`
                     : `${currentPomodoro.break / 60} min break`}
                 </Badge>
                 <span className="text-muted-foreground">
-                  🍅 {pomodoroCount} completed
+                  {pomodoroCount} completed
                 </span>
               </div>
             )}

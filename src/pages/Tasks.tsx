@@ -154,12 +154,12 @@ const Tasks = () => {
   return (
     <AppLayout isSaving={isSaving}>
       {!isLoggedIn && (
-        <div className="max-w-xl mx-auto px-4 pt-4">
+        <div className="max-w-3xl mx-auto px-4 pt-4">
           <GuestNotice message="Log in to save your tasks across devices" />
         </div>
       )}
 
-      <div className="max-w-xl mx-auto px-4 py-6 md:py-10 space-y-8">
+      <div className="max-w-3xl mx-auto px-4 py-6 md:py-8 space-y-8">
         {/* Header with progress */}
         <div className="space-y-3">
           <div className="flex items-end justify-between gap-4">
