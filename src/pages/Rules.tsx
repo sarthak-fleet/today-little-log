@@ -59,7 +59,7 @@ const Rules = () => {
       )}
 
       {/* Main Content */}
-      <div className="max-w-3xl mx-auto px-4 py-8 md:py-12">
+      <div className="max-w-3xl mx-auto px-4 py-6 md:py-8">
         <h2 className="text-xl font-display font-semibold text-foreground mb-6">Rules for Life</h2>
 
         {/* Add new rule */}
@@ -93,7 +93,7 @@ const Rules = () => {
                 <span className="text-muted-foreground font-display font-semibold w-8 text-center">
                   {index + 1}.
                 </span>
-                
+
                 {editingId === rule.id ? (
                   <Input
                     value={editContent}

@@ -15,7 +15,7 @@ import { format } from 'date-fns';
 
 const Habits = () => {
   const { habits, logs, isLoaded, isSaving, isLoggedIn, addHabit, updateHabit, deleteHabit, logHabit, getLog, getTodayLog } = useHabits();
-  
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [historyHabit, setHistoryHabit] = useState<Habit | null>(null);
@@ -74,7 +74,7 @@ const Habits = () => {
 
   const handleSubmit = async () => {
     if (!formData.title.trim()) return;
-    
+
     if (editingHabit) {
       await updateHabit(editingHabit.id, formData);
     } else {
@@ -150,7 +150,7 @@ const Habits = () => {
       )}
 
       {/* Main Content */}
-      <div className="max-w-3xl mx-auto px-4 py-6">
+      <div className="max-w-3xl mx-auto px-4 py-6 md:py-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-display font-semibold text-foreground">Your Habits</h2>
           <Dialog open={isDialogOpen} onOpenChange={(open) => open ? handleOpenDialog() : handleCloseDialog()}>
@@ -174,7 +174,7 @@ const Habits = () => {
                     onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                   />
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Type</Label>
@@ -191,7 +191,7 @@ const Habits = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label>Track by</Label>
                     <Select
@@ -225,7 +225,7 @@ const Habits = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label>{formData.target_type === 'target' ? 'Target' : 'Limit'}</Label>
                     <Input
@@ -282,8 +282,8 @@ const Habits = () => {
                 : `${formatValue(habit, remaining)} left`;
 
               return (
-                <Card 
-                  key={habit.id} 
+                <Card
+                  key={habit.id}
                   className={`transition-colors hover:shadow-md ${cardTone}`}
                 >
                   <CardHeader className="pb-2">
@@ -338,7 +338,7 @@ const Habits = () => {
                         </span>
                       </div>
                       <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div 
+                        <div
                           className={`h-full transition-all ${progressTone}`}
                           style={{ width: `${Math.min(percentage, 100)}%` }}
                         />
@@ -353,7 +353,7 @@ const Habits = () => {
                         </span>
                       </div>
                     </div>
-                    
+
                     <div className="mt-4 flex items-center justify-between gap-2">
                       <Button
                         size="sm"
