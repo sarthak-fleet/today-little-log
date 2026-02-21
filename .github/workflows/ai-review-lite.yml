@@ -1,0 +1,28 @@
+name: AI Review Lite
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  review:
+    if: ${{ github.event.pull_request.draft == false }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run AI reviewer
+        uses: sarthakagrawal927/code-reviewer-action@v0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          ai_base_url: ${{ secrets.AI_BASE_URL }}
+          ai_api_key: ${{ secrets.AI_API_KEY }}
+          model: gpt-4o-mini
+          max_inline_findings: "5"
+          min_inline_severity: medium
+          review_tone: balanced
+          fail_on_findings: "false"
