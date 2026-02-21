@@ -63,50 +63,50 @@ export const ScheduleMaker = ({ blocks, isLoaded, onBlocksChange, onClearAll }: 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isMouseDown) return;
-      
+
       // Resizing block
       if (resizing) {
         const slot = getSlotFromY(e.clientY);
         const block = blocks.find(b => b.id === resizing.id);
         if (!block) return;
-        
+
         if (resizing.edge === 'top') {
           const endSlot = hourToSlot(block.endHour);
           const newStartSlot = Math.max(0, Math.min(endSlot - 1, slot));
-          onBlocksChange(blocks.map(b => 
+          onBlocksChange(blocks.map(b =>
             b.id === resizing.id ? { ...b, startHour: slotToHour(newStartSlot) } : b
           ));
         } else {
           const startSlot = hourToSlot(block.startHour);
           const newEndSlot = Math.max(startSlot + 1, Math.min(96, slot + 1));
-          onBlocksChange(blocks.map(b => 
+          onBlocksChange(blocks.map(b =>
             b.id === resizing.id ? { ...b, endHour: slotToHour(newEndSlot) } : b
           ));
         }
         return;
       }
-      
+
       // Dragging existing block
       if (dragBlock) {
         const slot = getSlotFromY(e.clientY);
         const block = blocks.find(b => b.id === dragBlock.id);
         if (!block) return;
-        
+
         const duration = block.endHour - block.startHour;
         const durationSlots = hourToSlot(duration);
         let newStartSlot = slot - dragBlock.offsetSlots;
-        
+
         // Clamp to bounds
         newStartSlot = Math.max(0, Math.min(96 - durationSlots, newStartSlot));
-        
-        onBlocksChange(blocks.map(b => 
-          b.id === dragBlock.id 
+
+        onBlocksChange(blocks.map(b =>
+          b.id === dragBlock.id
             ? { ...b, startHour: slotToHour(newStartSlot), endHour: slotToHour(newStartSlot + durationSlots) }
             : b
         ));
         return;
       }
-      
+
       // Creating new block via drag
       if (dragging) {
         const slot = getSlotFromY(e.clientY);
@@ -118,7 +118,7 @@ export const ScheduleMaker = ({ blocks, isLoaded, onBlocksChange, onClearAll }: 
       if (dragging && isMouseDown && !dragBlock) {
         const startSlot = Math.min(dragging.startSlot, dragging.endSlot);
         const endSlot = Math.max(dragging.startSlot, dragging.endSlot);
-        
+
         if (endSlot > startSlot) {
           const newBlock: TimeBlock = {
             id: crypto.randomUUID(),
@@ -219,8 +219,51 @@ export const ScheduleMaker = ({ blocks, isLoaded, onBlocksChange, onClearAll }: 
 
   return (
     <div className="flex flex-col lg:flex-row gap-6">
-      {/* Timeline */}
-      <div className="flex-1">
+      {/* Mobile: simplified list */}
+      <div className="lg:hidden space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">{blocks.length} block{blocks.length !== 1 ? 's' : ''} scheduled</p>
+          {blocks.length > 0 && (
+            <Button variant="outline" size="sm" onClick={onClearAll}>Clear all</Button>
+          )}
+        </div>
+        {blocks.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-sm text-muted-foreground">Use a larger screen to create schedule blocks</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {[...blocks].sort((a, b) => a.startHour - b.startHour).map((block) => (
+              <div
+                key={block.id}
+                className="flex items-center gap-3 p-3 rounded-lg border border-border/60"
+                style={{ borderLeftWidth: 4, borderLeftColor: block.color }}
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm truncate">{block.title || 'Untitled'}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatTime(block.startHour)} - {formatTime(block.endHour)}
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 text-muted-foreground hover:text-destructive shrink-0"
+                  onClick={() => {
+                    const updated = blocks.filter(b => b.id !== block.id);
+                    onBlocksChange(updated);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Desktop: full timeline */}
+      <div className="hidden lg:block flex-1">
         <div
           ref={timelineRef}
           className="relative bg-card border border-border rounded-lg overflow-auto"
@@ -243,8 +286,8 @@ export const ScheduleMaker = ({ blocks, isLoaded, onBlocksChange, onClearAll }: 
               <div
                 key={slot}
                 className="absolute left-14 right-0 border-b border-border/20 hover:bg-primary/10 cursor-pointer transition-colors"
-                style={{ 
-                  top: slot * SLOT_HEIGHT, 
+                style={{
+                  top: slot * SLOT_HEIGHT,
                   height: SLOT_HEIGHT,
                   borderBottomStyle: slot % 4 === 3 ? 'solid' : 'dashed',
                   borderBottomColor: slot % 4 === 3 ? 'hsl(var(--border))' : undefined,
@@ -275,7 +318,7 @@ export const ScheduleMaker = ({ blocks, isLoaded, onBlocksChange, onClearAll }: 
               const height = (block.endHour - block.startHour) * HOUR_HEIGHT - 2;
               const isDragging = dragBlock?.id === block.id;
               const isResizing = resizing?.id === block.id;
-              
+
                 return (
                 <div
                   key={block.id}
@@ -287,15 +330,15 @@ export const ScheduleMaker = ({ blocks, isLoaded, onBlocksChange, onClearAll }: 
                   }}
                 >
                   {/* Top resize handle */}
-                  <div 
+                  <div
                     className="absolute -top-1 left-0 right-0 h-3 cursor-ns-resize group flex items-center justify-center"
                     onMouseDown={(e) => handleResizeStart(e, block.id, 'top')}
                   >
                     <div className="w-10 h-1 rounded-full bg-white/50 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
-                  
+
                   {/* Bottom resize handle */}
-                  <div 
+                  <div
                     className="absolute -bottom-1 left-0 right-0 h-3 cursor-ns-resize group flex items-center justify-center"
                     onMouseDown={(e) => handleResizeStart(e, block.id, 'bottom')}
                   >
@@ -343,13 +386,13 @@ export const ScheduleMaker = ({ blocks, isLoaded, onBlocksChange, onClearAll }: 
 
                   <div className="h-full p-2 flex flex-col">
                     {/* Drag handle */}
-                    <div 
+                    <div
                       className="absolute left-0 top-0 bottom-0 w-6 flex items-center justify-center cursor-grab hover:bg-white/20 transition-colors"
                       onMouseDown={(e) => handleBlockDragStart(e, block)}
                     >
                       <GripVertical className="h-4 w-4 text-white/70" />
                     </div>
-                    
+
                     <div className="flex-1 min-w-0 ml-5">
                       {editingId === block.id ? (
                         <Input
@@ -380,7 +423,7 @@ export const ScheduleMaker = ({ blocks, isLoaded, onBlocksChange, onClearAll }: 
                           className="h-6 text-sm bg-background border-input"
                         />
                       ) : (
-                        <div 
+                        <div
                           className="flex items-center gap-1 cursor-pointer group/title"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -394,7 +437,7 @@ export const ScheduleMaker = ({ blocks, isLoaded, onBlocksChange, onClearAll }: 
                         </div>
                       )}
                     </div>
-                    
+
                     {height >= 50 && (
                       <div className="flex items-center gap-1 mt-auto ml-5">
                         <span className="text-xs text-white/90 drop-shadow">
