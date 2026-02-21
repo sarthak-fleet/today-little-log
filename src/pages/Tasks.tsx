@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Trash2, Loader2, Clock, StickyNote, Plus, ListChecks } from 'lucide-react';
+import { Trash2, Loader2, Clock, StickyNote, Plus, ListChecks, CheckCheck } from 'lucide-react';
 import { useTasks, TaskItem } from '@/hooks/useTasks';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 
@@ -189,11 +189,14 @@ const Tasks = () => {
             </span>
           </div>
           {taskCounts.total > 0 && (
-            <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
-              <div
-                className="h-full rounded-full bg-primary/70 transition-all duration-500 ease-out"
-                style={{ width: `${progressPercent}%` }}
-              />
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-primary/70 transition-all duration-500 ease-out"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+              <span className="text-xs tabular-nums text-muted-foreground/60 w-8 text-right">{progressPercent}%</span>
             </div>
           )}
         </div>
@@ -240,21 +243,40 @@ const Tasks = () => {
 
         {/* Task list */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-5">
-            <TabsTrigger value="open">
-              Open
-              {taskCounts.open > 0 && (
-                <span className="ml-1.5 text-[11px] tabular-nums opacity-60">{taskCounts.open}</span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="done">
-              Done
-              {taskCounts.done > 0 && (
-                <span className="ml-1.5 text-[11px] tabular-nums opacity-60">{taskCounts.done}</span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="all">All</TabsTrigger>
-          </TabsList>
+          <div className="flex items-center justify-between mb-5">
+            <TabsList>
+              <TabsTrigger value="open">
+                Open
+                {taskCounts.open > 0 && (
+                  <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-primary/15 px-1.5 py-px text-[10px] font-medium tabular-nums text-primary/80 min-w-[18px]">
+                    {taskCounts.open}
+                  </span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="done">
+                Done
+                {taskCounts.done > 0 && (
+                  <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-muted px-1.5 py-px text-[10px] font-medium tabular-nums text-muted-foreground min-w-[18px]">
+                    {taskCounts.done}
+                  </span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="all">All</TabsTrigger>
+            </TabsList>
+            {activeTab === 'done' && taskCounts.done > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs text-muted-foreground hover:text-destructive gap-1.5"
+                onClick={() => {
+                  tasks.filter(t => t.status === 'done').forEach(t => deleteTask(t.id));
+                }}
+              >
+                <CheckCheck className="h-3.5 w-3.5" />
+                Clear completed
+              </Button>
+            )}
+          </div>
 
           <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId="task-list">
@@ -267,8 +289,22 @@ const Tasks = () => {
                   {filteredTasks.length === 0 ? (
                     <div className="text-center py-12">
                       <ListChecks className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
-                      <p className="text-sm font-medium text-muted-foreground">No tasks yet</p>
-                      <p className="text-xs text-muted-foreground/70 mt-1">Add your first task above</p>
+                      {activeTab === 'open' && taskCounts.done > 0 ? (
+                        <>
+                          <p className="text-sm font-medium text-muted-foreground">All caught up!</p>
+                          <p className="text-xs text-muted-foreground/70 mt-1">{taskCounts.done} task{taskCounts.done !== 1 ? 's' : ''} completed</p>
+                        </>
+                      ) : activeTab === 'done' ? (
+                        <>
+                          <p className="text-sm font-medium text-muted-foreground">Nothing done yet</p>
+                          <p className="text-xs text-muted-foreground/70 mt-1">Check off tasks to see them here</p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-sm font-medium text-muted-foreground">No tasks yet</p>
+                          <p className="text-xs text-muted-foreground/70 mt-1">Add your first task above</p>
+                        </>
+                      )}
                     </div>
                   ) : (
                     filteredTasks.map((task, index) => (
