@@ -177,23 +177,17 @@ const Tasks = () => {
       <div className="max-w-3xl mx-auto px-4 py-6 md:py-8 space-y-8">
         {/* Header with progress */}
         <div className="space-y-3">
-          <div className="flex items-end justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <ListChecks className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h2 className="text-xl font-display font-semibold text-foreground leading-tight">Tasks</h2>
-                <p className="text-sm text-muted-foreground">
-                  {taskCounts.open} open{totalMinutes > 0 && ` · ~${totalMinutes} min`}
-                </p>
-              </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-display font-semibold text-foreground">Tasks</h2>
+              <p className="text-sm text-muted-foreground">
+                {taskCounts.open} open{totalMinutes > 0 && ` · ~${totalMinutes} min`}
+              </p>
             </div>
             <span className="text-xs font-medium text-muted-foreground tabular-nums">
               {taskCounts.done}/{taskCounts.total}
             </span>
           </div>
-          {/* Progress bar */}
           {taskCounts.total > 0 && (
             <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
               <div
@@ -271,8 +265,10 @@ const Tasks = () => {
                   className="space-y-1.5"
                 >
                   {filteredTasks.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-border/50 py-14 text-center">
-                      <p className="text-sm text-muted-foreground/60">No tasks here yet</p>
+                    <div className="text-center py-12">
+                      <ListChecks className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
+                      <p className="text-sm font-medium text-muted-foreground">No tasks yet</p>
+                      <p className="text-xs text-muted-foreground/70 mt-1">Add your first task above</p>
                     </div>
                   ) : (
                     filteredTasks.map((task, index) => (

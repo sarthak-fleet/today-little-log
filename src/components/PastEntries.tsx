@@ -124,13 +124,10 @@ export function PastEntries({ entries, onUpdate, onDelete, hasMore, onLoadMore }
 
   if (entries.length === 0) {
     return (
-      <div className="text-center py-12 animate-fade-in">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
-          <BookOpen className="h-8 w-8 text-muted-foreground" />
-        </div>
-        <p className="text-muted-foreground font-sans">
-          Your past entries will appear here
-        </p>
+      <div className="text-center py-12">
+        <BookOpen className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
+        <p className="text-sm font-medium text-muted-foreground">No entries yet</p>
+        <p className="text-xs text-muted-foreground/70 mt-1">Start writing to see your history here</p>
       </div>
     );
   }

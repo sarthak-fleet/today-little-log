@@ -248,10 +248,10 @@ const Habits = () => {
 
         {habits.length === 0 ? (
           <div className="text-center py-12">
-            <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h2 className="text-lg font-medium text-foreground mb-2">No habits yet</h2>
-            <p className="text-muted-foreground mb-4">Create your first habit to start tracking</p>
-            <Button onClick={() => handleOpenDialog()}>
+            <Target className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
+            <p className="text-sm font-medium text-muted-foreground">No habits yet</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">Create your first habit to start tracking</p>
+            <Button className="mt-4" onClick={() => handleOpenDialog()}>
               <Plus className="h-4 w-4 mr-2" />
               Add Habit
             </Button>
