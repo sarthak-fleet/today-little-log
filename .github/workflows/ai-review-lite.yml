@@ -21,7 +21,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           ai_base_url: ${{ secrets.AI_BASE_URL != '' && secrets.AI_BASE_URL || 'https://api.openai.com/v1' }}
           ai_api_key: ${{ secrets.AI_API_KEY != '' && secrets.AI_API_KEY || secrets.OPENAI_API_KEY != '' && secrets.OPENAI_API_KEY || secrets.GEMINI_API_KEY != '' && secrets.GEMINI_API_KEY || vars.AI_API_KEY != '' && vars.AI_API_KEY || vars.OPENAI_API_KEY != '' && vars.OPENAI_API_KEY || vars.GEMINI_API_KEY }}
-          model: gpt-4o-mini
+          model: gemini-3-flash-preview
           max_inline_findings: "5"
           min_inline_severity: medium
           review_tone: balanced
