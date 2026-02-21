@@ -4,6 +4,7 @@ import { BookOpen, Pencil, Trash2, Check, X, Calendar, CalendarDays, Heart, Doll
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 const CATEGORY_META: Record<string, { label: string; icon: React.ComponentType<{ className?: string }> }> = {
   general: { label: 'General', icon: BookOpen },
@@ -73,7 +74,7 @@ export function PastEntries({ entries, onUpdate, onDelete, hasMore, onLoadMore }
     today.setHours(0, 0, 0, 0);
     const diffTime = today.getTime() - date.getTime();
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 1) return '1 day ago';
     if (diffDays < 7) return `${diffDays} days ago`;
     if (diffDays < 14) return '1 week ago';
@@ -139,7 +140,7 @@ export function PastEntries({ entries, onUpdate, onDelete, hasMore, onLoadMore }
       <h2 className="text-xl font-display font-medium text-foreground mb-6">
         Previous Entries
       </h2>
-      
+
       <div className="space-y-3">
         {entries.map((entry, index) => (
           <div
@@ -164,19 +165,28 @@ export function PastEntries({ entries, onUpdate, onDelete, hasMore, onLoadMore }
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    className="h-9 w-9 text-muted-foreground hover:text-foreground"
                     onClick={() => startEditing(entry)}
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                    onClick={() => onDelete(entry.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete entry?</AlertDialogTitle>
+                        <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => onDelete(entry.id)}>Delete</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
 
