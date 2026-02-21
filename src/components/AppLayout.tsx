@@ -25,7 +25,7 @@ export function AppLayout({ children, isSaving }: AppLayoutProps) {
           <AppSidebar />
         </div>
         {/* Spacer to push content */}
-        <div className="hidden md:block w-14 flex-shrink-0" />
+        <div className="hidden md:block w-12 flex-shrink-0" />
         <SidebarInset className="flex-1 flex flex-col min-w-0">
           <Navbar isSaving={isSaving} />
           <main className="flex-1 overflow-auto pb-20 md:pb-6">
