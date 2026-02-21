@@ -41,24 +41,56 @@ export function useTasks() {
     if (authLoading) return;
 
     const loadTasks = async () => {
-      if (isLoggedIn) {
+      if (isLoggedIn && user) {
         const { data, error } = await supabase
           .from('tasks')
           .select('*')
           .order('sort_order', { ascending: true });
 
         if (!error && data) {
-          setTasks(
-            data.map((t) => ({
-              id: t.id,
-              title: t.title,
-              notes: t.notes ?? undefined,
-              estimate_minutes: t.estimate_minutes ?? undefined,
-              status: t.status as 'todo' | 'done',
-              sort_order: (t as any).sort_order ?? 0,
-              created_at: t.created_at,
-            }))
-          );
+          const mapped: TaskItem[] = data.map((t) => ({
+            id: t.id,
+            title: t.title,
+            notes: t.notes ?? undefined,
+            estimate_minutes: t.estimate_minutes ?? undefined,
+            status: t.status as 'todo' | 'done',
+            sort_order: (t as any).sort_order ?? 0,
+            created_at: t.created_at,
+          }));
+          setTasks(mapped);
+
+          // Migrate guest tasks to Supabase if DB is empty
+          const guestTasks = readGuestTasks();
+          if (guestTasks.length > 0 && mapped.length === 0) {
+            for (const task of guestTasks) {
+              await supabase.from('tasks').insert({
+                id: task.id,
+                user_id: user.id,
+                title: task.title,
+                notes: task.notes ?? null,
+                estimate_minutes: task.estimate_minutes ?? null,
+                status: task.status,
+                sort_order: task.sort_order,
+              } as any);
+            }
+            // Reload after migration
+            const { data: reloaded } = await supabase
+              .from('tasks')
+              .select('*')
+              .order('sort_order', { ascending: true });
+            if (reloaded) {
+              setTasks(reloaded.map((t) => ({
+                id: t.id,
+                title: t.title,
+                notes: t.notes ?? undefined,
+                estimate_minutes: t.estimate_minutes ?? undefined,
+                status: t.status as 'todo' | 'done',
+                sort_order: (t as any).sort_order ?? 0,
+                created_at: t.created_at,
+              })));
+            }
+            localStorage.removeItem(GUEST_TASKS_KEY);
+          }
         }
       } else {
         setTasks(readGuestTasks());
@@ -67,7 +99,7 @@ export function useTasks() {
     };
 
     loadTasks();
-  }, [authLoading, isLoggedIn]);
+  }, [authLoading, isLoggedIn, user]);
 
   const addTask = useCallback(
     async (payload: { title: string; notes?: string; estimate_minutes?: number }) => {
