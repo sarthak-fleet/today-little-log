@@ -2,6 +2,7 @@ import { ReactNode, useState } from 'react';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
 import { BottomNav } from './BottomNav';
+import { ChatBot } from './ChatBot';
 import { Navbar } from './Navbar';
 
 interface AppLayoutProps {
@@ -34,6 +35,7 @@ export function AppLayout({ children, isSaving }: AppLayoutProps) {
         </SidebarInset>
       </div>
       <BottomNav />
+      <ChatBot />
     </SidebarProvider>
   );
 }

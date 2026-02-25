@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Feather, Target, Clock, BookOpen, CheckSquare, Timer } from 'lucide-react';
+import { Feather, Target, Clock, BookOpen, CheckSquare } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -17,7 +17,6 @@ const navItems = [
   { title: 'Journal', url: '/', icon: Feather },
   { title: 'Habits', url: '/habits', icon: Target },
   { title: 'Tasks', url: '/tasks', icon: CheckSquare },
-  { title: 'Time', url: '/time-tracking', icon: Timer },
   { title: 'Schedule', url: '/schedule', icon: Clock },
   { title: 'Rules', url: '/rules', icon: BookOpen },
 ];
@@ -29,8 +28,8 @@ export function AppSidebar() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <Sidebar 
-      collapsible="icon" 
+    <Sidebar
+      collapsible="icon"
       className="border-r-0 bg-sidebar/95 backdrop-blur-sm transition-all duration-300 ease-out"
     >
       <SidebarHeader className="px-3 py-4">
