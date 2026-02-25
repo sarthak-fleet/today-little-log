@@ -11,7 +11,6 @@ import Schedule from "./pages/Schedule";
 import Rules from "./pages/Rules";
 import Habits from "./pages/Habits";
 import Tasks from "./pages/Tasks";
-import TimeTracking from "./pages/TimeTracking";
 import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 
@@ -32,7 +31,6 @@ const App = () => (
               <Route path="/rules" element={<Rules />} />
               <Route path="/habits" element={<Habits />} />
               <Route path="/tasks" element={<Tasks />} />
-              <Route path="/time-tracking" element={<TimeTracking />} />
               <Route path="/install" element={<Install />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
