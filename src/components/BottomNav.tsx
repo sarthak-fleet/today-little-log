@@ -1,11 +1,10 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Feather, Target, Clock, BookOpen, CheckSquare, Timer } from 'lucide-react';
+import { Feather, Target, Clock, BookOpen, CheckSquare } from 'lucide-react';
 
 const navItems = [
   { title: 'Journal', url: '/', icon: Feather },
   { title: 'Habits', url: '/habits', icon: Target },
   { title: 'Tasks', url: '/tasks', icon: CheckSquare },
-  { title: 'Time', url: '/time-tracking', icon: Timer },
   { title: 'Schedule', url: '/schedule', icon: Clock },
   { title: 'Rules', url: '/rules', icon: BookOpen },
 ];
@@ -24,8 +23,8 @@ export function BottomNav() {
             key={item.title}
             onClick={() => navigate(item.url)}
             className={`flex flex-col items-center justify-center min-w-[56px] h-full gap-0.5 transition-colors ${
-              isActive(item.url) 
-                ? 'text-primary' 
+              isActive(item.url)
+                ? 'text-primary'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
