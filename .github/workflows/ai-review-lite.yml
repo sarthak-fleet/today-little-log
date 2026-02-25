@@ -1,0 +1,21 @@
+name: AI Review Lite
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  review:
+    if: ${{ github.event.pull_request.draft == false }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Trigger enterprise reviewer
+        uses: sarthakagrawal927/code-reviewer-action@v1
+        with:
+          platform_base_url: ${{ secrets.CODE_REVIEWER_PLATFORM_BASE_URL }}
+          platform_token: ${{ secrets.CODE_REVIEWER_PLATFORM_TOKEN }}
+          workflow_run_id: ${{ github.run_id }}
