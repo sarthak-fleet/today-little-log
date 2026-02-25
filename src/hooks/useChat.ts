@@ -101,39 +101,61 @@ export function useChat() {
 
       const decoder = new TextDecoder();
       let accumulated = '';
+      let buffer = '';
+
+      const updateAssistantMessage = (updatedContent: string) => {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === assistantMessage.id
+              ? { ...m, content: updatedContent }
+              : m
+          )
+        );
+      };
+
+      const processSseLine = (line: string) => {
+        if (!line.startsWith('data: ')) return;
+
+        const payload = line.slice(6).trim();
+        if (!payload || payload === '[DONE]') return;
+
+        let parsed: { text?: unknown; error?: unknown };
+        try {
+          parsed = JSON.parse(payload) as { text?: unknown; error?: unknown };
+        } catch {
+          // Skip malformed JSON event lines.
+          return;
+        }
+
+        if (typeof parsed.error === 'string' && parsed.error) {
+          throw new Error(parsed.error);
+        }
+
+        if (typeof parsed.text === 'string' && parsed.text) {
+          accumulated += parsed.text;
+          updateAssistantMessage(accumulated);
+        }
+      };
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n');
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
 
         for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          const payload = line.slice(6).trim();
-          if (!payload || payload === '[DONE]') continue;
-
-          try {
-            const parsed = JSON.parse(payload);
-            if (parsed.text) {
-              accumulated += parsed.text;
-              const updatedContent = accumulated;
-              setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === assistantMessage.id
-                    ? { ...m, content: updatedContent }
-                    : m
-                )
-              );
-            }
-          } catch {
-            // skip malformed JSON lines
-          }
+          processSseLine(line.trim());
         }
       }
-    } catch (err: any) {
-      const errorContent = `Error: ${err.message || 'Unknown error'}`;
+
+      if (buffer.trim()) {
+        processSseLine(buffer.trim());
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      const errorContent = `Error: ${message}`;
       setMessages((prev) =>
         prev.map((m) =>
           m.id === assistantMessage.id
