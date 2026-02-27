@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { apiFetch } from '@/lib/api';
 import { useAuth } from './useAuth';
 
 export type EntryType = 'daily' | 'weekly' | 'monthly';
@@ -27,50 +27,46 @@ export function useJournalEntries() {
   const fetchEntries = useCallback(async (loadMore = false) => {
     if (user) {
       const currentOffset = loadMore ? entries.length : 0;
-      
-      const { data, error, count } = await supabase
-        .from('journal_entries')
-        .select('*', { count: 'exact' })
-        .eq('user_id', user.id)
-        .order('date', { ascending: false })
-        .range(currentOffset, currentOffset + PAGE_SIZE - 1);
 
-      if (error) {
-        console.error('Failed to fetch entries:', error);
-      } else {
-        const newEntries = (data as JournalEntry[]) || [];
+      try {
+        const result = await apiFetch<{ data: JournalEntry[], count: number }>(
+          '/api/journal-entries?offset=' + currentOffset + '&limit=' + PAGE_SIZE
+        );
+
+        const newEntries = result.data || [];
         if (loadMore) {
           setEntries(prev => [...prev, ...newEntries]);
         } else {
           setEntries(newEntries);
         }
-        setHasMore(count ? currentOffset + newEntries.length < count : false);
-        
+        setHasMore(result.count ? currentOffset + newEntries.length < result.count : false);
+
         // Check for local storage migration (only on initial load)
         if (!loadMore) {
           const savedEntries = localStorage.getItem(STORAGE_KEY);
-          if (savedEntries && (!data || data.length === 0)) {
+          if (savedEntries && newEntries.length === 0) {
             const localEntries = JSON.parse(savedEntries) as JournalEntry[];
             for (const entry of localEntries) {
-              await supabase.from('journal_entries').insert({
-                user_id: user.id,
-                date: entry.date,
-                content: entry.content,
-                entry_type: entry.entry_type,
+              await apiFetch('/api/journal-entries', {
+                method: 'POST',
+                body: JSON.stringify({
+                  date: entry.date,
+                  content: entry.content,
+                  entry_type: entry.entry_type,
+                }),
               });
             }
             // Reload after migration
-            const { data: reloadedEntries } = await supabase
-              .from('journal_entries')
-              .select('*')
-              .eq('user_id', user.id)
-              .order('date', { ascending: false })
-              .limit(PAGE_SIZE);
-            if (reloadedEntries) {
-              setEntries(reloadedEntries as JournalEntry[]);
+            const reloaded = await apiFetch<{ data: JournalEntry[], count: number }>(
+              '/api/journal-entries?offset=0&limit=' + PAGE_SIZE
+            );
+            if (reloaded.data) {
+              setEntries(reloaded.data);
             }
           }
         }
+      } catch (error) {
+        console.error('Failed to fetch entries:', error);
       }
     } else {
       // Guest mode - use localStorage
@@ -124,7 +120,7 @@ export function useJournalEntries() {
 
   const saveEntry = async (content: string, date?: string, entryType: EntryType = 'daily') => {
     setIsSaving(true);
-    
+
     let targetDate = date;
     if (!targetDate) {
       if (entryType === 'weekly') {
@@ -139,41 +135,35 @@ export function useJournalEntries() {
     const existingEntry = entries.find(e => e.date === targetDate && e.entry_type === entryType);
 
     if (user) {
-      if (existingEntry) {
-        const { error } = await supabase
-          .from('journal_entries')
-          .update({ content })
-          .eq('id', existingEntry.id);
-
-        if (error) {
-          console.error('Failed to update entry:', error);
-          setIsSaving(false);
-          return;
-        }
-      } else {
-        const { error } = await supabase
-          .from('journal_entries')
-          .insert({
-            user_id: user.id,
-            date: targetDate,
-            content,
-            entry_type: entryType,
+      try {
+        if (existingEntry) {
+          await apiFetch('/api/journal-entries', {
+            method: 'PATCH',
+            body: JSON.stringify({ id: existingEntry.id, content }),
           });
-
-        if (error) {
-          console.error('Failed to create entry:', error);
-          setIsSaving(false);
-          return;
+        } else {
+          await apiFetch('/api/journal-entries', {
+            method: 'POST',
+            body: JSON.stringify({
+              date: targetDate,
+              content,
+              entry_type: entryType,
+            }),
+          });
         }
+        await fetchEntries(false);
+      } catch (error) {
+        console.error('Failed to save entry:', error);
+        setIsSaving(false);
+        return;
       }
-      await fetchEntries(false);
     } else {
       // Guest mode
       let newEntries: JournalEntry[];
       if (existingEntry) {
-        newEntries = entries.map(e => 
-          e.id === existingEntry.id 
-            ? { ...e, content, updated_at: new Date().toISOString() } 
+        newEntries = entries.map(e =>
+          e.id === existingEntry.id
+            ? { ...e, content, updated_at: new Date().toISOString() }
             : e
         );
       } else {
@@ -190,57 +180,57 @@ export function useJournalEntries() {
       setEntries(newEntries);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newEntries));
     }
-    
+
     setIsSaving(false);
   };
 
   const updateEntry = async (id: string, content: string) => {
     setIsSaving(true);
-    
-    if (user) {
-      const { error } = await supabase
-        .from('journal_entries')
-        .update({ content })
-        .eq('id', id);
 
-      if (error) {
+    if (user) {
+      try {
+        await apiFetch('/api/journal-entries', {
+          method: 'PATCH',
+          body: JSON.stringify({ id, content }),
+        });
+        await fetchEntries(false);
+      } catch (error) {
         console.error('Failed to update entry:', error);
         setIsSaving(false);
         return;
       }
-      await fetchEntries(false);
     } else {
-      const newEntries = entries.map(e => 
+      const newEntries = entries.map(e =>
         e.id === id ? { ...e, content, updated_at: new Date().toISOString() } : e
       );
       setEntries(newEntries);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newEntries));
     }
-    
+
     setIsSaving(false);
   };
 
   const deleteEntry = async (id: string) => {
     setIsSaving(true);
-    
-    if (user) {
-      const { error } = await supabase
-        .from('journal_entries')
-        .delete()
-        .eq('id', id);
 
-      if (error) {
+    if (user) {
+      try {
+        await apiFetch('/api/journal-entries', {
+          method: 'DELETE',
+          body: JSON.stringify({ id }),
+        });
+        await fetchEntries(false);
+      } catch (error) {
         console.error('Failed to delete entry:', error);
         setIsSaving(false);
         return;
       }
-      await fetchEntries(false);
     } else {
       const newEntries = entries.filter(e => e.id !== id);
       setEntries(newEntries);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newEntries));
     }
-    
+
     setIsSaving(false);
   };
 

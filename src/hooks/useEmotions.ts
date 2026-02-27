@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { apiFetch } from '@/lib/api';
 import { useAuth } from './useAuth';
 
 export interface Emotion {
@@ -36,20 +36,15 @@ export function useEmotions() {
     localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(newEmotions));
   }, []);
 
-  // Fetch emotions from Supabase or localStorage
+  // Fetch emotions from API or localStorage
   useEffect(() => {
     const fetchEmotions = async () => {
       if (user) {
-        const { data, error } = await supabase
-          .from('emotions')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('logged_at', { ascending: false });
-
-        if (error) {
-          console.error('Failed to fetch emotions:', error);
-        } else {
+        try {
+          const data = await apiFetch<Emotion[]>('/api/emotions');
           setEmotions(data || []);
+        } catch (error) {
+          console.error('Failed to fetch emotions:', error);
         }
       } else {
         setEmotions(loadGuestEmotions());
@@ -63,26 +58,20 @@ export function useEmotions() {
   // Log a new emotion
   const logEmotion = async (emotion: string, comment?: string) => {
     const now = new Date().toISOString();
-    
-    if (user) {
-      const { data, error } = await supabase
-        .from('emotions')
-        .insert({
-          user_id: user.id,
-          emotion,
-          comment: comment || null,
-          logged_at: now,
-        })
-        .select()
-        .single();
 
-      if (error) {
+    if (user) {
+      try {
+        const data = await apiFetch<Emotion>('/api/emotions', {
+          method: 'POST',
+          body: JSON.stringify({ emotion, comment: comment || null, logged_at: now }),
+        });
+
+        setEmotions(prev => [data, ...prev]);
+        return data;
+      } catch (error) {
         console.error('Failed to log emotion:', error);
         return null;
       }
-
-      setEmotions(prev => [data, ...prev]);
-      return data;
     } else {
       const newEmotion: Emotion = {
         id: crypto.randomUUID(),
@@ -103,12 +92,12 @@ export function useEmotions() {
   // Delete an emotion
   const deleteEmotion = async (id: string) => {
     if (user) {
-      const { error } = await supabase
-        .from('emotions')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
+      try {
+        await apiFetch('/api/emotions', {
+          method: 'DELETE',
+          body: JSON.stringify({ id }),
+        });
+      } catch (error) {
         console.error('Failed to delete emotion:', error);
         return false;
       }

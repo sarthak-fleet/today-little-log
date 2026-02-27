@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { apiFetch } from '@/lib/api';
 
 export interface Profile {
   id: string;
@@ -27,7 +28,7 @@ export function useAuth() {
         // Fetch profile when user logs in
         if (session?.user) {
           setTimeout(() => {
-            fetchProfile(session.user.id);
+            fetchProfile();
           }, 0);
         } else {
           setProfile(null);
@@ -41,24 +42,19 @@ export function useAuth() {
       setUser(session?.user ?? null);
       setLoading(false);
       if (session?.user) {
-        fetchProfile(session.user.id);
+        fetchProfile();
       }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Failed to fetch profile:', error);
-    } else {
+  const fetchProfile = async () => {
+    try {
+      const data = await apiFetch<Profile | null>('/api/profiles');
       setProfile(data);
+    } catch (error) {
+      console.error('Failed to fetch profile:', error);
     }
   };
 
@@ -68,16 +64,20 @@ export function useAuth() {
 
   const updateDob = async (dob: string) => {
     if (!user) return { error: new Error('Not authenticated') };
-    
-    const { error } = await supabase
-      .from('profiles')
-      .update({ dob })
-      .eq('user_id', user.id);
 
-    if (!error && profile) {
-      setProfile({ ...profile, dob });
+    try {
+      await apiFetch('/api/profiles', {
+        method: 'PATCH',
+        body: JSON.stringify({ dob }),
+      });
+
+      if (profile) {
+        setProfile({ ...profile, dob });
+      }
+      return { error: null };
+    } catch (error) {
+      return { error };
     }
-    return { error };
   };
 
   return {

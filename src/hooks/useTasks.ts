@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { apiFetch } from '@/lib/api';
 import { useAuth } from './useAuth';
 
 export interface TaskItem {
@@ -42,55 +42,51 @@ export function useTasks() {
 
     const loadTasks = async () => {
       if (isLoggedIn && user) {
-        const { data, error } = await supabase
-          .from('tasks')
-          .select('*')
-          .order('sort_order', { ascending: true });
+        try {
+          const data = await apiFetch<any[]>('/api/tasks');
 
-        if (!error && data) {
           const mapped: TaskItem[] = data.map((t) => ({
             id: t.id,
             title: t.title,
             notes: t.notes ?? undefined,
             estimate_minutes: t.estimate_minutes ?? undefined,
             status: t.status as 'todo' | 'done',
-            sort_order: (t as any).sort_order ?? 0,
+            sort_order: t.sort_order ?? 0,
             created_at: t.created_at,
           }));
           setTasks(mapped);
 
-          // Migrate guest tasks to Supabase if DB is empty
+          // Migrate guest tasks to DB if DB is empty
           const guestTasks = readGuestTasks();
           if (guestTasks.length > 0 && mapped.length === 0) {
             for (const task of guestTasks) {
-              await supabase.from('tasks').insert({
-                id: task.id,
-                user_id: user.id,
-                title: task.title,
-                notes: task.notes ?? null,
-                estimate_minutes: task.estimate_minutes ?? null,
-                status: task.status,
-                sort_order: task.sort_order,
-              } as any);
+              await apiFetch('/api/tasks', {
+                method: 'POST',
+                body: JSON.stringify({
+                  id: task.id,
+                  title: task.title,
+                  notes: task.notes ?? null,
+                  estimate_minutes: task.estimate_minutes ?? null,
+                  status: task.status,
+                  sort_order: task.sort_order,
+                }),
+              });
             }
             // Reload after migration
-            const { data: reloaded } = await supabase
-              .from('tasks')
-              .select('*')
-              .order('sort_order', { ascending: true });
-            if (reloaded) {
-              setTasks(reloaded.map((t) => ({
-                id: t.id,
-                title: t.title,
-                notes: t.notes ?? undefined,
-                estimate_minutes: t.estimate_minutes ?? undefined,
-                status: t.status as 'todo' | 'done',
-                sort_order: (t as any).sort_order ?? 0,
-                created_at: t.created_at,
-              })));
-            }
+            const reloaded = await apiFetch<any[]>('/api/tasks');
+            setTasks(reloaded.map((t) => ({
+              id: t.id,
+              title: t.title,
+              notes: t.notes ?? undefined,
+              estimate_minutes: t.estimate_minutes ?? undefined,
+              status: t.status as 'todo' | 'done',
+              sort_order: t.sort_order ?? 0,
+              created_at: t.created_at,
+            })));
             localStorage.removeItem(GUEST_TASKS_KEY);
           }
+        } catch {
+          // Failed to load from API, leave tasks empty
         }
       } else {
         setTasks(readGuestTasks());
@@ -118,20 +114,22 @@ export function useTasks() {
 
       if (isLoggedIn && user) {
         setIsSaving(true);
-        const { error } = await supabase.from('tasks').insert({
-          id: newTask.id,
-          user_id: user.id,
-          title: newTask.title,
-          notes: newTask.notes ?? null,
-          estimate_minutes: newTask.estimate_minutes ?? null,
-          status: newTask.status,
-          sort_order: newTask.sort_order,
-        } as any);
-        setIsSaving(false);
-
-        if (error) {
+        try {
+          await apiFetch('/api/tasks', {
+            method: 'POST',
+            body: JSON.stringify({
+              id: newTask.id,
+              title: newTask.title,
+              notes: newTask.notes ?? null,
+              estimate_minutes: newTask.estimate_minutes ?? null,
+              status: newTask.status,
+              sort_order: newTask.sort_order,
+            }),
+          });
+        } catch {
           setTasks((prev) => prev.filter((t) => t.id !== newTask.id));
         }
+        setIsSaving(false);
       } else {
         const updated = [...tasks, newTask];
         writeGuestTasks(updated);
@@ -151,22 +149,23 @@ export function useTasks() {
 
       if (isLoggedIn) {
         setIsSaving(true);
-        const { error } = await supabase
-          .from('tasks')
-          .update({
-            title: updates.title,
-            notes: updates.notes ?? null,
-            estimate_minutes: updates.estimate_minutes ?? null,
-            status: updates.status,
-          })
-          .eq('id', id);
-        setIsSaving(false);
-
-        if (error) {
+        try {
+          await apiFetch('/api/tasks', {
+            method: 'PATCH',
+            body: JSON.stringify({
+              id,
+              title: updates.title,
+              notes: updates.notes ?? null,
+              estimate_minutes: updates.estimate_minutes ?? null,
+              status: updates.status,
+            }),
+          });
+        } catch {
           setTasks((current) =>
             current.map((t) => (t.id === id ? prev : t))
           );
         }
+        setIsSaving(false);
       } else {
         const updated = tasks.map((t) => (t.id === id ? { ...t, ...updates } : t));
         writeGuestTasks(updated);
@@ -188,17 +187,17 @@ export function useTasks() {
 
       if (isLoggedIn) {
         setIsSaving(true);
-        const { error } = await supabase
-          .from('tasks')
-          .update({ status: newStatus })
-          .eq('id', id);
-        setIsSaving(false);
-
-        if (error) {
+        try {
+          await apiFetch('/api/tasks', {
+            method: 'PATCH',
+            body: JSON.stringify({ id, status: newStatus }),
+          });
+        } catch {
           setTasks((current) =>
             current.map((t) => (t.id === id ? { ...t, status: task.status } : t))
           );
         }
+        setIsSaving(false);
       } else {
         const updated = tasks.map((t) =>
           t.id === id ? { ...t, status: newStatus } : t
@@ -218,12 +217,15 @@ export function useTasks() {
 
       if (isLoggedIn) {
         setIsSaving(true);
-        const { error } = await supabase.from('tasks').delete().eq('id', id);
-        setIsSaving(false);
-
-        if (error) {
+        try {
+          await apiFetch('/api/tasks', {
+            method: 'DELETE',
+            body: JSON.stringify({ id }),
+          });
+        } catch {
           setTasks((current) => [prev, ...current]);
         }
+        setIsSaving(false);
       } else {
         const updated = tasks.filter((t) => t.id !== id);
         writeGuestTasks(updated);
@@ -239,14 +241,14 @@ export function useTasks() {
 
       if (isLoggedIn) {
         setIsSaving(true);
-        // Batch update sort_order for all reordered tasks
-        const promises = updated.map((t) =>
-          supabase
-            .from('tasks')
-            .update({ sort_order: t.sort_order } as any)
-            .eq('id', t.id)
+        await Promise.all(
+          updated.map((t) =>
+            apiFetch('/api/tasks', {
+              method: 'PATCH',
+              body: JSON.stringify({ id: t.id, sort_order: t.sort_order }),
+            })
+          )
         );
-        await Promise.all(promises);
         setIsSaving(false);
       } else {
         writeGuestTasks(updated);

@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { apiFetch } from '@/lib/api';
 import { useAuth } from './useAuth';
-import { Json } from '@/integrations/supabase/types';
 
 export interface TimeBlock {
   id: string;
@@ -22,16 +21,14 @@ export function useSchedule() {
   // Save to database
   const saveToDb = useCallback(async (blocksToSave: TimeBlock[]) => {
     if (!user) return;
-    
-    setIsSaving(true);
-    const { error } = await supabase
-      .from('schedules')
-      .upsert(
-        { user_id: user.id, blocks: blocksToSave as unknown as Json },
-        { onConflict: 'user_id' }
-      );
 
-    if (error) {
+    setIsSaving(true);
+    try {
+      await apiFetch('/api/schedules', {
+        method: 'POST',
+        body: JSON.stringify({ blocks: blocksToSave }),
+      });
+    } catch (error) {
       console.error('Failed to save schedule:', error);
     }
     setIsSaving(false);
@@ -41,25 +38,23 @@ export function useSchedule() {
   const loadSchedule = useCallback(async () => {
     if (user) {
       // Load from database
-      const { data, error } = await supabase
-        .from('schedules')
-        .select('blocks')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      try {
+        const data = await apiFetch<{ blocks: TimeBlock[] } | null>('/api/schedules');
 
-      if (error) {
-        console.error('Failed to load schedule:', error);
-      } else if (data) {
-        setBlocks((data.blocks as unknown as TimeBlock[]) || []);
-      } else {
-        // No schedule in DB, check localStorage for migration
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const localBlocks = JSON.parse(saved) as TimeBlock[];
-          setBlocks(localBlocks);
-          // Migrate to DB
-          await saveToDb(localBlocks);
+        if (data) {
+          setBlocks(data.blocks || []);
+        } else {
+          // No schedule in DB, check localStorage for migration
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved) {
+            const localBlocks = JSON.parse(saved) as TimeBlock[];
+            setBlocks(localBlocks);
+            // Migrate to DB
+            await saveToDb(localBlocks);
+          }
         }
+      } catch (error) {
+        console.error('Failed to load schedule:', error);
       }
     } else {
       // Not logged in, use localStorage
@@ -76,7 +71,7 @@ export function useSchedule() {
   // Update blocks and persist
   const updateBlocks = useCallback(async (newBlocks: TimeBlock[]) => {
     setBlocks(newBlocks);
-    
+
     if (user) {
       await saveToDb(newBlocks);
     } else {
