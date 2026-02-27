@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/**/*.ts": {
+      "includeFiles": "src/db/**"
+    }
+  },
   "rewrites": [
     { "source": "/api/auth/:path*", "destination": "/api/auth" },
     { "source": "/api/(.*)", "destination": "/api/$1" },
