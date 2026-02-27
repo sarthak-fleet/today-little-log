@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { db } from '../src/db';
-import { habits } from '../src/db/schema';
+import { db } from './_lib/db';
+import { habits } from './_lib/db';
 import { eq, and, asc } from 'drizzle-orm';
 import { getUserId } from './_lib/auth';
 

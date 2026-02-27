@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { db } from '../src/db';
-import { emotions } from '../src/db/schema';
+import { db } from './_lib/db';
+import { emotions } from './_lib/db';
 import { eq, and, desc } from 'drizzle-orm';
 import { getUserId } from './_lib/auth';
 

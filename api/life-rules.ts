@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { db } from '../src/db';
+import { db } from './_lib/db';
 import { getUserId } from './_lib/auth';
-import { lifeRules } from '../src/db/schema';
+import { lifeRules } from './_lib/db';
 import { eq, and, asc } from 'drizzle-orm';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
