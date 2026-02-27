@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { db } from '../src/db/index';
+import { db } from '../src/db';
 import { getUserId } from './_lib/auth';
 import { profiles } from '../src/db/schema';
 import { eq } from 'drizzle-orm';
