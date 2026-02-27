@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { toNodeHandler } from 'better-auth/node';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { db } from '../src/db';
+import { db } from '../src/db/index';
 import * as schema from '../src/db/schema';
 
 const auth = betterAuth({
