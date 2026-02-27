@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { authClient } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
 import { Feather } from 'lucide-react';
 
@@ -16,11 +16,9 @@ const Auth = () => {
   }, [user, loading, navigate]);
 
   const handleGoogleSignIn = async () => {
-    await supabase.auth.signInWithOAuth({
+    await authClient.signIn.social({
       provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/`,
-      },
+      callbackURL: '/',
     });
   };
 

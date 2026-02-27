@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { authClient } from '@/lib/auth-client';
 import { apiFetch } from '@/lib/api';
 
 export interface Profile {
@@ -12,42 +11,16 @@ export interface Profile {
 }
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const { data: sessionData, isPending } = authClient.useSession();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-
-        // Fetch profile when user logs in
-        if (session?.user) {
-          setTimeout(() => {
-            fetchProfile();
-          }, 0);
-        } else {
-          setProfile(null);
-        }
-      }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-      if (session?.user) {
-        fetchProfile();
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+    if (sessionData?.user) {
+      fetchProfile();
+    } else {
+      setProfile(null);
+    }
+  }, [sessionData?.user?.id]);
 
   const fetchProfile = async () => {
     try {
@@ -59,11 +32,11 @@ export function useAuth() {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await authClient.signOut();
   };
 
   const updateDob = async (dob: string) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    if (!sessionData?.user) return { error: new Error('Not authenticated') };
 
     try {
       await apiFetch('/api/profiles', {
@@ -81,10 +54,10 @@ export function useAuth() {
   };
 
   return {
-    user,
-    session,
+    user: sessionData?.user ?? null,
+    session: sessionData?.session ?? null,
     profile,
-    loading,
+    loading: isPending,
     signOut,
     updateDob,
   };
