@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/libsql';
 import { createClient } from '@libsql/client';
-import * as schema from '../../src/db/schema';
+import * as schema from './schema';
 
 const client = createClient({
   url: process.env.TURSO_DATABASE_URL!,
@@ -13,4 +13,4 @@ export {
   user, session, account, verification,
   profiles, projects, tasks, habits, habitLogs,
   emotions, journalEntries, lifeRules, schedules, timeSessions,
-} from '../../src/db/schema';
+} from './schema';

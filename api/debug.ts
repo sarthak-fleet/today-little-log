@@ -1,16 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { drizzle } from 'drizzle-orm/libsql';
-import { createClient } from '@libsql/client';
+import { db, schedules } from './_lib/db';
 
 export default async function handler(_req: VercelRequest, res: VercelResponse) {
   try {
-    const client = createClient({
-      url: process.env.TURSO_DATABASE_URL!,
-      authToken: process.env.TURSO_AUTH_TOKEN!,
-    });
-    const db = drizzle(client);
-    const result = await db.run({ sql: 'SELECT 1 as ok', args: [] });
-    return res.json({ ok: true, result });
+    const rows = await db.select().from(schedules).limit(1);
+    return res.json({ ok: true, rowCount: rows.length });
   } catch (err: any) {
     return res.status(500).json({
       error: err.message,
