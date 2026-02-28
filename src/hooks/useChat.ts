@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 export interface ChatMessage {
   id: string;
@@ -19,6 +19,7 @@ const PRESETS: Record<string, { baseUrl: string; model: string }> = {
 };
 
 const CONFIG_KEY = 'chatbot-ai-config';
+const MESSAGES_KEY = 'chatbot-messages';
 
 function isAnthropicBaseUrl(baseUrl: string): boolean {
   return baseUrl.toLowerCase().includes('anthropic.com');
@@ -79,9 +80,35 @@ export function resolveConfig(config: AiConfig): AiConfig {
   };
 }
 
+// Load persisted messages from localStorage
+function loadMessages(): ChatMessage[] {
+  try {
+    const raw = localStorage.getItem(MESSAGES_KEY);
+    if (raw) return JSON.parse(raw) as ChatMessage[];
+  } catch {
+    // fall through
+  }
+  return [];
+}
+
+// Save messages to localStorage (keep last 50 messages to avoid bloat)
+function persistMessages(msgs: ChatMessage[]) {
+  const toSave = msgs
+    .filter(m => m.content.trim().length > 0)
+    .slice(-50);
+  localStorage.setItem(MESSAGES_KEY, JSON.stringify(toSave));
+}
+
 export function useChat() {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(loadMessages);
   const [isStreaming, setIsStreaming] = useState(false);
+
+  // Persist whenever messages change (debounced by React batching)
+  useEffect(() => {
+    if (!isStreaming) {
+      persistMessages(messages);
+    }
+  }, [messages, isStreaming]);
 
   const sendMessage = useCallback(async (content: string, pageContext: string) => {
     const resolved = resolveConfig(getAiConfig());
@@ -102,12 +129,30 @@ export function useChat() {
     setMessages((prev) => [...prev, userMessage, assistantMessage]);
     setIsStreaming(true);
 
-    const systemPrompt = `You are a helpful assistant for Significant Hobbies, a personal productivity app. The user is currently viewing:\n\n${pageContext}\n\nHelp them with their tasks, habits, journal entries, schedule, and life rules. Be concise and actionable.`;
+    const systemPrompt = [
+      `You are a thoughtful personal assistant embedded in "Significant Hobbies", a daily life dashboard app.`,
+      `Today is ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.`,
+      ``,
+      `The user's live data from the app is below. Use it to give specific, personalized answers.`,
+      ``,
+      pageContext,
+      ``,
+      `Guidelines:`,
+      `- Reference the user's actual data when answering (e.g., mention specific habits, tasks, or journal entries by name)`,
+      `- Be concise — 2-3 sentences unless the user asks for detail`,
+      `- For journal prompts, ask reflective questions based on what they've written`,
+      `- For habits, comment on streaks, progress, or suggest adjustments`,
+      `- For tasks, help prioritize based on estimates and what's open`,
+      `- For schedule, help optimize time blocks`,
+      `- Tone: warm, direct, encouraging — like a thoughtful friend, not a corporate assistant`,
+      `- Use markdown sparingly (bold for emphasis, lists when helpful)`,
+    ].join('\n');
 
     try {
       const history = messages
         .filter((m) => m.content.trim().length > 0)
         .filter((m) => !(m.role === 'assistant' && m.content.startsWith('Error:')))
+        .slice(-20) // keep last 20 messages for context window
         .map((m) => ({ role: m.role, content: m.content }));
 
       const response = await fetch('/api/chat', {
@@ -201,6 +246,7 @@ export function useChat() {
 
   const clearMessages = useCallback(() => {
     setMessages([]);
+    localStorage.removeItem(MESSAGES_KEY);
   }, []);
 
   return { messages, isStreaming, sendMessage, clearMessages };

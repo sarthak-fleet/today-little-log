@@ -11,7 +11,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
@@ -255,9 +254,9 @@ function ChatPanel({ view, setView }: { view: 'chat' | 'settings'; setView: (v: 
 
   // ---- Chat view ----
   return (
-    <div className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 w-[calc(100vw-2rem)] md:w-[350px] max-h-[60vh] bg-background border border-border/60 rounded-2xl shadow-2xl animate-in slide-in-from-bottom-2 fade-in duration-200 flex flex-col">
+    <div className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 w-[calc(100vw-2rem)] md:w-[380px] h-[60vh] max-h-[500px] bg-background border border-border/60 rounded-2xl shadow-2xl animate-in slide-in-from-bottom-2 fade-in duration-200 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border/60 shrink-0">
         <span className="text-sm font-medium">Assistant</span>
         <div className="flex items-center gap-1">
           {messages.length > 0 && (
@@ -286,45 +285,43 @@ function ChatPanel({ view, setView }: { view: 'chat' | 'settings'; setView: (v: 
         </div>
       </div>
 
-      {/* Messages */}
-      <ScrollArea className="flex-1 min-h-0">
-        <div className="px-4 py-3 space-y-3">
-          {messages.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              Ask anything about your {pageName}...
-            </p>
-          ) : (
-            messages.map((msg) => (
+      {/* Messages — native scroll */}
+      <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-3 space-y-3">
+        {messages.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-8">
+            Ask anything about your {pageName}...
+          </p>
+        ) : (
+          messages.map((msg) => (
+            <div
+              key={msg.id}
+              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
               <div
-                key={msg.id}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`max-w-[85%] rounded-xl px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap ${
+                  msg.role === 'user'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-foreground'
+                }`}
               >
-                <div
-                  className={`max-w-[85%] rounded-xl px-3 py-2 text-sm leading-relaxed ${
-                    msg.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-foreground'
-                  }`}
-                >
-                  {msg.role === 'assistant' && msg.content === '' ? (
-                    <span className="inline-flex items-center gap-1">
-                      <span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce [animation-delay:0ms]" />
-                      <span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce [animation-delay:150ms]" />
-                      <span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce [animation-delay:300ms]" />
-                    </span>
-                  ) : (
-                    msg.content
-                  )}
-                </div>
+                {msg.role === 'assistant' && msg.content === '' ? (
+                  <span className="inline-flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce [animation-delay:0ms]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce [animation-delay:150ms]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce [animation-delay:300ms]" />
+                  </span>
+                ) : (
+                  msg.content
+                )}
               </div>
-            ))
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-      </ScrollArea>
+            </div>
+          ))
+        )}
+        <div ref={messagesEndRef} />
+      </div>
 
       {/* Input */}
-      <div className="flex items-center gap-2 px-4 py-3 border-t border-border/60">
+      <div className="flex items-center gap-2 px-4 py-3 border-t border-border/60 shrink-0">
         <Input
           ref={inputRef}
           className="h-9 text-sm flex-1"
