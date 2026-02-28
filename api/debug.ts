@@ -12,11 +12,10 @@ const schedules = sqliteTable('schedules', {
 }, (t) => [uniqueIndex('schedules_user_id_idx').on(t.user_id)]);
 
 export default async function handler(_req: VercelRequest, res: VercelResponse) {
+  const url = process.env.TURSO_DATABASE_URL!;
+  const token = process.env.TURSO_AUTH_TOKEN!;
   try {
-    const client = createClient({
-      url: process.env.TURSO_DATABASE_URL!,
-      authToken: process.env.TURSO_AUTH_TOKEN!,
-    });
+    const client = createClient({ url, authToken: token });
     const db = drizzle(client);
     const rows = await db.select().from(schedules).limit(1);
     return res.json({ ok: true, rowCount: rows.length });
@@ -24,6 +23,10 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
     return res.status(500).json({
       error: err.message,
       code: err.code,
+      url: url.substring(0, 20) + '...',
+      urlFull: url,
+      tokenLen: token?.length,
+      stack: err.stack?.split('\n').slice(0, 8),
     });
   }
 }
