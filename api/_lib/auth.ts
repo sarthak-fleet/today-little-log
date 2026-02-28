@@ -1,6 +1,7 @@
 import type { VercelRequest } from '@vercel/node';
 import { and, eq, gt } from 'drizzle-orm';
 import { db, session } from './db';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 
 const SESSION_COOKIE_KEYS = [
   '__Secure-better-auth.session_token',
@@ -28,33 +29,24 @@ function getCookieValue(req: VercelRequest, name: string): string | null {
   return null;
 }
 
-async function verifySignedCookieValue(
+function verifySignedCookieValue(
   value: string,
   secret: string
-): Promise<string | null> {
+): string | null {
   const lastDot = value.lastIndexOf('.');
   if (lastDot <= 0 || lastDot === value.length - 1) return null;
 
   const unsignedValue = value.slice(0, lastDot);
   const signatureBase64 = value.slice(lastDot + 1);
-  const signatureBytes = Buffer.from(signatureBase64, 'base64');
+  const expectedSignature = createHmac('sha256', secret)
+    .update(unsignedValue)
+    .digest('base64');
 
-  const key = await crypto.subtle.importKey(
-    'raw',
-    new TextEncoder().encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['verify']
-  );
+  const actualBytes = Buffer.from(signatureBase64, 'base64');
+  const expectedBytes = Buffer.from(expectedSignature, 'base64');
+  if (actualBytes.length !== expectedBytes.length) return null;
 
-  const isValid = await crypto.subtle.verify(
-    'HMAC',
-    key,
-    signatureBytes,
-    new TextEncoder().encode(unsignedValue)
-  );
-
-  return isValid ? unsignedValue : null;
+  return timingSafeEqual(actualBytes, expectedBytes) ? unsignedValue : null;
 }
 
 async function getSessionToken(req: VercelRequest): Promise<string | null> {
@@ -65,7 +57,7 @@ async function getSessionToken(req: VercelRequest): Promise<string | null> {
     const cookieValue = getCookieValue(req, cookieKey);
     if (!cookieValue) continue;
 
-    const unsignedToken = await verifySignedCookieValue(cookieValue, secret);
+    const unsignedToken = verifySignedCookieValue(cookieValue, secret);
     if (unsignedToken) return unsignedToken;
   }
 
@@ -73,14 +65,31 @@ async function getSessionToken(req: VercelRequest): Promise<string | null> {
 }
 
 export async function getUserId(req: VercelRequest): Promise<string | null> {
-  const token = await getSessionToken(req);
-  if (!token) return null;
+  try {
+    const token = await getSessionToken(req);
+    if (token) {
+      const [row] = await db
+        .select({ userId: session.userId })
+        .from(session)
+        .where(and(eq(session.token, token), gt(session.expiresAt, new Date())))
+        .limit(1);
 
-  const [row] = await db
-    .select({ userId: session.userId })
-    .from(session)
-    .where(and(eq(session.token, token), gt(session.expiresAt, new Date())))
-    .limit(1);
+      if (row?.userId) return row.userId;
+    }
+  } catch {
+    // Fall through to official Better Auth session lookup.
+  }
 
-  return row?.userId ?? null;
+  try {
+    const [{ fromNodeHeaders }, { auth }] = await Promise.all([
+      import('better-auth/node'),
+      import('./auth-instance'),
+    ]);
+    const sess = await auth.api.getSession({
+      headers: fromNodeHeaders(req.headers),
+    });
+    return sess?.user?.id ?? null;
+  } catch {
+    return null;
+  }
 }
