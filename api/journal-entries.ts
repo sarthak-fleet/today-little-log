@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { db } from './_lib/db';
 import { getUserId } from './_lib/auth';
 import { journalEntries } from './_lib/db';
-import { eq, and, desc, count, sql } from 'drizzle-orm';
+import { eq, and, desc } from 'drizzle-orm';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const userId = await getUserId(req);
@@ -11,21 +11,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   switch (req.method) {
     case 'GET': {
       const offset = Number(req.query.offset) || 0;
-      const limit = Number(req.query.limit) || 10;
+      const limit = Math.min(Math.max(Number(req.query.limit) || 10, 1), 50);
 
-      const [data, [{ total }]] = await Promise.all([
-        db.select()
-          .from(journalEntries)
-          .where(eq(journalEntries.user_id, userId))
-          .orderBy(desc(journalEntries.date))
-          .offset(offset)
-          .limit(limit),
-        db.select({ total: count() })
-          .from(journalEntries)
-          .where(eq(journalEntries.user_id, userId)),
-      ]);
+      const rows = await db.select()
+        .from(journalEntries)
+        .where(eq(journalEntries.user_id, userId))
+        .orderBy(desc(journalEntries.date))
+        .offset(offset)
+        .limit(limit + 1);
 
-      return res.json({ data, count: total });
+      const hasMore = rows.length > limit;
+      const data = hasMore ? rows.slice(0, limit) : rows;
+
+      return res.json({ data, hasMore });
     }
 
     case 'POST': {

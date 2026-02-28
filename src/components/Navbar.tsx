@@ -19,7 +19,7 @@ interface NavbarProps {
 
 export function Navbar({ isSaving = false }: NavbarProps) {
   const navigate = useNavigate();
-  const { user, profile, signOut, updateDob } = useAuth();
+  const { user, profile, signOut, updateDob } = useAuth({ includeProfile: true });
   const { resolvedTheme, setTheme } = useTheme();
   const isDark = (resolvedTheme ?? 'light') === 'dark';
   const [timeView, setTimeView] = useState<TimeView>('month');

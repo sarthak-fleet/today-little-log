@@ -10,17 +10,26 @@ export interface Profile {
   dob: string | null;
 }
 
-export function useAuth() {
+interface UseAuthOptions {
+  includeProfile?: boolean;
+}
+
+export function useAuth(options: UseAuthOptions = {}) {
+  const { includeProfile = false } = options;
   const { data: sessionData, isPending } = authClient.useSession();
   const [profile, setProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
     if (sessionData?.user) {
-      fetchProfile();
+      if (includeProfile) {
+        fetchProfile();
+      } else {
+        setProfile(null);
+      }
     } else {
       setProfile(null);
     }
-  }, [sessionData?.user?.id]);
+  }, [sessionData?.user?.id, includeProfile]);
 
   const fetchProfile = async () => {
     try {

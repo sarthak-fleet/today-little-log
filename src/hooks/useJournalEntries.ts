@@ -29,7 +29,7 @@ export function useJournalEntries() {
       const currentOffset = loadMore ? entries.length : 0;
 
       try {
-        const result = await apiFetch<{ data: JournalEntry[], count: number }>(
+        const result = await apiFetch<{ data: JournalEntry[], hasMore: boolean }>(
           '/api/journal-entries?offset=' + currentOffset + '&limit=' + PAGE_SIZE
         );
 
@@ -39,7 +39,7 @@ export function useJournalEntries() {
         } else {
           setEntries(newEntries);
         }
-        setHasMore(result.count ? currentOffset + newEntries.length < result.count : false);
+        setHasMore(Boolean(result.hasMore));
 
         // Check for local storage migration (only on initial load)
         if (!loadMore) {
@@ -57,11 +57,12 @@ export function useJournalEntries() {
               });
             }
             // Reload after migration
-            const reloaded = await apiFetch<{ data: JournalEntry[], count: number }>(
+            const reloaded = await apiFetch<{ data: JournalEntry[], hasMore: boolean }>(
               '/api/journal-entries?offset=0&limit=' + PAGE_SIZE
             );
             if (reloaded.data) {
               setEntries(reloaded.data);
+              setHasMore(Boolean(reloaded.hasMore));
             }
           }
         }
