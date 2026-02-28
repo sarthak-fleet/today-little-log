@@ -4,14 +4,15 @@ import { AppSidebar } from './AppSidebar';
 import { BottomNav } from './BottomNav';
 import { ChatBot } from './ChatBot';
 import { Navbar } from './Navbar';
+import { SavingProvider, useSaving } from './SavingContext';
 
 interface AppLayoutProps {
   children: ReactNode;
-  isSaving?: boolean;
 }
 
-export function AppLayout({ children, isSaving }: AppLayoutProps) {
+export function AppLayout({ children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isSaving } = useSaving();
 
   return (
     <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
@@ -37,5 +38,14 @@ export function AppLayout({ children, isSaving }: AppLayoutProps) {
       <BottomNav />
       <ChatBot />
     </SidebarProvider>
+  );
+}
+
+/** Wraps AppLayout so it persists across route changes. Use in router. */
+export function PersistentLayout({ children }: { children: ReactNode }) {
+  return (
+    <SavingProvider>
+      <AppLayout>{children}</AppLayout>
+    </SavingProvider>
   );
 }

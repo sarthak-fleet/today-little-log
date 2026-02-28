@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
-import { AppLayout } from '@/components/AppLayout';
+import { useReportSaving } from '@/components/SavingContext';
 import { GuestNotice } from '@/components/GuestNotice';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Trash2, Loader2, Clock, StickyNote, Plus, ListChecks, CheckCheck } from 'lucide-react';
+import { Trash2, Clock, StickyNote, Plus, ListChecks, CheckCheck } from 'lucide-react';
+import { TasksSkeleton } from '@/components/PageSkeleton';
 import { useTasks, TaskItem } from '@/hooks/useTasks';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 
@@ -150,15 +151,9 @@ const Tasks = () => {
     reorderTasks(fullCopy);
   };
 
-  if (!isLoaded) {
-    return (
-      <AppLayout>
-        <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </AppLayout>
-    );
-  }
+  useReportSaving(isSaving);
+
+  if (!isLoaded) return <TasksSkeleton />;
 
   const totalMinutes = tasks
     .filter((t) => t.status === 'todo' && t.estimate_minutes)
@@ -167,7 +162,7 @@ const Tasks = () => {
   const progressPercent = taskCounts.total > 0 ? Math.round((taskCounts.done / taskCounts.total) * 100) : 0;
 
   return (
-    <AppLayout isSaving={isSaving}>
+    <>
       {!isLoggedIn && (
         <div className="max-w-3xl mx-auto px-4 pt-4">
           <GuestNotice message="Log in to save your tasks across devices" />
@@ -325,7 +320,7 @@ const Tasks = () => {
           </DragDropContext>
         </Tabs>
       </div>
-    </AppLayout>
+    </>
   );
 };
 

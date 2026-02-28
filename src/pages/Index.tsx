@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { TodayPrompt } from '@/components/TodayPrompt';
 import { PastEntries } from '@/components/PastEntries';
 import { CalendarView } from '@/components/CalendarView';
-import { AppLayout } from '@/components/AppLayout';
+import { useReportSaving } from '@/components/SavingContext';
 import { GuestNotice } from '@/components/GuestNotice';
 import { EmotionLogger } from '@/components/EmotionLogger';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EntryType } from '@/hooks/useJournalEntries';
+import { JournalSkeleton } from '@/components/PageSkeleton';
 
 const Index = () => {
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
@@ -58,23 +59,10 @@ const Index = () => {
     saveEntry(content, undefined, entryType);
   };
 
-  // Loading skeleton for journal content
-  const JournalSkeleton = () => (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <Skeleton className="h-6 w-32" />
-        <Skeleton className="h-32 w-full" />
-      </div>
-      <div className="space-y-3">
-        {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-24 w-full" />
-        ))}
-      </div>
-    </div>
-  );
+  useReportSaving(isSaving);
 
   return (
-    <AppLayout isSaving={isSaving}>
+    <>
       {/* Guest mode notice */}
       {!loading && !isLoggedIn && (
         <div className="max-w-3xl mx-auto px-4 pt-4">
@@ -193,7 +181,7 @@ const Index = () => {
           Your thoughts, securely stored
         </p>
       </footer>
-    </AppLayout>
+    </>
   );
 };
 

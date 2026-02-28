@@ -1,14 +1,15 @@
 import { ScheduleMaker } from '@/components/ScheduleMaker';
-import { AppLayout } from '@/components/AppLayout';
+import { useReportSaving } from '@/components/SavingContext';
 import { GuestNotice } from '@/components/GuestNotice';
 import { useSchedule } from '@/hooks/useSchedule';
 
 const Schedule = () => {
   const { blocks, isLoaded, isSaving, updateBlocks, clearAll, isLoggedIn } = useSchedule();
 
+  useReportSaving(isSaving);
+
   return (
-    <AppLayout isSaving={isSaving}>
-      <div className="container max-w-5xl mx-auto px-4 py-6">
+    <div className="container max-w-5xl mx-auto px-4 py-6">
         {/* Login prompt */}
         {!isLoggedIn && (
           <div className="mb-6">
@@ -28,8 +29,7 @@ const Schedule = () => {
           onBlocksChange={updateBlocks}
           onClearAll={clearAll}
         />
-      </div>
-    </AppLayout>
+    </div>
   );
 };
 

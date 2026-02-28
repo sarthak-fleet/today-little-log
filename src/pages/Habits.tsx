@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AppLayout } from '@/components/AppLayout';
+import { useReportSaving } from '@/components/SavingContext';
 import { GuestNotice } from '@/components/GuestNotice';
 import { HabitHistory } from '@/components/HabitHistory';
 import { useHabits, Habit } from '@/hooks/useHabits';
@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2, Loader2, Target, CheckCircle2, Pencil } from 'lucide-react';
+import { Plus, Trash2, Target, CheckCircle2, Pencil } from 'lucide-react';
+import { HabitsSkeleton } from '@/components/PageSkeleton';
 import { format } from 'date-fns';
 
 const Habits = () => {
@@ -129,20 +130,16 @@ const Habits = () => {
   const formatValue = (habit: Habit, value: number) =>
     habit.track_type === 'time' ? formatTime(value) : value.toString();
 
+  useReportSaving(isSaving);
+
   const parsedLogValue = Number.parseInt(logModal.value, 10);
   const isLogValueValid =
     logModal.value.trim().length > 0 && !Number.isNaN(parsedLogValue) && parsedLogValue >= 0;
 
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  if (!isLoaded) return <HabitsSkeleton />;
 
   return (
-    <AppLayout isSaving={isSaving}>
+    <>
       {/* Guest mode notice */}
       {!isLoggedIn && (
         <div className="max-w-3xl mx-auto px-4 pt-4">
@@ -450,7 +447,7 @@ const Habits = () => {
           )}
         </DialogContent>
       </Dialog>
-    </AppLayout>
+    </>
   );
 };
 

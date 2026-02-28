@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Trash2, Pencil, GripVertical, Palette, Loader2 } from 'lucide-react';
+import { Trash2, Pencil, GripVertical, Palette } from 'lucide-react';
+import { ScheduleSkeleton } from '@/components/PageSkeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -210,11 +211,7 @@ export const ScheduleMaker = ({ blocks, isLoaded, onBlocksChange, onClearAll }: 
   const selectionEnd = dragging ? Math.max(dragging.startSlot, dragging.endSlot) : null;
 
   if (!isLoaded) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <ScheduleSkeleton />;
   }
 
   return (

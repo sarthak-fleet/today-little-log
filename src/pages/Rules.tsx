@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { AppLayout } from '@/components/AppLayout';
+import { useReportSaving } from '@/components/SavingContext';
 import { GuestNotice } from '@/components/GuestNotice';
 import { useAuth } from '@/hooks/useAuth';
 import { useLifeRules } from '@/hooks/useLifeRules';
-import { Feather, Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
+import { RulesSkeleton } from '@/components/PageSkeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -13,16 +14,6 @@ const Rules = () => {
   const [newRule, setNewRule] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
-
-  if (loading || isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse">
-          <Feather className="h-8 w-8 text-primary" />
-        </div>
-      </div>
-    );
-  }
 
   const handleAddRule = async () => {
     if (!newRule.trim()) return;
@@ -49,8 +40,12 @@ const Rules = () => {
     }
   };
 
+  useReportSaving(isSaving);
+
+  if (loading || isLoading) return <RulesSkeleton />;
+
   return (
-    <AppLayout isSaving={isSaving}>
+    <>
       {/* Guest mode notice */}
       {!isLoggedIn && (
         <div className="max-w-3xl mx-auto px-4 pt-4">
@@ -125,7 +120,7 @@ const Rules = () => {
           )}
         </div>
       </div>
-    </AppLayout>
+    </>
   );
 };
 
