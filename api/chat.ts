@@ -9,7 +9,41 @@ interface ChatRequestBody {
 }
 
 function isAnthropic(baseUrl: string): boolean {
-  return baseUrl.includes("anthropic.com");
+  return baseUrl.toLowerCase().includes("anthropic.com");
+}
+
+function normalizeBaseUrl(rawBaseUrl: string): string {
+  return rawBaseUrl.trim().replace(/\/+$/, "");
+}
+
+function appendPath(base: string, nextPath: string): string {
+  const cleanBase = normalizeBaseUrl(base);
+  const cleanPath = nextPath.startsWith("/") ? nextPath : `/${nextPath}`;
+  return `${cleanBase}${cleanPath}`;
+}
+
+function buildOpenAiChatUrl(baseUrl: string): string {
+  const normalized = normalizeBaseUrl(baseUrl);
+  try {
+    const url = new URL(normalized);
+    const pathname = url.pathname.replace(/\/+$/, "");
+    url.pathname = pathname.endsWith("/v1")
+      ? `${pathname}/chat/completions`
+      : `${pathname}/v1/chat/completions`;
+    url.search = "";
+    return url.toString();
+  } catch {
+    return normalized.endsWith("/v1")
+      ? appendPath(normalized, "/chat/completions")
+      : appendPath(normalized, "/v1/chat/completions");
+  }
+}
+
+function buildAnthropicMessagesUrl(baseUrl: string): string {
+  const normalized = normalizeBaseUrl(baseUrl);
+  return normalized.endsWith("/v1")
+    ? appendPath(normalized, "/messages")
+    : appendPath(normalized, "/v1/messages");
 }
 
 function validateBody(
@@ -43,7 +77,30 @@ export default async function handler(
     });
   }
 
-  const { baseUrl, apiKey, model, messages, systemPrompt } = body;
+  const normalizedBaseUrl = normalizeBaseUrl(body.baseUrl);
+  const normalizedApiKey = body.apiKey.trim();
+  const normalizedSystemPrompt = body.systemPrompt.trim();
+  const normalizedMessages = body.messages
+    .map((m) => ({
+      role: typeof m.role === "string" ? m.role : "",
+      content: typeof m.content === "string" ? m.content.trim() : "",
+    }))
+    .filter((m) => m.content.length > 0);
+  const anthropic = isAnthropic(normalizedBaseUrl);
+  const normalizedModel = body.model.trim() || (anthropic ? "" : "auto");
+
+  if (!normalizedBaseUrl || !normalizedApiKey || normalizedMessages.length === 0 || !normalizedSystemPrompt) {
+    return res.status(400).json({
+      error:
+        "Missing required fields: baseUrl, apiKey, messages, systemPrompt",
+    });
+  }
+
+  if (anthropic && !normalizedModel) {
+    return res.status(400).json({
+      error: "Missing required field: model",
+    });
+  }
 
   // Set SSE headers
   res.setHeader("Content-Type", "text/event-stream");
@@ -53,24 +110,24 @@ export default async function handler(
   try {
     let upstream: Response;
 
-    if (isAnthropic(baseUrl)) {
+    if (anthropic) {
       // --- Anthropic Messages API ---
-      const anthropicMessages = messages.map((m) => ({
+      const anthropicMessages = normalizedMessages.map((m) => ({
         role: m.role === "assistant" ? "assistant" : "user",
         content: m.content,
       }));
 
-      upstream = await fetch(`${baseUrl}/v1/messages`, {
+      upstream = await fetch(buildAnthropicMessagesUrl(normalizedBaseUrl), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": apiKey,
+          "x-api-key": normalizedApiKey,
           "anthropic-version": "2023-06-01",
         },
         body: JSON.stringify({
-          model,
+          model: normalizedModel,
           max_tokens: 4096,
-          system: systemPrompt,
+          system: normalizedSystemPrompt,
           messages: anthropicMessages,
           stream: true,
         }),
@@ -78,18 +135,18 @@ export default async function handler(
     } else {
       // --- OpenAI-compatible API ---
       const openaiMessages = [
-        { role: "system", content: systemPrompt },
-        ...messages,
+        { role: "system", content: normalizedSystemPrompt },
+        ...normalizedMessages,
       ];
 
-      upstream = await fetch(`${baseUrl}/v1/chat/completions`, {
+      upstream = await fetch(buildOpenAiChatUrl(normalizedBaseUrl), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
+          Authorization: `Bearer ${normalizedApiKey}`,
         },
         body: JSON.stringify({
-          model,
+          model: normalizedModel,
           messages: openaiMessages,
           stream: true,
         }),
@@ -143,7 +200,7 @@ export default async function handler(
           const parsed = JSON.parse(payload);
           let text = "";
 
-          if (isAnthropic(baseUrl)) {
+          if (anthropic) {
             // Anthropic: look for content_block_delta events
             if (
               parsed.type === "content_block_delta" &&
@@ -175,7 +232,7 @@ export default async function handler(
         try {
           const parsed = JSON.parse(trimmed.slice(6));
           let text = "";
-          if (isAnthropic(baseUrl)) {
+          if (anthropic) {
             if (parsed.type === "content_block_delta" && parsed.delta?.text) {
               text = parsed.delta.text;
             }

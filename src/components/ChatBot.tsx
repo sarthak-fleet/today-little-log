@@ -25,7 +25,13 @@ import {
   saveAiConfig,
   resolveConfig,
 } from '@/hooks/useChat';
-import { getPageDescription } from '@/lib/pageContext';
+import { useJournalEntries } from '@/hooks/useJournalEntries';
+import { useHabits } from '@/hooks/useHabits';
+import { useTasks } from '@/hooks/useTasks';
+import { useSchedule } from '@/hooks/useSchedule';
+import { useLifeRules } from '@/hooks/useLifeRules';
+import { useEmotions } from '@/hooks/useEmotions';
+import { buildLiveContext } from '@/lib/pageContext';
 
 type View = 'closed' | 'chat' | 'settings';
 
@@ -37,11 +43,39 @@ const PAGE_NAMES: Record<string, string> = {
   '/rules': 'rules',
 };
 
+// Thin wrapper — only renders the floating button when closed.
+// ChatPanel (with all data hooks) only mounts when the user opens the chat.
 export function ChatBot() {
+  const [view, setView] = useState<View>('closed');
+
+  if (view === 'closed') {
+    return (
+      <Button
+        onClick={() => setView('chat')}
+        className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 h-12 w-12 rounded-full shadow-lg"
+        size="icon"
+      >
+        <MessageCircle className="h-5 w-5" />
+      </Button>
+    );
+  }
+
+  return <ChatPanel view={view} setView={setView} />;
+}
+
+// Full chat panel — hooks only run when this component is mounted (chat is open)
+function ChatPanel({ view, setView }: { view: 'chat' | 'settings'; setView: (v: View) => void }) {
   const location = useLocation();
   const { messages, isStreaming, sendMessage, clearMessages } = useChat();
 
-  const [view, setView] = useState<View>('closed');
+  // Live data hooks — only active while chat panel is open
+  const { entries } = useJournalEntries();
+  const { habits, logs: habitLogs } = useHabits();
+  const { tasks } = useTasks();
+  const { blocks } = useSchedule();
+  const { rules } = useLifeRules();
+  const { emotions } = useEmotions();
+
   const [input, setInput] = useState('');
 
   // Settings form state
@@ -110,7 +144,15 @@ export function ChatBot() {
       return;
     }
 
-    const pageContext = getPageDescription(location.pathname);
+    const pageContext = buildLiveContext(location.pathname, {
+      entries,
+      habits,
+      habitLogs,
+      tasks,
+      blocks,
+      rules,
+      emotions,
+    });
     sendMessage(trimmed, pageContext);
     setInput('');
   }
@@ -120,19 +162,6 @@ export function ChatBot() {
       e.preventDefault();
       handleSend();
     }
-  }
-
-  // ---- Floating button ----
-  if (view === 'closed') {
-    return (
-      <Button
-        onClick={() => setView('chat')}
-        className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 h-12 w-12 rounded-full shadow-lg"
-        size="icon"
-      >
-        <MessageCircle className="h-5 w-5" />
-      </Button>
-    );
   }
 
   // ---- Settings view ----

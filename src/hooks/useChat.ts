@@ -20,10 +20,37 @@ const PRESETS: Record<string, { baseUrl: string; model: string }> = {
 
 const CONFIG_KEY = 'chatbot-ai-config';
 
+function isAnthropicBaseUrl(baseUrl: string): boolean {
+  return baseUrl.toLowerCase().includes('anthropic.com');
+}
+
+function normalizeBaseUrl(baseUrl: string): string {
+  return baseUrl.trim().replace(/\/+$/, '');
+}
+
+function normalizeModel(model: string): string {
+  return model.trim();
+}
+
+function normalizeConfig(config: AiConfig): AiConfig {
+  const next: AiConfig = {
+    provider: config.provider,
+    apiKey: config.apiKey.trim(),
+    baseUrl: normalizeBaseUrl(config.baseUrl),
+    model: normalizeModel(config.model),
+  };
+
+  if (next.provider === 'custom' && !next.model) {
+    next.model = isAnthropicBaseUrl(next.baseUrl) ? PRESETS.claude.model : 'auto';
+  }
+
+  return next;
+}
+
 export function getAiConfig(): AiConfig {
   try {
     const raw = localStorage.getItem(CONFIG_KEY);
-    if (raw) return JSON.parse(raw) as AiConfig;
+    if (raw) return normalizeConfig(JSON.parse(raw) as AiConfig);
   } catch {
     // fall through to default
   }
@@ -36,11 +63,11 @@ export function getAiConfig(): AiConfig {
 }
 
 export function saveAiConfig(config: AiConfig) {
-  localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+  localStorage.setItem(CONFIG_KEY, JSON.stringify(normalizeConfig(config)));
 }
 
 export function resolveConfig(config: AiConfig): AiConfig {
-  if (config.provider === 'custom') return config;
+  if (config.provider === 'custom') return normalizeConfig(config);
 
   const preset = PRESETS[config.provider];
   if (!preset) return config;
@@ -48,7 +75,7 @@ export function resolveConfig(config: AiConfig): AiConfig {
   return {
     ...config,
     baseUrl: preset.baseUrl,
-    model: config.model || preset.model,
+    model: normalizeModel(config.model) || preset.model,
   };
 }
 
@@ -58,7 +85,7 @@ export function useChat() {
 
   const sendMessage = useCallback(async (content: string, pageContext: string) => {
     const resolved = resolveConfig(getAiConfig());
-    if (!resolved.apiKey) return;
+    if (!resolved.apiKey || !resolved.baseUrl) return;
 
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
@@ -78,7 +105,11 @@ export function useChat() {
     const systemPrompt = `You are a helpful assistant for Significant Hobbies, a personal productivity app. The user is currently viewing:\n\n${pageContext}\n\nHelp them with their tasks, habits, journal entries, schedule, and life rules. Be concise and actionable.`;
 
     try {
-      const history = messages.map((m) => ({ role: m.role, content: m.content }));
+      const history = messages
+        .filter((m) => m.content.trim().length > 0)
+        .filter((m) => !(m.role === 'assistant' && m.content.startsWith('Error:')))
+        .map((m) => ({ role: m.role, content: m.content }));
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
