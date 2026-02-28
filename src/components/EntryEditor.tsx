@@ -14,7 +14,7 @@ interface EntryEditorProps {
 
 export function EntryEditor({ entry, entryType, title, placeholder, onSave }: EntryEditorProps) {
   const [content, setContent] = useState(entry?.content || '');
-  const [isEditing, setIsEditing] = useState(!entry?.content);
+  const [isEditing, setIsEditing] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
