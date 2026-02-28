@@ -1,7 +1,7 @@
 {
   "buildCommand": "node scripts/bundle-api.mjs && vite build",
   "rewrites": [
-    { "source": "/api/auth/:path*", "destination": "/api/auth" },
+    { "source": "/api/auth/(.*)", "destination": "/api/auth?authPath=$1" },
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
