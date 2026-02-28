@@ -19,14 +19,14 @@ for (const file of routeFiles) {
     write: false,
     platform: 'node',
     target: 'node20',
-    format: 'cjs',
+    format: 'esm',
     packages: 'external',
   });
 
-  // Overwrite the .ts file with bundled CJS content
-  // Vercel will still find the .ts file, but its content is now
-  // self-contained CJS with no local file imports
-  writeFileSync(entry, result.outputFiles[0].text);
+  // Overwrite the .ts file with bundled ESM output
+  // @ts-nocheck suppresses TypeScript errors from esbuild output
+  const code = '// @ts-nocheck\n' + result.outputFiles[0].text;
+  writeFileSync(entry, code);
   console.log(`  ✓ ${file}`);
 }
 
