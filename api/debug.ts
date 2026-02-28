@@ -1,13 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { db, schedules } from './_lib/db';
 
 export default async function handler(_req: VercelRequest, res: VercelResponse) {
   try {
-    const dbModule = await import('./_lib/db');
-    return res.json({
-      ok: true,
-      keys: Object.keys(dbModule),
-      hasDb: !!dbModule.db,
-    });
+    const rows = await db.select().from(schedules).limit(1);
+    return res.json({ ok: true, rowCount: rows.length });
   } catch (err: any) {
     return res.status(500).json({
       error: err.message,
