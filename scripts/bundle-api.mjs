@@ -1,5 +1,5 @@
 import { buildSync } from 'esbuild';
-import { readdirSync, writeFileSync, unlinkSync, rmSync, existsSync } from 'fs';
+import { readdirSync, writeFileSync } from 'fs';
 import { join, basename } from 'path';
 
 const apiDir = join(process.cwd(), 'api');
@@ -11,7 +11,6 @@ const routeFiles = readdirSync(apiDir)
 console.log(`Bundling ${routeFiles.length} API functions...`);
 
 for (const file of routeFiles) {
-  const name = basename(file, '.ts');
   const entry = join(apiDir, file);
 
   const result = buildSync({
@@ -24,17 +23,11 @@ for (const file of routeFiles) {
     packages: 'external',
   });
 
-  // Delete the .ts file THEN write .js in its place
-  unlinkSync(entry);
-  writeFileSync(join(apiDir, `${name}.js`), result.outputFiles[0].text);
-  console.log(`  ✓ ${name}`);
-}
-
-// Remove _lib/ dir since everything is bundled
-const libDir = join(apiDir, '_lib');
-if (existsSync(libDir)) {
-  rmSync(libDir, { recursive: true });
-  console.log('  ✓ Removed _lib/');
+  // Overwrite the .ts file with bundled CJS content
+  // Vercel will still find the .ts file, but its content is now
+  // self-contained CJS with no local file imports
+  writeFileSync(entry, result.outputFiles[0].text);
+  console.log(`  ✓ ${file}`);
 }
 
 console.log('API bundling complete!');
