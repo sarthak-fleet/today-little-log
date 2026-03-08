@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route, Outlet, useLocation } from "react-router-
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { PersistentLayout } from "./components/AppLayout";
 import { saasmaker } from "./lib/saasmaker";
+import { SaaSMakerFeedback } from "./components/saasmaker-feedback";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Schedule from "./pages/Schedule";
@@ -43,6 +44,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <PageViewTracker />
+          <SaaSMakerFeedback />
           <ErrorBoundary>
             <Routes>
               {/* Routes with persistent sidebar layout */}
