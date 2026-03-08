@@ -3,9 +3,11 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Outlet, useLocation } from "react-router-dom";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { PersistentLayout } from "./components/AppLayout";
+import { saasmaker } from "./lib/saasmaker";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Schedule from "./pages/Schedule";
@@ -16,6 +18,14 @@ import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+function PageViewTracker() {
+  const location = useLocation();
+  useEffect(() => {
+    saasmaker.analytics.track({ name: 'page_view', url: location.pathname }).catch(() => {});
+  }, [location.pathname]);
+  return null;
+}
 
 function LayoutWrapper() {
   return (
@@ -32,6 +42,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <PageViewTracker />
           <ErrorBoundary>
             <Routes>
               {/* Routes with persistent sidebar layout */}
