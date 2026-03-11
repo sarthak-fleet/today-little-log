@@ -104,9 +104,18 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: ^1.2.7
         version: 1.2.8(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@saas-maker/changelog-widget':
+        specifier: 0.2.0
+        version: 0.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@saas-maker/feedback':
+        specifier: 0.2.0
+        version: 0.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@saas-maker/sdk':
         specifier: ^0.2.0
         version: 0.2.0
+      '@saas-maker/testimonials':
+        specifier: 0.2.0
+        version: 0.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@tanstack/react-query':
         specifier: ^5.83.0
         version: 5.90.21(react@18.3.1)
@@ -2592,8 +2601,26 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@saas-maker/changelog-widget@0.2.0':
+    resolution: {integrity: sha512-D0pNamHMfW8f+WyRckwZSSKTI25M3Jponf4tPgINsrky+ZENcDDuhcuaj5KUwkhOdUQ9KPZsNIuCnfVOWRXAiw==}
+    peerDependencies:
+      react: '>=18'
+      react-dom: '>=18'
+
+  '@saas-maker/feedback@0.2.0':
+    resolution: {integrity: sha512-zr7eEHYM0UPDWYn/SPkfCMxHvIYmV4obvCpF5+fp6LDK3QwSBLPMpx3kBy3wpHSoyq0h4fORchGJMwkA+YbOUw==}
+    peerDependencies:
+      react: '>=18'
+      react-dom: '>=18'
+
   '@saas-maker/sdk@0.2.0':
     resolution: {integrity: sha512-lkb/0WGZzLuYwz6pt9i594YorORrW9FUObZxg9ell8gKz0IQA71d+bYSNgSfnQ42kU4BmKXO5UUf9lNW+O9g4g==}
+
+  '@saas-maker/testimonials@0.2.0':
+    resolution: {integrity: sha512-u9ZojbYIg6zHajVbOpgDqtQYbQzxtOq4BDGB9jNARpeMHPpE5PvVbYO1qZXzQ2DQQN3PU6pu1cg84YUgU3TnuA==}
+    peerDependencies:
+      react: '>=18'
+      react-dom: '>=18'
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
@@ -7179,7 +7206,22 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.59.0':
     optional: true
 
+  '@saas-maker/changelog-widget@0.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+
+  '@saas-maker/feedback@0.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+
   '@saas-maker/sdk@0.2.0': {}
+
+  '@saas-maker/testimonials@0.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
 
   '@standard-schema/spec@1.1.0': {}
 
