@@ -62,10 +62,8 @@ export function AppSidebar() {
         </button>
       </SidebarHeader>
 
-      <SidebarSeparator className="opacity-40 transition-opacity duration-300" />
-
       {/* Navigation */}
-      <SidebarContent className="pt-3 px-1">
+      <SidebarContent className="pt-6 px-1">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="gap-0.5">
