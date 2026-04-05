@@ -1,115 +1,168 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
 
-@import '@fontsource/playfair-display/400.css';
-@import '@fontsource/playfair-display/500.css';
-@import '@fontsource/playfair-display/600.css';
-@import '@fontsource/playfair-display/700.css';
-@import '@fontsource/source-sans-pro/400.css';
-@import '@fontsource/source-sans-pro/600.css';
+@theme {
+  --font-sans: "Inter", "system-ui", "sans-serif";
+  --font-display: "Manrope", "system-ui", "sans-serif";
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --color-journal-paper: hsl(var(--journal-paper));
+  --color-journal-line: hsl(var(--journal-line));
+  --color-journal-ink: hsl(var(--journal-ink));
+  --color-journal-date: hsl(var(--journal-date));
+  --color-journal-highlight: hsl(var(--journal-highlight));
+
+  --color-sidebar: hsl(var(--sidebar-background));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --shadow-soft: var(--shadow-soft);
+  --shadow-card: var(--shadow-card);
+  --shadow-glow: var(--shadow-glow);
+
+  @keyframes accordion-down {
+    from { height: 0; }
+    to { height: var(--radix-accordion-content-height); }
+  }
+  @keyframes accordion-up {
+    from { height: var(--radix-accordion-content-height); }
+    to { height: 0; }
+  }
+
+  --animation-accordion-down: accordion-down 0.2s ease-out;
+  --animation-accordion-up: accordion-up 0.2s ease-out;
+}
 
 @layer base {
   :root {
-    --background: 40 33% 96%;
-    --foreground: 30 10% 20%;
+    --background: 210 33% 98%;
+    --foreground: 210 15% 20%;
 
-    --card: 40 30% 98%;
-    --card-foreground: 30 10% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 210 15% 20%;
 
-    --popover: 40 30% 98%;
-    --popover-foreground: 30 10% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 15% 20%;
 
-    --primary: 30 60% 45%;
-    --primary-foreground: 40 33% 98%;
+    --primary: 210 40% 35%;
+    --primary-foreground: 210 33% 98%;
 
-    --secondary: 35 30% 90%;
-    --secondary-foreground: 30 10% 25%;
+    --secondary: 210 20% 90%;
+    --secondary-foreground: 210 40% 35%;
 
-    --muted: 35 20% 92%;
-    --muted-foreground: 30 10% 50%;
+    --muted: 210 20% 95%;
+    --muted-foreground: 210 10% 45%;
 
-    --accent: 25 70% 55%;
-    --accent-foreground: 40 33% 98%;
+    --accent: 210 20% 90%;
+    --accent-foreground: 210 40% 35%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 33% 98%;
 
-    --border: 35 25% 85%;
-    --input: 35 25% 88%;
-    --ring: 30 60% 45%;
+    --border: 210 20% 90%;
+    --input: 210 20% 90%;
+    --ring: 210 40% 35%;
 
     --radius: 0.75rem;
 
-    /* Custom tokens */
-    --journal-paper: 43 50% 97%;
-    --journal-line: 35 20% 88%;
-    --journal-ink: 30 15% 25%;
-    --journal-date: 30 40% 55%;
-    --journal-highlight: 40 80% 92%;
-    
-    /* Shadows */
-    --shadow-soft: 0 4px 20px -4px hsl(30 20% 30% / 0.08);
-    --shadow-card: 0 8px 30px -8px hsl(30 20% 30% / 0.12);
-    --shadow-glow: 0 0 40px hsl(30 60% 45% / 0.15);
+    --journal-paper: 45 30% 96%;
+    --journal-line: 210 20% 90%;
+    --journal-ink: 210 15% 20%;
+    --journal-date: 210 10% 45%;
+    --journal-highlight: 45 100% 85%;
 
-    --sidebar-background: 40 40% 96%;
-    --sidebar-foreground: 30 12% 22%;
-    --sidebar-primary: 30 60% 45%;
-    --sidebar-primary-foreground: 40 33% 98%;
-    --sidebar-accent: 35 30% 90%;
-    --sidebar-accent-foreground: 30 15% 20%;
-    --sidebar-border: 35 20% 86%;
-    --sidebar-ring: 30 60% 45%;
+    --shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.05);
+    --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
+    --shadow-glow: 0 0 15px rgba(100, 149, 237, 0.2);
+
+    --sidebar-background: 210 33% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    --background: 30 15% 10%;
-    --foreground: 40 20% 90%;
+    --background: 210 20% 12%;
+    --foreground: 210 15% 95%;
 
-    --card: 30 15% 13%;
-    --card-foreground: 40 20% 90%;
+    --card: 210 20% 15%;
+    --card-foreground: 210 15% 95%;
 
-    --popover: 30 15% 13%;
-    --popover-foreground: 40 20% 90%;
+    --popover: 210 20% 15%;
+    --popover-foreground: 210 15% 95%;
 
-    --primary: 35 70% 55%;
-    --primary-foreground: 30 15% 10%;
+    --primary: 210 40% 65%;
+    --primary-foreground: 210 20% 12%;
 
-    --secondary: 30 15% 18%;
-    --secondary-foreground: 40 20% 85%;
+    --secondary: 210 20% 25%;
+    --secondary-foreground: 210 40% 65%;
 
-    --muted: 30 15% 18%;
-    --muted-foreground: 40 15% 60%;
+    --muted: 210 20% 20%;
+    --muted-foreground: 210 10% 70%;
 
-    --accent: 30 80% 60%;
-    --accent-foreground: 30 15% 10%;
+    --accent: 210 20% 25%;
+    --accent-foreground: 210 40% 65%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 210 15% 95%;
 
-    --border: 30 15% 22%;
-    --input: 30 15% 22%;
-    --ring: 35 70% 55%;
+    --border: 210 20% 25%;
+    --input: 210 20% 25%;
+    --ring: 210 40% 65%;
 
-    --journal-paper: 30 15% 15%;
-    --journal-line: 30 12% 25%;
-    --journal-ink: 40 20% 85%;
-    --journal-date: 35 50% 60%;
-    --journal-highlight: 30 30% 20%;
+    --journal-paper: 210 20% 10%;
+    --journal-line: 210 20% 20%;
+    --journal-ink: 210 15% 95%;
+    --journal-date: 210 10% 70%;
+    --journal-highlight: 210 40% 30%;
 
-    --shadow-soft: 0 4px 20px -4px hsl(0 0% 0% / 0.3);
-    --shadow-card: 0 8px 30px -8px hsl(0 0% 0% / 0.4);
-    --shadow-glow: 0 0 40px hsl(35 70% 55% / 0.2);
-
-    --sidebar-background: 30 15% 9%;
-    --sidebar-foreground: 40 20% 88%;
-    --sidebar-primary: 35 70% 55%;
-    --sidebar-primary-foreground: 30 15% 10%;
-    --sidebar-accent: 30 18% 16%;
-    --sidebar-accent-foreground: 40 20% 90%;
-    --sidebar-border: 30 12% 18%;
-    --sidebar-ring: 35 70% 55%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -117,124 +170,29 @@
   * {
     @apply border-border;
   }
-
-  html {
-    -webkit-tap-highlight-color: transparent;
-  }
-
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-  }
-
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-display;
-  }
-
-  /* Better touch targets for mobile */
-  button, [role="button"] {
-    min-height: 44px;
-    min-width: 44px;
-  }
-
-  /* Exception for icon buttons that are explicitly smaller */
-  button.h-8, button.h-7, [role="button"].h-8, [role="button"].h-7 {
-    min-height: unset;
-    min-width: unset;
   }
 }
 
-@layer utilities {
-  .journal-paper {
-    background-color: hsl(var(--journal-paper));
-  }
-
-  .journal-lines {
-    background-image: repeating-linear-gradient(
-      transparent,
-      transparent 31px,
-      hsl(var(--journal-line)) 31px,
-      hsl(var(--journal-line)) 32px
-    );
-    background-position: 0 8px;
-  }
-
-  .text-ink {
-    color: hsl(var(--journal-ink));
-  }
-
-  .text-date {
-    color: hsl(var(--journal-date));
-  }
-
-  .highlight-today {
-    background-color: hsl(var(--journal-highlight));
-  }
+.journal-paper {
+  @apply bg-journal-paper text-journal-ink relative;
+  background-image: linear-gradient(var(--color-journal-line) 1px, transparent 1px);
+  background-size: 100% 2rem;
 }
 
-@layer components {
-  .animate-fade-in {
-    animation: fadeIn 0.5s ease-out forwards;
-  }
+.journal-entry {
+  @apply py-2 px-4 mb-4 rounded-lg transition-all duration-200;
+}
 
-  .animate-slide-up {
-    animation: slideUp 0.4s ease-out forwards;
-  }
-
-  .animate-scale-in {
-    animation: scaleIn 0.3s ease-out forwards;
-  }
-
-  /* Sidebar animations */
-  .sidebar-logo-icon {
-    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
-  }
-  .sidebar-logo-icon:hover {
-    transform: scale(1.08) rotate(-3deg);
-    box-shadow: 0 4px 12px hsl(30 60% 45% / 0.25);
-  }
-
-  .sidebar-nav-item {
-    position: relative;
-  }
-  .sidebar-nav-item::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: linear-gradient(90deg, hsl(var(--primary) / 0.06), transparent);
-    opacity: 0;
-    transition: opacity 0.2s ease;
-  }
-  .sidebar-nav-item:hover::before {
-    opacity: 1;
-  }
-
-  .sidebar-active-indicator {
-    animation: sidebarIndicatorIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-  }
-
-  .sidebar-status-dot {
-    animation: sidebarPulse 3s ease-in-out infinite;
-  }
+.journal-entry:hover {
+  @apply bg-journal-highlight/30;
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -242,18 +200,11 @@
   }
 }
 
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
 }
 
-@keyframes sidebarIndicatorIn {
+@keyframes lineGrow {
   from {
     opacity: 0;
     height: 0;

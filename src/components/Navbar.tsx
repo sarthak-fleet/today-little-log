@@ -94,8 +94,8 @@ export function Navbar({ isSaving = false }: NavbarProps) {
   };
 
   return (
-    <header className="py-3 px-4 border-b border-border/50">
-      <div className="max-w-3xl mx-auto flex items-center justify-between md:max-w-none">
+    <header className="py-4 px-6 bg-background/80 backdrop-blur-md sticky top-0 z-50">
+      <div className="max-w-6xl mx-auto flex items-center justify-between">
         {/* Left: Date + Time counter */}
         <div className="flex items-center gap-4">
           <div className="flex flex-col">
