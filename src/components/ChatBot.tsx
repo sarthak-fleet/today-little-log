@@ -7,22 +7,16 @@ import {
   Settings,
   Send,
   ArrowLeft,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
   useChat,
   getAiConfig,
   saveAiConfig,
-  resolveConfig,
+  fetchModels,
 } from '@/hooks/useChat';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useHabits } from '@/hooks/useHabits';
@@ -78,15 +72,16 @@ function ChatPanel({ view, setView }: { view: 'chat' | 'settings'; setView: (v: 
   const [input, setInput] = useState('');
 
   // Settings form state
-  const [settingsProvider, setSettingsProvider] = useState<
-    'claude' | 'codex' | 'custom'
-  >('claude');
   const [settingsApiKey, setSettingsApiKey] = useState('');
   const [settingsBaseUrl, setSettingsBaseUrl] = useState('');
   const [settingsModel, setSettingsModel] = useState('');
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
+  const [isLoadingModels, setIsLoadingModels] = useState(false);
+  const [showModelDropdown, setShowModelDropdown] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const modelDropdownRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll when messages change
   useEffect(() => {
@@ -100,32 +95,44 @@ function ChatPanel({ view, setView }: { view: 'chat' | 'settings'; setView: (v: 
     }
   }, [view]);
 
+  // Close model dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (modelDropdownRef.current && !modelDropdownRef.current.contains(e.target as Node)) {
+        setShowModelDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const pageName = PAGE_NAMES[location.pathname] || 'page';
 
   function openSettings() {
     const config = getAiConfig();
-    setSettingsProvider(config.provider);
     setSettingsApiKey(config.apiKey);
     setSettingsBaseUrl(config.baseUrl);
     setSettingsModel(config.model);
+    setAvailableModels([]);
     setView('settings');
   }
 
-  function handleProviderChange(value: 'claude' | 'codex' | 'custom') {
-    setSettingsProvider(value);
-    const resolved = resolveConfig({
-      provider: value,
-      apiKey: settingsApiKey,
-      baseUrl: settingsBaseUrl,
-      model: settingsModel,
-    });
-    setSettingsBaseUrl(resolved.baseUrl);
-    setSettingsModel(resolved.model);
+  async function handleFetchModels() {
+    if (!settingsBaseUrl.trim() || !settingsApiKey.trim()) return;
+    setIsLoadingModels(true);
+    try {
+      const models = await fetchModels(settingsBaseUrl, settingsApiKey);
+      setAvailableModels(models);
+      if (models.length > 0) {
+        setShowModelDropdown(true);
+      }
+    } finally {
+      setIsLoadingModels(false);
+    }
   }
 
   function handleSaveSettings() {
     saveAiConfig({
-      provider: settingsProvider,
       apiKey: settingsApiKey,
       baseUrl: settingsBaseUrl,
       model: settingsModel,
@@ -163,6 +170,12 @@ function ChatPanel({ view, setView }: { view: 'chat' | 'settings'; setView: (v: 
     }
   }
 
+  const filteredModels = settingsModel
+    ? availableModels.filter((m) =>
+        m.toLowerCase().includes(settingsModel.toLowerCase())
+      )
+    : availableModels;
+
   // ---- Settings view ----
   if (view === 'settings') {
     return (
@@ -182,22 +195,17 @@ function ChatPanel({ view, setView }: { view: 'chat' | 'settings'; setView: (v: 
         {/* Form */}
         <div className="flex-1 overflow-auto p-4 space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="chat-provider" className="text-xs">
-              Provider
+            <Label htmlFor="chat-base-url" className="text-xs">
+              Endpoint URL
             </Label>
-            <Select
-              value={settingsProvider}
-              onValueChange={handleProviderChange}
-            >
-              <SelectTrigger id="chat-provider" className="h-9 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="claude">Claude</SelectItem>
-                <SelectItem value="codex">Codex (OpenAI)</SelectItem>
-                <SelectItem value="custom">Custom</SelectItem>
-              </SelectContent>
-            </Select>
+            <Input
+              id="chat-base-url"
+              type="text"
+              className="h-9 text-sm"
+              value={settingsBaseUrl}
+              onChange={(e) => setSettingsBaseUrl(e.target.value)}
+              placeholder="https://api.openai.com/v1"
+            />
           </div>
 
           <div className="space-y-1.5">
@@ -214,31 +222,61 @@ function ChatPanel({ view, setView }: { view: 'chat' | 'settings'; setView: (v: 
             />
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="chat-base-url" className="text-xs">
-              Base URL
-            </Label>
-            <Input
-              id="chat-base-url"
-              type="text"
-              className="h-9 text-sm"
-              value={settingsBaseUrl}
-              onChange={(e) => setSettingsBaseUrl(e.target.value)}
-              disabled={settingsProvider !== 'custom'}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="chat-model" className="text-xs">
-              Model
-            </Label>
-            <Input
-              id="chat-model"
-              type="text"
-              className="h-9 text-sm"
-              value={settingsModel}
-              onChange={(e) => setSettingsModel(e.target.value)}
-            />
+          <div className="space-y-1.5" ref={modelDropdownRef}>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="chat-model" className="text-xs">
+                Model
+              </Label>
+              <Button
+                variant="ghost"
+                className="h-6 px-2 text-xs text-muted-foreground"
+                onClick={handleFetchModels}
+                disabled={isLoadingModels || !settingsBaseUrl.trim() || !settingsApiKey.trim()}
+              >
+                {isLoadingModels ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  'Fetch models'
+                )}
+              </Button>
+            </div>
+            <div className="relative">
+              <Input
+                id="chat-model"
+                type="text"
+                className="h-9 text-sm"
+                value={settingsModel}
+                onChange={(e) => {
+                  setSettingsModel(e.target.value);
+                  if (availableModels.length > 0) {
+                    setShowModelDropdown(true);
+                  }
+                }}
+                onFocus={() => {
+                  if (availableModels.length > 0) {
+                    setShowModelDropdown(true);
+                  }
+                }}
+                placeholder="gpt-4o, claude-sonnet-4-20250514, etc."
+              />
+              {showModelDropdown && filteredModels.length > 0 && (
+                <div className="absolute z-10 top-full left-0 right-0 mt-1 max-h-40 overflow-auto bg-popover border border-border rounded-lg shadow-lg">
+                  {filteredModels.map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      className="w-full text-left px-3 py-1.5 text-sm hover:bg-accent truncate"
+                      onClick={() => {
+                        setSettingsModel(m);
+                        setShowModelDropdown(false);
+                      }}
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

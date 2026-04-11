@@ -7,23 +7,13 @@ export interface ChatMessage {
 }
 
 interface AiConfig {
-  provider: 'claude' | 'codex' | 'custom';
   apiKey: string;
   baseUrl: string;
   model: string;
 }
 
-const PRESETS: Record<string, { baseUrl: string; model: string }> = {
-  claude: { baseUrl: 'https://api.anthropic.com', model: 'claude-sonnet-4-20250514' },
-  codex: { baseUrl: 'https://api.openai.com', model: 'gpt-4o' },
-};
-
 const CONFIG_KEY = 'chatbot-ai-config';
 const MESSAGES_KEY = 'chatbot-messages';
-
-function isAnthropicBaseUrl(baseUrl: string): boolean {
-  return baseUrl.toLowerCase().includes('anthropic.com');
-}
 
 function normalizeBaseUrl(baseUrl: string): string {
   return baseUrl.trim().replace(/\/+$/, '');
@@ -34,18 +24,11 @@ function normalizeModel(model: string): string {
 }
 
 function normalizeConfig(config: AiConfig): AiConfig {
-  const next: AiConfig = {
-    provider: config.provider,
+  return {
     apiKey: config.apiKey.trim(),
     baseUrl: normalizeBaseUrl(config.baseUrl),
     model: normalizeModel(config.model),
   };
-
-  if (next.provider === 'custom' && !next.model) {
-    next.model = isAnthropicBaseUrl(next.baseUrl) ? PRESETS.claude.model : 'auto';
-  }
-
-  return next;
 }
 
 export function getAiConfig(): AiConfig {
@@ -55,29 +38,27 @@ export function getAiConfig(): AiConfig {
   } catch {
     // fall through to default
   }
-  return {
-    provider: 'claude',
-    apiKey: '',
-    baseUrl: PRESETS.claude.baseUrl,
-    model: PRESETS.claude.model,
-  };
+  return { apiKey: '', baseUrl: '', model: '' };
 }
 
 export function saveAiConfig(config: AiConfig) {
   localStorage.setItem(CONFIG_KEY, JSON.stringify(normalizeConfig(config)));
 }
 
-export function resolveConfig(config: AiConfig): AiConfig {
-  if (config.provider === 'custom') return normalizeConfig(config);
-
-  const preset = PRESETS[config.provider];
-  if (!preset) return config;
-
-  return {
-    ...config,
-    baseUrl: preset.baseUrl,
-    model: normalizeModel(config.model) || preset.model,
-  };
+export async function fetchModels(baseUrl: string, apiKey: string): Promise<string[]> {
+  if (!baseUrl.trim() || !apiKey.trim()) return [];
+  try {
+    const response = await fetch('/api/models', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ baseUrl: baseUrl.trim(), apiKey: apiKey.trim() }),
+    });
+    if (!response.ok) return [];
+    const data = (await response.json()) as { models?: string[] };
+    return data.models ?? [];
+  } catch {
+    return [];
+  }
 }
 
 // Load persisted messages from localStorage
@@ -111,8 +92,8 @@ export function useChat() {
   }, [messages, isStreaming]);
 
   const sendMessage = useCallback(async (content: string, pageContext: string) => {
-    const resolved = resolveConfig(getAiConfig());
-    if (!resolved.apiKey || !resolved.baseUrl) return;
+    const config = normalizeConfig(getAiConfig());
+    if (!config.apiKey || !config.baseUrl) return;
 
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
@@ -130,7 +111,7 @@ export function useChat() {
     setIsStreaming(true);
 
     const systemPrompt = [
-      `You are a thoughtful personal assistant embedded in "Significant Hobbies", a daily life dashboard app.`,
+      `You are a thoughtful personal assistant embedded in "Today Little Log", a daily life dashboard app.`,
       `Today is ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.`,
       ``,
       `The user's live data from the app is below. Use it to give specific, personalized answers.`,
@@ -159,9 +140,9 @@ export function useChat() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          baseUrl: resolved.baseUrl,
-          apiKey: resolved.apiKey,
-          model: resolved.model,
+          baseUrl: config.baseUrl,
+          apiKey: config.apiKey,
+          model: config.model,
           messages: [...history, { role: 'user', content }],
           systemPrompt,
         }),
