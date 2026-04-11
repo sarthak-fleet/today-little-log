@@ -56,7 +56,7 @@ export function AppSidebar() {
               transition: 'opacity 0.3s ease, transform 0.3s ease',
             }}
           >
-            <span className="font-display text-[13px] font-semibold whitespace-nowrap tracking-tight">Significant Hobbies</span>
+            <span className="font-display text-[13px] font-semibold whitespace-nowrap tracking-tight">Today Little Log</span>
             <span className="text-[11px] text-sidebar-foreground/50 whitespace-nowrap font-medium">{format(today, 'EEEE, MMM d')}</span>
           </div>
         </button>

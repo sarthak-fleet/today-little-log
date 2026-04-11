@@ -18,10 +18,10 @@ export default defineConfig(({ mode }) => ({
       registerType: "prompt",
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "pwa-192x192.png", "pwa-512x512.png"],
       manifest: {
-        name: "Significant Hobbies - Journal, Habits, Tasks & Time Tracking",
-        short_name: "Significant Hobbies",
+        name: "Today Little Log - Journal, Habits, Tasks & Schedule",
+        short_name: "Little Log",
         description:
-          "Significant Hobbies is a calm, focused daily journal and habit tracker with tasks and time tracking.",
+          "Today Little Log is a calm, focused daily journal and habit tracker with tasks, schedules, and offline support.",
         theme_color: "#1a1a2e",
         background_color: "#1a1a2e",
         display: "standalone",
@@ -83,18 +83,6 @@ export default defineConfig(({ mode }) => ({
               expiration: {
                 maxEntries: 50,
                 maxAgeSeconds: 60 * 60 * 24 * 30,
-              },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/.*supabase\.co\/.*/i,
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "supabase-cache",
-              networkTimeoutSeconds: 10,
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24,
               },
             },
           },

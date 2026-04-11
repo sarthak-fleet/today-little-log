@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { getAIConfig, type AIConfig } from '@saas-maker/ai';
 
 export interface ChatMessage {
   id: string;
@@ -6,60 +7,8 @@ export interface ChatMessage {
   content: string;
 }
 
-interface AiConfig {
-  apiKey: string;
-  baseUrl: string;
-  model: string;
-}
-
-const CONFIG_KEY = 'chatbot-ai-config';
+const STORAGE_KEY = 'chatbot-ai-config';
 const MESSAGES_KEY = 'chatbot-messages';
-
-function normalizeBaseUrl(baseUrl: string): string {
-  return baseUrl.trim().replace(/\/+$/, '');
-}
-
-function normalizeModel(model: string): string {
-  return model.trim();
-}
-
-function normalizeConfig(config: AiConfig): AiConfig {
-  return {
-    apiKey: config.apiKey.trim(),
-    baseUrl: normalizeBaseUrl(config.baseUrl),
-    model: normalizeModel(config.model),
-  };
-}
-
-export function getAiConfig(): AiConfig {
-  try {
-    const raw = localStorage.getItem(CONFIG_KEY);
-    if (raw) return normalizeConfig(JSON.parse(raw) as AiConfig);
-  } catch {
-    // fall through to default
-  }
-  return { apiKey: '', baseUrl: '', model: '' };
-}
-
-export function saveAiConfig(config: AiConfig) {
-  localStorage.setItem(CONFIG_KEY, JSON.stringify(normalizeConfig(config)));
-}
-
-export async function fetchModels(baseUrl: string, apiKey: string): Promise<string[]> {
-  if (!baseUrl.trim() || !apiKey.trim()) return [];
-  try {
-    const response = await fetch('/api/models', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ baseUrl: baseUrl.trim(), apiKey: apiKey.trim() }),
-    });
-    if (!response.ok) return [];
-    const data = (await response.json()) as { models?: string[] };
-    return data.models ?? [];
-  } catch {
-    return [];
-  }
-}
 
 // Load persisted messages from localStorage
 function loadMessages(): ChatMessage[] {
@@ -92,8 +41,8 @@ export function useChat() {
   }, [messages, isStreaming]);
 
   const sendMessage = useCallback(async (content: string, pageContext: string) => {
-    const config = normalizeConfig(getAiConfig());
-    if (!config.apiKey || !config.baseUrl) return;
+    const config = getAIConfig(STORAGE_KEY);
+    if (!config.apiKey || !config.endpointUrl) return;
 
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
@@ -140,7 +89,7 @@ export function useChat() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          baseUrl: config.baseUrl,
+          endpointUrl: config.endpointUrl,
           apiKey: config.apiKey,
           model: config.model,
           messages: [...history, { role: 'user', content }],

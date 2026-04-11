@@ -7,17 +7,11 @@ import {
   Settings,
   Send,
   ArrowLeft,
-  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  useChat,
-  getAiConfig,
-  saveAiConfig,
-  fetchModels,
-} from '@/hooks/useChat';
+import { useChat } from '@/hooks/useChat';
+import { useAIConfig, AISettings } from '@saas-maker/ai';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useHabits } from '@/hooks/useHabits';
 import { useTasks } from '@/hooks/useTasks';
@@ -70,18 +64,10 @@ function ChatPanel({ view, setView }: { view: 'chat' | 'settings'; setView: (v: 
   const { emotions } = useEmotions();
 
   const [input, setInput] = useState('');
-
-  // Settings form state
-  const [settingsApiKey, setSettingsApiKey] = useState('');
-  const [settingsBaseUrl, setSettingsBaseUrl] = useState('');
-  const [settingsModel, setSettingsModel] = useState('');
-  const [availableModels, setAvailableModels] = useState<string[]>([]);
-  const [isLoadingModels, setIsLoadingModels] = useState(false);
-  const [showModelDropdown, setShowModelDropdown] = useState(false);
+  const { config, setConfig, save: saveConfig, isReady } = useAIConfig('chatbot-ai-config');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const modelDropdownRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll when messages change
   useEffect(() => {
@@ -95,48 +81,14 @@ function ChatPanel({ view, setView }: { view: 'chat' | 'settings'; setView: (v: 
     }
   }, [view]);
 
-  // Close model dropdown on outside click
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (modelDropdownRef.current && !modelDropdownRef.current.contains(e.target as Node)) {
-        setShowModelDropdown(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   const pageName = PAGE_NAMES[location.pathname] || 'page';
 
   function openSettings() {
-    const config = getAiConfig();
-    setSettingsApiKey(config.apiKey);
-    setSettingsBaseUrl(config.baseUrl);
-    setSettingsModel(config.model);
-    setAvailableModels([]);
     setView('settings');
   }
 
-  async function handleFetchModels() {
-    if (!settingsBaseUrl.trim() || !settingsApiKey.trim()) return;
-    setIsLoadingModels(true);
-    try {
-      const models = await fetchModels(settingsBaseUrl, settingsApiKey);
-      setAvailableModels(models);
-      if (models.length > 0) {
-        setShowModelDropdown(true);
-      }
-    } finally {
-      setIsLoadingModels(false);
-    }
-  }
-
   function handleSaveSettings() {
-    saveAiConfig({
-      apiKey: settingsApiKey,
-      baseUrl: settingsBaseUrl,
-      model: settingsModel,
-    });
+    saveConfig();
     setView('chat');
   }
 
@@ -144,8 +96,7 @@ function ChatPanel({ view, setView }: { view: 'chat' | 'settings'; setView: (v: 
     const trimmed = input.trim();
     if (!trimmed || isStreaming) return;
 
-    const config = getAiConfig();
-    if (!config.apiKey) {
+    if (!isReady) {
       openSettings();
       return;
     }
@@ -170,12 +121,6 @@ function ChatPanel({ view, setView }: { view: 'chat' | 'settings'; setView: (v: 
     }
   }
 
-  const filteredModels = settingsModel
-    ? availableModels.filter((m) =>
-        m.toLowerCase().includes(settingsModel.toLowerCase())
-      )
-    : availableModels;
-
   // ---- Settings view ----
   if (view === 'settings') {
     return (
@@ -193,98 +138,27 @@ function ChatPanel({ view, setView }: { view: 'chat' | 'settings'; setView: (v: 
         </div>
 
         {/* Form */}
-        <div className="flex-1 overflow-auto p-4 space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="chat-base-url" className="text-xs">
-              Endpoint URL
-            </Label>
-            <Input
-              id="chat-base-url"
-              type="text"
-              className="h-9 text-sm"
-              value={settingsBaseUrl}
-              onChange={(e) => setSettingsBaseUrl(e.target.value)}
-              placeholder="https://api.openai.com/v1"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="chat-api-key" className="text-xs">
-              API Key
-            </Label>
-            <Input
-              id="chat-api-key"
-              type="password"
-              className="h-9 text-sm"
-              value={settingsApiKey}
-              onChange={(e) => setSettingsApiKey(e.target.value)}
-              placeholder="sk-..."
-            />
-          </div>
-
-          <div className="space-y-1.5" ref={modelDropdownRef}>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="chat-model" className="text-xs">
-                Model
-              </Label>
-              <Button
-                variant="ghost"
-                className="h-6 px-2 text-xs text-muted-foreground"
-                onClick={handleFetchModels}
-                disabled={isLoadingModels || !settingsBaseUrl.trim() || !settingsApiKey.trim()}
-              >
-                {isLoadingModels ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  'Fetch models'
-                )}
-              </Button>
-            </div>
-            <div className="relative">
-              <Input
-                id="chat-model"
-                type="text"
-                className="h-9 text-sm"
-                value={settingsModel}
-                onChange={(e) => {
-                  setSettingsModel(e.target.value);
-                  if (availableModels.length > 0) {
-                    setShowModelDropdown(true);
-                  }
-                }}
-                onFocus={() => {
-                  if (availableModels.length > 0) {
-                    setShowModelDropdown(true);
-                  }
-                }}
-                placeholder="gpt-4o, claude-sonnet-4-20250514, etc."
-              />
-              {showModelDropdown && filteredModels.length > 0 && (
-                <div className="absolute z-10 top-full left-0 right-0 mt-1 max-h-40 overflow-auto bg-popover border border-border rounded-lg shadow-lg">
-                  {filteredModels.map((m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      className="w-full text-left px-3 py-1.5 text-sm hover:bg-accent truncate"
-                      onClick={() => {
-                        setSettingsModel(m);
-                        setShowModelDropdown(false);
-                      }}
-                    >
-                      {m}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Save */}
-        <div className="px-4 py-3 border-t border-border/60">
-          <Button className="w-full h-9 text-sm" onClick={handleSaveSettings}>
-            Save
-          </Button>
+        <div className="flex-1 overflow-auto p-4">
+          <AISettings
+            config={config}
+            onChange={setConfig}
+            onSave={handleSaveSettings}
+            modelsApiUrl="/api/models"
+            labels={{ save: 'Save' }}
+            classNames={{
+              container: 'space-y-4',
+              field: 'space-y-1.5',
+              label: 'text-xs font-medium text-foreground',
+              input: 'h-9 w-full text-sm rounded-md border border-border bg-background px-3 py-1 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring',
+              button: 'h-9 px-3 text-xs rounded-md border border-border bg-background text-muted-foreground hover:bg-accent disabled:opacity-50',
+              dropdown: 'bg-popover border border-border rounded-lg shadow-lg',
+              dropdownItem: 'text-sm hover:bg-accent truncate',
+              saveButton: 'w-full h-9 text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90 mt-4',
+              error: 'text-destructive',
+              hint: 'text-muted-foreground',
+              modelRow: 'flex gap-2',
+            }}
+          />
         </div>
       </div>
     );

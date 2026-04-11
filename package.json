@@ -47,6 +47,7 @@
     "@radix-ui/react-toggle": "^1.1.9",
     "@radix-ui/react-toggle-group": "^1.1.10",
     "@radix-ui/react-tooltip": "^1.2.7",
+    "@saas-maker/ai": "file:../saas-maker/packages/ai",
     "@saas-maker/changelog-widget": "0.2.0",
     "@saas-maker/feedback": "0.2.0",
     "@saas-maker/sdk": "^0.2.0",

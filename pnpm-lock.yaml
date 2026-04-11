@@ -107,6 +107,9 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: ^1.2.7
         version: 1.2.8(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@saas-maker/ai':
+        specifier: file:../saas-maker/packages/ai
+        version: file:../saas-maker/packages/ai(@ai-sdk/openai-compatible@2.0.41(zod@3.25.76))(ai@6.0.158(zod@3.25.76))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@saas-maker/changelog-widget':
         specifier: 0.2.0
         version: 0.2.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -2553,6 +2556,19 @@ packages:
       rollup: ^1.20.0||^2.0.0||^3.0.0||^4.0.0
     peerDependenciesMeta:
       rollup:
+        optional: true
+
+  '@saas-maker/ai@file:../saas-maker/packages/ai':
+    resolution: {directory: ../saas-maker/packages/ai, type: directory}
+    peerDependencies:
+      '@ai-sdk/openai-compatible': '>=1.0.0'
+      ai: '>=4.0.0'
+      react: '>=18'
+      react-dom: '>=18'
+    peerDependenciesMeta:
+      '@ai-sdk/openai-compatible':
+        optional: true
+      ai:
         optional: true
 
   '@saas-maker/changelog-widget@0.2.0':
@@ -7258,6 +7274,14 @@ snapshots:
       picomatch: 4.0.4
     optionalDependencies:
       rollup: 2.80.0
+
+  '@saas-maker/ai@file:../saas-maker/packages/ai(@ai-sdk/openai-compatible@2.0.41(zod@3.25.76))(ai@6.0.158(zod@3.25.76))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
+    optionalDependencies:
+      '@ai-sdk/openai-compatible': 2.0.41(zod@3.25.76)
+      ai: 6.0.158(zod@3.25.76)
 
   '@saas-maker/changelog-widget@0.2.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:

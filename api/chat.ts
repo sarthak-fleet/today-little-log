@@ -1,24 +1,20 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
+import { createAIModel } from "@saas-maker/ai/server";
 import { streamText } from "ai";
 
 interface ChatRequestBody {
-  baseUrl: string;
+  endpointUrl: string;
   apiKey: string;
   model: string;
   messages: Array<{ role: string; content: string }>;
   systemPrompt: string;
 }
 
-function normalizeBaseUrl(rawBaseUrl: string): string {
-  return rawBaseUrl.trim().replace(/\/+$/, "");
-}
-
 function validateBody(body: unknown): body is ChatRequestBody {
   if (!body || typeof body !== "object") return false;
   const b = body as Record<string, unknown>;
   return (
-    typeof b.baseUrl === "string" &&
+    typeof b.endpointUrl === "string" &&
     typeof b.apiKey === "string" &&
     typeof b.model === "string" &&
     Array.isArray(b.messages) &&
@@ -39,11 +35,11 @@ export default async function handler(
   if (!validateBody(body)) {
     return res.status(400).json({
       error:
-        "Missing required fields: baseUrl, apiKey, model, messages, systemPrompt",
+        "Missing required fields: endpointUrl, apiKey, model, messages, systemPrompt",
     });
   }
 
-  const baseUrl = normalizeBaseUrl(body.baseUrl);
+  const endpointUrl = body.endpointUrl.trim();
   const apiKey = body.apiKey.trim();
   const model = body.model.trim();
   const systemPrompt = body.systemPrompt.trim();
@@ -56,10 +52,10 @@ export default async function handler(
     }))
     .filter((m) => m.content.length > 0);
 
-  if (!baseUrl || !apiKey || !model || messages.length === 0 || !systemPrompt) {
+  if (!endpointUrl || !apiKey || !model || messages.length === 0 || !systemPrompt) {
     return res.status(400).json({
       error:
-        "Missing required fields: baseUrl, apiKey, model, messages, systemPrompt",
+        "Missing required fields: endpointUrl, apiKey, model, messages, systemPrompt",
     });
   }
 
@@ -69,17 +65,13 @@ export default async function handler(
   res.setHeader("Connection", "keep-alive");
 
   try {
-    const provider = createOpenAICompatible({
-      baseURL: baseUrl,
-      apiKey,
-      name: "custom",
-      headers: {
-        "x-gateway-project-id": "today-little-log",
-      },
-    });
+    const aiModel = createAIModel(
+      { endpointUrl, apiKey, model },
+      { headers: { "x-gateway-project-id": "today-little-log" } },
+    );
 
     const result = streamText({
-      model: provider.chatModel(model),
+      model: aiModel,
       system: systemPrompt,
       messages,
     });

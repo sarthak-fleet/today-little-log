@@ -24,5 +24,5 @@ Deployed via **Vercel** (`.vercel/` directory present). Verify that Vercel env v
 - [ ] Rotate Turso auth token (exposed in git history)
 - [ ] Rotate Better Auth secret (exposed in git history)
 - [ ] Run `git filter-branch` or BFG to purge `.env` from git history
-- [ ] Add `.env.local` explicitly to `.gitignore` (currently only covered by `*.local` glob)
+- [x] Add `.env.local` explicitly to `.gitignore`
 - [ ] Verify Vercel env vars are updated after rotation

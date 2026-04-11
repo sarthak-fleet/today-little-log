@@ -67,7 +67,7 @@ export default function Install() {
             App Installed!
           </h1>
           <p className="text-muted-foreground">
-            Significant Hobbies is now installed on your device. You can access it from your home screen.
+            Today Little Log is now installed on your device. You can access it from your home screen.
           </p>
         </main>
       </div>
@@ -83,10 +83,10 @@ export default function Install() {
             <Smartphone className="h-10 w-10 text-primary" />
           </div>
           <h1 className="text-2xl font-display font-bold text-foreground mb-2">
-            Install Significant Hobbies
+            Install Today Little Log
           </h1>
           <p className="text-muted-foreground">
-            Add Significant Hobbies to your home screen for quick access and offline support.
+            Add Today Little Log to your home screen for quick access and offline support.
           </p>
         </div>
 
