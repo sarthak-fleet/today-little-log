@@ -10,20 +10,8 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  useChat,
-  getAiConfig,
-  saveAiConfig,
-  resolveConfig,
-} from '@/hooks/useChat';
+import { useChat } from '@/hooks/useChat';
+import { useAIConfig, AISettings } from '@saas-maker/ai';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useHabits } from '@/hooks/useHabits';
 import { useTasks } from '@/hooks/useTasks';
@@ -76,14 +64,7 @@ function ChatPanel({ view, setView }: { view: 'chat' | 'settings'; setView: (v: 
   const { emotions } = useEmotions();
 
   const [input, setInput] = useState('');
-
-  // Settings form state
-  const [settingsProvider, setSettingsProvider] = useState<
-    'claude' | 'codex' | 'custom'
-  >('claude');
-  const [settingsApiKey, setSettingsApiKey] = useState('');
-  const [settingsBaseUrl, setSettingsBaseUrl] = useState('');
-  const [settingsModel, setSettingsModel] = useState('');
+  const { config, setConfig, save: saveConfig, isReady } = useAIConfig('chatbot-ai-config');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -103,33 +84,11 @@ function ChatPanel({ view, setView }: { view: 'chat' | 'settings'; setView: (v: 
   const pageName = PAGE_NAMES[location.pathname] || 'page';
 
   function openSettings() {
-    const config = getAiConfig();
-    setSettingsProvider(config.provider);
-    setSettingsApiKey(config.apiKey);
-    setSettingsBaseUrl(config.baseUrl);
-    setSettingsModel(config.model);
     setView('settings');
   }
 
-  function handleProviderChange(value: 'claude' | 'codex' | 'custom') {
-    setSettingsProvider(value);
-    const resolved = resolveConfig({
-      provider: value,
-      apiKey: settingsApiKey,
-      baseUrl: settingsBaseUrl,
-      model: settingsModel,
-    });
-    setSettingsBaseUrl(resolved.baseUrl);
-    setSettingsModel(resolved.model);
-  }
-
   function handleSaveSettings() {
-    saveAiConfig({
-      provider: settingsProvider,
-      apiKey: settingsApiKey,
-      baseUrl: settingsBaseUrl,
-      model: settingsModel,
-    });
+    saveConfig();
     setView('chat');
   }
 
@@ -137,8 +96,7 @@ function ChatPanel({ view, setView }: { view: 'chat' | 'settings'; setView: (v: 
     const trimmed = input.trim();
     if (!trimmed || isStreaming) return;
 
-    const config = getAiConfig();
-    if (!config.apiKey) {
+    if (!isReady) {
       openSettings();
       return;
     }
@@ -180,73 +138,27 @@ function ChatPanel({ view, setView }: { view: 'chat' | 'settings'; setView: (v: 
         </div>
 
         {/* Form */}
-        <div className="flex-1 overflow-auto p-4 space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="chat-provider" className="text-xs">
-              Provider
-            </Label>
-            <Select
-              value={settingsProvider}
-              onValueChange={handleProviderChange}
-            >
-              <SelectTrigger id="chat-provider" className="h-9 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="claude">Claude</SelectItem>
-                <SelectItem value="codex">Codex (OpenAI)</SelectItem>
-                <SelectItem value="custom">Custom</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="chat-api-key" className="text-xs">
-              API Key
-            </Label>
-            <Input
-              id="chat-api-key"
-              type="password"
-              className="h-9 text-sm"
-              value={settingsApiKey}
-              onChange={(e) => setSettingsApiKey(e.target.value)}
-              placeholder="sk-..."
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="chat-base-url" className="text-xs">
-              Base URL
-            </Label>
-            <Input
-              id="chat-base-url"
-              type="text"
-              className="h-9 text-sm"
-              value={settingsBaseUrl}
-              onChange={(e) => setSettingsBaseUrl(e.target.value)}
-              disabled={settingsProvider !== 'custom'}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="chat-model" className="text-xs">
-              Model
-            </Label>
-            <Input
-              id="chat-model"
-              type="text"
-              className="h-9 text-sm"
-              value={settingsModel}
-              onChange={(e) => setSettingsModel(e.target.value)}
-            />
-          </div>
-        </div>
-
-        {/* Save */}
-        <div className="px-4 py-3 border-t border-border/60">
-          <Button className="w-full h-9 text-sm" onClick={handleSaveSettings}>
-            Save
-          </Button>
+        <div className="flex-1 overflow-auto p-4">
+          <AISettings
+            config={config}
+            onChange={setConfig}
+            onSave={handleSaveSettings}
+            modelsApiUrl="/api/models"
+            labels={{ save: 'Save' }}
+            classNames={{
+              container: 'space-y-4',
+              field: 'space-y-1.5',
+              label: 'text-xs font-medium text-foreground',
+              input: 'h-9 w-full text-sm rounded-md border border-border bg-background px-3 py-1 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring',
+              button: 'h-9 px-3 text-xs rounded-md border border-border bg-background text-muted-foreground hover:bg-accent disabled:opacity-50',
+              dropdown: 'bg-popover border border-border rounded-lg shadow-lg',
+              dropdownItem: 'text-sm hover:bg-accent truncate',
+              saveButton: 'w-full h-9 text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90 mt-4',
+              error: 'text-destructive',
+              hint: 'text-muted-foreground',
+              modelRow: 'flex gap-2',
+            }}
+          />
         </div>
       </div>
     );

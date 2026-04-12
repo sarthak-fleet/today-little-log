@@ -1,16 +1,36 @@
-# Significant Hobbies
+# Today Little Log
 
 ![AI Generated](https://ai-percentage-pin.vercel.app/api/ai-percentage?value=100)
 ![AI PRs Welcome](https://ai-percentage-pin.vercel.app/api/ai-prs?welcome=yes)
 
-A calm, focused daily journal and habit tracker with tasks and time tracking. Built with React, Vite, TypeScript, shadcn/ui, Tailwind CSS, and Supabase.
+A calm, focused daily journal, habit tracker, task manager, and schedule planner. Built with React, Vite, TypeScript, Better Auth, Turso, Drizzle, and a small set of Vercel serverless API routes.
+
+## Stack
+
+- React 19 + Vite
+- Tailwind CSS + shadcn/ui
+- Better Auth with Google sign-in
+- Turso/libSQL + Drizzle ORM
+- Vercel serverless functions under `api/`
+- PWA via `vite-plugin-pwa`
 
 ## Development
 
 ```sh
 npm install
+# configure the required env vars before starting the app
 npm run dev
 ```
+
+Required env vars:
+
+- `TURSO_DATABASE_URL`
+- `TURSO_AUTH_TOKEN`
+- `BETTER_AUTH_URL`
+- `BETTER_AUTH_SECRET`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `VITE_BETTER_AUTH_URL`
 
 ## Build
 

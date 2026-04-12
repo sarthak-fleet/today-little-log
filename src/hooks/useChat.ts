@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { getAIConfig, type AIConfig } from '@saas-maker/ai';
 
 export interface ChatMessage {
   id: string;
@@ -6,79 +7,8 @@ export interface ChatMessage {
   content: string;
 }
 
-interface AiConfig {
-  provider: 'claude' | 'codex' | 'custom';
-  apiKey: string;
-  baseUrl: string;
-  model: string;
-}
-
-const PRESETS: Record<string, { baseUrl: string; model: string }> = {
-  claude: { baseUrl: 'https://api.anthropic.com', model: 'claude-sonnet-4-20250514' },
-  codex: { baseUrl: 'https://api.openai.com', model: 'gpt-4o' },
-};
-
-const CONFIG_KEY = 'chatbot-ai-config';
+const STORAGE_KEY = 'chatbot-ai-config';
 const MESSAGES_KEY = 'chatbot-messages';
-
-function isAnthropicBaseUrl(baseUrl: string): boolean {
-  return baseUrl.toLowerCase().includes('anthropic.com');
-}
-
-function normalizeBaseUrl(baseUrl: string): string {
-  return baseUrl.trim().replace(/\/+$/, '');
-}
-
-function normalizeModel(model: string): string {
-  return model.trim();
-}
-
-function normalizeConfig(config: AiConfig): AiConfig {
-  const next: AiConfig = {
-    provider: config.provider,
-    apiKey: config.apiKey.trim(),
-    baseUrl: normalizeBaseUrl(config.baseUrl),
-    model: normalizeModel(config.model),
-  };
-
-  if (next.provider === 'custom' && !next.model) {
-    next.model = isAnthropicBaseUrl(next.baseUrl) ? PRESETS.claude.model : 'auto';
-  }
-
-  return next;
-}
-
-export function getAiConfig(): AiConfig {
-  try {
-    const raw = localStorage.getItem(CONFIG_KEY);
-    if (raw) return normalizeConfig(JSON.parse(raw) as AiConfig);
-  } catch {
-    // fall through to default
-  }
-  return {
-    provider: 'claude',
-    apiKey: '',
-    baseUrl: PRESETS.claude.baseUrl,
-    model: PRESETS.claude.model,
-  };
-}
-
-export function saveAiConfig(config: AiConfig) {
-  localStorage.setItem(CONFIG_KEY, JSON.stringify(normalizeConfig(config)));
-}
-
-export function resolveConfig(config: AiConfig): AiConfig {
-  if (config.provider === 'custom') return normalizeConfig(config);
-
-  const preset = PRESETS[config.provider];
-  if (!preset) return config;
-
-  return {
-    ...config,
-    baseUrl: preset.baseUrl,
-    model: normalizeModel(config.model) || preset.model,
-  };
-}
 
 // Load persisted messages from localStorage
 function loadMessages(): ChatMessage[] {
@@ -111,8 +41,8 @@ export function useChat() {
   }, [messages, isStreaming]);
 
   const sendMessage = useCallback(async (content: string, pageContext: string) => {
-    const resolved = resolveConfig(getAiConfig());
-    if (!resolved.apiKey || !resolved.baseUrl) return;
+    const config = getAIConfig(STORAGE_KEY);
+    if (!config.apiKey || !config.endpointUrl) return;
 
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
@@ -130,7 +60,7 @@ export function useChat() {
     setIsStreaming(true);
 
     const systemPrompt = [
-      `You are a thoughtful personal assistant embedded in "Significant Hobbies", a daily life dashboard app.`,
+      `You are a thoughtful personal assistant embedded in "Today Little Log", a daily life dashboard app.`,
       `Today is ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.`,
       ``,
       `The user's live data from the app is below. Use it to give specific, personalized answers.`,
@@ -159,9 +89,9 @@ export function useChat() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          baseUrl: resolved.baseUrl,
-          apiKey: resolved.apiKey,
-          model: resolved.model,
+          endpointUrl: config.endpointUrl,
+          apiKey: config.apiKey,
+          model: config.model,
           messages: [...history, { role: 'user', content }],
           systemPrompt,
         }),

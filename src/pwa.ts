@@ -14,7 +14,7 @@ const updateSW = registerSW({
   },
   onOfflineReady() {
     toast("App ready offline", {
-      description: "You can keep using Significant Hobbies without a connection.",
+      description: "You can keep using Today Little Log without a connection.",
     });
   },
 });

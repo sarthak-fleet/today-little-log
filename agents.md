@@ -1,4 +1,4 @@
-# Significant Hobbies (Today Little Log)
+# Today Little Log
 
 Daily journal, habit tracker, task manager, and schedule planner -- a calm personal productivity PWA.
 
@@ -76,4 +76,4 @@ pnpm lint        # ESLint
 
 **Done:** Journal (daily/weekly/monthly + search + calendar view), tasks (drag-and-drop, projects, estimates), habits (daily/weekly, history), emotion logging, life rules, schedule builder, AI chatbot (BYOK -- user provides Claude/OpenAI key), Google auth + guest mode, PWA, SaaS Maker integration, dark mode.
 
-**Gaps:** No tests, schema duplicated in two places (fragile), README mentions Supabase (stale -- DB is Turso now), no UI for projects or time sessions (tables exist in schema but unused).
+**Gaps:** Minimal automated coverage (one smoke Playwright spec), schema duplicated in two places (fragile), no UI for projects or time sessions (tables exist in schema but unused).
