@@ -30,3 +30,4 @@ api/*.ts.bak
 .env
 .env.local
 .claude/settings.local.json
+.saasmaker.json
