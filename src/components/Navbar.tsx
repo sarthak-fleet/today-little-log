@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { LogOut, LogIn, Loader2, Cake, Moon, Sun } from 'lucide-react';
 import { differenceInDays, parseISO, isValid, format, getDaysInMonth, endOfMonth, endOfYear, differenceInCalendarDays } from 'date-fns';
 import { useLifeMath, AVERAGE_LIFESPAN_DAYS } from '@/hooks/useLifeMath';
+import { LifeScoreBadge } from './LifeScoreBadge';
 
 type TimeView = 'month' | 'year' | 'life';
 
@@ -151,8 +152,9 @@ export function Navbar({ isSaving = false }: NavbarProps) {
           </div>
         </div>
 
-        {/* Right: DOB setter (if logged in & no DOB) + Dark mode toggle + User section */}
-        <div className="flex items-center gap-1">
+        {/* Right: LifeScore + DOB setter + Dark mode toggle + User section */}
+        <div className="flex items-center gap-2">
+          <LifeScoreBadge />
           {isSaving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground mr-2" />}
 
           {isLoggedIn && !dayOfLife && (

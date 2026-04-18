@@ -1,5 +1,7 @@
 import { sqliteTable, text, integer, real, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
+// NOTE: keep in sync with src/db/schema.ts — see agents.md.
+
 // ── Better Auth tables ───────────────────────────────────────
 export const user = sqliteTable('user', {
   id: text('id').primaryKey(),
@@ -59,9 +61,56 @@ export const profiles = sqliteTable('profiles', {
   name: text('name'),
   avatar_url: text('avatar_url'),
   dob: text('dob'),
+  identity_statement: text('identity_statement'),
+  sleep_target_bed: text('sleep_target_bed'),
+  sleep_target_wake: text('sleep_target_wake'),
   created_at: createdAt(),
   updated_at: updatedAt(),
 }, (t) => [uniqueIndex('profiles_user_id_idx').on(t.user_id)]);
+
+// ── Urgency / gamification tables ────────────────────────────
+
+export const userStats = sqliteTable('user_stats', {
+  id: id(),
+  user_id: userId(),
+  life_score: real('life_score').notNull().default(50),
+  xp: integer('xp').notNull().default(0),
+  last_activity_date: text('last_activity_date'),
+  created_at: createdAt(),
+  updated_at: updatedAt(),
+}, (t) => [uniqueIndex('user_stats_user_id_idx').on(t.user_id)]);
+
+export const quickLogs = sqliteTable('quick_logs', {
+  id: id(),
+  user_id: userId(),
+  kind: text('kind').notNull(),
+  value_num: real('value_num'),
+  value_text: text('value_text'),
+  logged_at: text('logged_at').notNull().$defaultFn(() => new Date().toISOString()),
+  created_at: createdAt(),
+});
+
+export const weightLogs = sqliteTable('weight_logs', {
+  id: id(),
+  user_id: userId(),
+  date: text('date').notNull(),
+  kg: real('kg').notNull(),
+  notes: text('notes'),
+  created_at: createdAt(),
+  updated_at: updatedAt(),
+}, (t) => [uniqueIndex('weight_logs_user_date_idx').on(t.user_id, t.date)]);
+
+export const urgeLogs = sqliteTable('urge_logs', {
+  id: id(),
+  user_id: userId(),
+  trigger: text('trigger').notNull(),
+  reflection: text('reflection'),
+  status: text('status').notNull().default('cooldown'),
+  logged_at: text('logged_at').notNull().$defaultFn(() => new Date().toISOString()),
+  expires_at: text('expires_at').notNull(),
+  created_at: createdAt(),
+  updated_at: updatedAt(),
+});
 
 export const projects = sqliteTable('projects', {
   id: id(),

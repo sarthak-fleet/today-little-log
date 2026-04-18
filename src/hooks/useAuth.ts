@@ -9,6 +9,9 @@ export interface Profile {
   name: string | null;
   avatar_url: string | null;
   dob: string | null;
+  identity_statement?: string | null;
+  sleep_target_bed?: string | null;
+  sleep_target_wake?: string | null;
 }
 
 interface UseAuthOptions {
@@ -69,6 +72,24 @@ export function useAuth(options: UseAuthOptions = {}) {
     }
   };
 
+  const updateProfile = async (patch: Partial<Pick<Profile, 'name' | 'avatar_url' | 'dob' | 'identity_statement' | 'sleep_target_bed' | 'sleep_target_wake'>>) => {
+    if (!sessionData?.user) return { error: new Error('Not authenticated') };
+    try {
+      const updated = await apiFetch<Profile>('/api/profiles', {
+        method: 'PATCH',
+        body: JSON.stringify(patch),
+      });
+      setProfile(updated);
+      if (patch.dob !== undefined) {
+        setCachedDob(patch.dob);
+        window.dispatchEvent(new Event('tll:dob-changed'));
+      }
+      return { error: null };
+    } catch (error) {
+      return { error };
+    }
+  };
+
   return {
     user: sessionData?.user ?? null,
     session: sessionData?.session ?? null,
@@ -76,5 +97,6 @@ export function useAuth(options: UseAuthOptions = {}) {
     loading: isPending,
     signOut,
     updateDob,
+    updateProfile,
   };
 }

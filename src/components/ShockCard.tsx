@@ -7,6 +7,9 @@ import { useLifeMath } from '@/hooks/useLifeMath';
 import { quoteOfDay } from '@/lib/mementoMori';
 import { useAuth } from '@/hooks/useAuth';
 import { Skull } from 'lucide-react';
+import { IdentitySetter } from './IdentitySetter';
+import { useUserStats } from '@/hooks/useUserStats';
+import { XP_REWARDS, SCORE_DELTAS } from '@/lib/xp';
 
 const DISMISS_KEY_PREFIX = 'tll:shock-dismissed:';
 
@@ -36,6 +39,7 @@ function markDismissed() {
  */
 export function ShockCard() {
   const { user, profile, updateDob } = useAuth({ includeProfile: true });
+  const { award } = useUserStats();
   const life = useLifeMath(60_000);
   const quote = quoteOfDay();
 
@@ -52,6 +56,7 @@ export function ShockCard() {
 
   const handleDismiss = () => {
     markDismissed();
+    award(XP_REWARDS.SHOCK_DISMISS, SCORE_DELTAS.DAILY_ENGAGEMENT);
     setOpen(false);
   };
 
@@ -122,6 +127,8 @@ export function ShockCard() {
             </div>
           </div>
         )}
+
+        {hasDob && <IdentitySetter compact />}
 
         <blockquote className="border-l-2 border-primary/60 pl-4 italic text-foreground/90">
           "{quote.text}"

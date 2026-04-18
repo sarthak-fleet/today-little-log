@@ -59,9 +59,62 @@ export const profiles = sqliteTable('profiles', {
   name: text('name'),
   avatar_url: text('avatar_url'),
   dob: text('dob'),
+  // Highest-self identity statement shown at ShockCard + home.
+  identity_statement: text('identity_statement'),
+  // Sleep targets, "HH:MM" 24h.
+  sleep_target_bed: text('sleep_target_bed'),
+  sleep_target_wake: text('sleep_target_wake'),
   created_at: createdAt(),
   updated_at: updatedAt(),
 }, (t) => [uniqueIndex('profiles_user_id_idx').on(t.user_id)]);
+
+// ── Urgency / gamification tables ────────────────────────────
+
+export const userStats = sqliteTable('user_stats', {
+  id: id(),
+  user_id: userId(),
+  life_score: real('life_score').notNull().default(50),
+  xp: integer('xp').notNull().default(0),
+  last_activity_date: text('last_activity_date'),
+  created_at: createdAt(),
+  updated_at: updatedAt(),
+}, (t) => [uniqueIndex('user_stats_user_id_idx').on(t.user_id)]);
+
+export const quickLogs = sqliteTable('quick_logs', {
+  id: id(),
+  user_id: userId(),
+  // 'water' | 'workout' | 'temptation' | 'win' | 'note'
+  kind: text('kind').notNull(),
+  value_num: real('value_num'),
+  value_text: text('value_text'),
+  logged_at: text('logged_at').notNull().$defaultFn(() => new Date().toISOString()),
+  created_at: createdAt(),
+});
+
+export const weightLogs = sqliteTable('weight_logs', {
+  id: id(),
+  user_id: userId(),
+  date: text('date').notNull(),
+  kg: real('kg').notNull(),
+  notes: text('notes'),
+  created_at: createdAt(),
+  updated_at: updatedAt(),
+}, (t) => [uniqueIndex('weight_logs_user_date_idx').on(t.user_id, t.date)]);
+
+export const urgeLogs = sqliteTable('urge_logs', {
+  id: id(),
+  user_id: userId(),
+  // user-entered temptation e.g. "install random HN game"
+  trigger: text('trigger').notNull(),
+  reflection: text('reflection'),
+  // 'cooldown' | 'resisted' | 'acted'
+  status: text('status').notNull().default('cooldown'),
+  logged_at: text('logged_at').notNull().$defaultFn(() => new Date().toISOString()),
+  // 24h from logged_at
+  expires_at: text('expires_at').notNull(),
+  created_at: createdAt(),
+  updated_at: updatedAt(),
+});
 
 export const projects = sqliteTable('projects', {
   id: id(),

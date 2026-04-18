@@ -18,11 +18,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     case 'PATCH': {
-      const { dob, name, avatar_url } = req.body;
+      const {
+        dob,
+        name,
+        avatar_url,
+        identity_statement,
+        sleep_target_bed,
+        sleep_target_wake,
+      } = req.body;
       const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
       if (dob !== undefined) updates.dob = dob;
       if (name !== undefined) updates.name = name;
       if (avatar_url !== undefined) updates.avatar_url = avatar_url;
+      if (identity_statement !== undefined) updates.identity_statement = identity_statement;
+      if (sleep_target_bed !== undefined) updates.sleep_target_bed = sleep_target_bed;
+      if (sleep_target_wake !== undefined) updates.sleep_target_wake = sleep_target_wake;
+
+      // Upsert: insert if no row exists, else update.
+      const [existing] = await db.select().from(profiles).where(eq(profiles.user_id, userId)).limit(1);
+      if (!existing) {
+        const [inserted] = await db
+          .insert(profiles)
+          .values({ user_id: userId, ...updates })
+          .returning();
+        return res.json(inserted);
+      }
 
       const [row] = await db.update(profiles)
         .set(updates)

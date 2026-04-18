@@ -17,6 +17,7 @@ import Habits from "./pages/Habits";
 import Tasks from "./pages/Tasks";
 import Install from "./pages/Install";
 import Life from "./pages/Life";
+import Weight from "./pages/Weight";
 import NotFound from "./pages/NotFound";
 import { useTabTitleCountdown } from "./hooks/useTabTitleCountdown";
 
@@ -59,6 +60,7 @@ const App = () => (
               <Route element={<LayoutWrapper />}>
                 <Route path="/" element={<Index />} />
                 <Route path="/life" element={<Life />} />
+                <Route path="/weight" element={<Weight />} />
                 <Route path="/schedule" element={<Schedule />} />
                 <Route path="/rules" element={<Rules />} />
                 <Route path="/habits" element={<Habits />} />

@@ -7,6 +7,8 @@ import { Navbar } from './Navbar';
 import { SavingProvider, useSaving } from './SavingContext';
 import { FooterStamp } from './FooterStamp';
 import { ShockCard } from './ShockCard';
+import { QuickLogFab } from './QuickLogFab';
+import { UrgeButton } from './UrgeButton';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -41,6 +43,8 @@ export function AppLayout({ children }: AppLayoutProps) {
       <ChatBot />
       <FooterStamp />
       <ShockCard />
+      <QuickLogFab />
+      <UrgeButton />
     </SidebarProvider>
   );
 }

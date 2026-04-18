@@ -8,6 +8,7 @@ import { EmotionLogger } from '@/components/EmotionLogger';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useAuth } from '@/hooks/useAuth';
 import { useLifeMath } from '@/hooks/useLifeMath';
+import { IdentitySetter } from '@/components/IdentitySetter';
 import { List, CalendarDays, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -109,7 +110,12 @@ const Index = () => {
       )}
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 space-y-16 pb-20">
+      <div className="max-w-4xl mx-auto px-4 space-y-8 pb-20">
+        {/* Highest-self identity */}
+        <section className="animate-slide-up" style={{ animationDelay: '0.05s' }}>
+          <IdentitySetter />
+        </section>
+
         {/* Emotion Logger - Styled as a floating card */}
         <section className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
           <div className="bg-card rounded-3xl p-6 shadow-soft border-none">
@@ -117,6 +123,9 @@ const Index = () => {
             <EmotionLogger />
           </div>
         </section>
+
+        {/* spacing */}
+        <div className="h-4" />
 
         {/* Today's Entry - The core focus */}
         <section className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
