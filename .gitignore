@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# but keep the vendored @saas-maker/ai dist (needed for Vercel builds)
+!vendor/**/dist
+!vendor/**/dist/**
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
