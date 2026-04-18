@@ -31,3 +31,7 @@ api/*.ts.bak
 .env.local
 .claude/settings.local.json
 .saasmaker.json
+
+# Playwright
+test-results/
+playwright-report/
