@@ -11,6 +11,7 @@ import { differenceInDays, parseISO, isValid, format, getDaysInMonth, endOfMonth
 import { useLifeMath, AVERAGE_LIFESPAN_DAYS } from '@/hooks/useLifeMath';
 import { LifeScoreBadge } from './LifeScoreBadge';
 import { StreakBadge } from './StreakBadge';
+import { ManaBadge } from './ManaBadge';
 
 type TimeView = 'month' | 'year' | 'life';
 
@@ -155,6 +156,7 @@ export function Navbar({ isSaving = false }: NavbarProps) {
 
         {/* Right: LifeScore + Streak + DOB setter + Dark mode toggle + User section */}
         <div className="flex items-center gap-2">
+          <ManaBadge />
           <StreakBadge />
           <LifeScoreBadge />
           {isSaving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground mr-2" />}

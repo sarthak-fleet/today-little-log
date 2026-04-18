@@ -156,6 +156,65 @@ export const weeklyReviews = sqliteTable('weekly_reviews', {
   updated_at: updatedAt(),
 }, (t) => [uniqueIndex('weekly_reviews_user_week_idx').on(t.user_id, t.week_start)]);
 
+// ── Food + goals + mana tables ───────────────────────────────
+
+export const foodItems = sqliteTable('food_items', {
+  id: id(),
+  user_id: userId(),
+  name: text('name').notNull(),
+  calories_per_serving: real('calories_per_serving').notNull(),
+  protein_g: real('protein_g').notNull().default(0),
+  carbs_g: real('carbs_g').notNull().default(0),
+  fat_g: real('fat_g').notNull().default(0),
+  unit: text('unit').notNull().default('serving'),
+  created_at: createdAt(),
+  updated_at: updatedAt(),
+});
+
+export const foodLogs = sqliteTable('food_logs', {
+  id: id(),
+  user_id: userId(),
+  date: text('date').notNull(),
+  food_item_id: text('food_item_id').notNull().references(() => foodItems.id, { onDelete: 'cascade' }),
+  servings: real('servings').notNull().default(1),
+  meal_type: text('meal_type'),
+  created_at: createdAt(),
+});
+
+export const goals = sqliteTable('goals', {
+  id: id(),
+  user_id: userId(),
+  title: text('title').notNull(),
+  category: text('category').notNull().default('other'),
+  target_date: text('target_date'),
+  target_value_num: real('target_value_num'),
+  target_value_text: text('target_value_text'),
+  probability: real('probability').notNull().default(50),
+  created_at: createdAt(),
+  updated_at: updatedAt(),
+});
+
+export const goalActions = sqliteTable('goal_actions', {
+  id: id(),
+  user_id: userId(),
+  goal_id: text('goal_id').notNull().references(() => goals.id, { onDelete: 'cascade' }),
+  action_at: text('action_at').notNull().$defaultFn(() => new Date().toISOString()),
+  delta: real('delta').notNull().default(0),
+  source: text('source'),
+  note: text('note'),
+  created_at: createdAt(),
+});
+
+export const manaState = sqliteTable('mana_state', {
+  id: id(),
+  user_id: userId(),
+  date: text('date').notNull(),
+  daily_max: integer('daily_max').notNull().default(10),
+  bank_remaining: integer('bank_remaining').notNull().default(10),
+  created_at: createdAt(),
+  updated_at: updatedAt(),
+}, (t) => [uniqueIndex('mana_state_user_date_idx').on(t.user_id, t.date)]);
+
 export const projects = sqliteTable('projects', {
   id: id(),
   user_id: userId(),

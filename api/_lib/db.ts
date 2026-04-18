@@ -15,4 +15,5 @@ export {
   emotions, journalEntries, lifeRules, schedules, timeSessions,
   userStats, quickLogs, weightLogs, urgeLogs,
   dailyCheckins, devLogs, weeklyReviews,
+  foodItems, foodLogs, goals, goalActions, manaState,
 } from './schema';

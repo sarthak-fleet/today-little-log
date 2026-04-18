@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Feather, Target, Clock, BookOpen, CheckSquare, Skull, Scale, Code2, LayoutGrid } from 'lucide-react';
+import { Feather, Target, Clock, BookOpen, CheckSquare, Skull, Scale, Code2, LayoutGrid, Apple, Trophy, Sparkles } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -17,8 +17,11 @@ import { format } from 'date-fns';
 
 const navItems = [
   { title: 'Journal', url: '/', icon: Feather, shortcut: 'J' },
+  { title: 'Now', url: '/now', icon: Sparkles, shortcut: 'N' },
   { title: 'Life', url: '/life', icon: Skull, shortcut: 'L' },
+  { title: 'Goals', url: '/goals', icon: Trophy, shortcut: 'G' },
   { title: 'Weight', url: '/weight', icon: Scale, shortcut: 'W' },
+  { title: 'Food', url: '/food', icon: Apple, shortcut: 'F' },
   { title: 'Dev', url: '/dev', icon: Code2, shortcut: 'D' },
   { title: 'Habits', url: '/habits', icon: Target, shortcut: 'H' },
   { title: 'Tasks', url: '/tasks', icon: CheckSquare, shortcut: 'T' },

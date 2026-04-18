@@ -20,6 +20,9 @@ import Life from "./pages/Life";
 import Weight from "./pages/Weight";
 import Dev from "./pages/Dev";
 import Eisenhower from "./pages/Eisenhower";
+import Food from "./pages/Food";
+import Goals from "./pages/Goals";
+import WhatToDo from "./pages/WhatToDo";
 import NotFound from "./pages/NotFound";
 import { useTabTitleCountdown } from "./hooks/useTabTitleCountdown";
 
@@ -65,6 +68,9 @@ const App = () => (
                 <Route path="/weight" element={<Weight />} />
                 <Route path="/dev" element={<Dev />} />
                 <Route path="/eisenhower" element={<Eisenhower />} />
+                <Route path="/food" element={<Food />} />
+                <Route path="/goals" element={<Goals />} />
+                <Route path="/now" element={<WhatToDo />} />
                 <Route path="/schedule" element={<Schedule />} />
                 <Route path="/rules" element={<Rules />} />
                 <Route path="/habits" element={<Habits />} />

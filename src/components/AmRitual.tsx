@@ -4,9 +4,49 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Sunrise, Check } from 'lucide-react';
+import { Sunrise, Check, Gauge } from 'lucide-react';
 
 const MAX_INTENTS = 3;
+
+function PsiSlider() {
+  const { todayRow, save } = useDailyCheckins();
+  const [value, setValue] = useState<number>(todayRow?.psi_score ?? 50);
+
+  useEffect(() => {
+    if (todayRow?.psi_score != null) setValue(todayRow.psi_score);
+  }, [todayRow?.id, todayRow?.psi_score]);
+
+  const tone = value >= 80 ? 'text-destructive'
+    : value >= 60 ? 'text-orange-600'
+    : value >= 40 ? 'text-primary'
+    : 'text-emerald-600';
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+          <Gauge className="h-3 w-3" /> Brain pressure (PSI)
+        </label>
+        <span className={`text-sm font-display font-bold tabular-nums ${tone}`}>{value}</span>
+      </div>
+      <input
+        type="range"
+        min={0}
+        max={100}
+        value={value}
+        onChange={(e) => setValue(parseInt(e.target.value))}
+        onMouseUp={() => save({ psi_score: value })}
+        onTouchEnd={() => save({ psi_score: value })}
+        className="w-full accent-primary"
+      />
+      <div className="flex justify-between text-[9px] text-muted-foreground uppercase tracking-widest">
+        <span>calm</span>
+        <span>steady</span>
+        <span className="text-destructive">about to explode</span>
+      </div>
+    </div>
+  );
+}
 
 export function AmRitual() {
   const { user } = useAuth();
@@ -102,6 +142,8 @@ export function AmRitual() {
           />
         </div>
       </div>
+
+      <PsiSlider />
 
       <div className="flex justify-between items-center">
         <span className="text-[11px] text-muted-foreground">
