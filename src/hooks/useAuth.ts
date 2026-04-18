@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { apiFetch } from '@/lib/api';
+import { setCachedDob } from './useLifeMath';
 
 export interface Profile {
   id: string;
@@ -35,12 +36,16 @@ export function useAuth(options: UseAuthOptions = {}) {
     try {
       const data = await apiFetch<Profile | null>('/api/profiles');
       setProfile(data);
+      setCachedDob(data?.dob ?? null);
+      window.dispatchEvent(new Event('tll:dob-changed'));
     } catch (error) {
       console.error('Failed to fetch profile:', error);
     }
   };
 
   const signOut = async () => {
+    setCachedDob(null);
+    window.dispatchEvent(new Event('tll:dob-changed'));
     await authClient.signOut();
   };
 
@@ -56,6 +61,8 @@ export function useAuth(options: UseAuthOptions = {}) {
       if (profile) {
         setProfile({ ...profile, dob });
       }
+      setCachedDob(dob);
+      window.dispatchEvent(new Event('tll:dob-changed'));
       return { error: null };
     } catch (error) {
       return { error };

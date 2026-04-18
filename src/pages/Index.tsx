@@ -7,6 +7,7 @@ import { GuestNotice } from '@/components/GuestNotice';
 import { EmotionLogger } from '@/components/EmotionLogger';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useAuth } from '@/hooks/useAuth';
+import { useLifeMath } from '@/hooks/useLifeMath';
 import { List, CalendarDays, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +19,7 @@ const Index = () => {
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [searchQuery, setSearchQuery] = useState('');
   const { loading } = useAuth();
+  const life = useLifeMath(60_000);
 
   const {
     entries,
@@ -65,14 +67,35 @@ const Index = () => {
     <div className="min-h-screen bg-background text-foreground font-sans">
       {/* Hero Section */}
       <section className="pt-12 pb-8 md:pt-20 md:pb-12 px-4 max-w-4xl mx-auto">
-        <div className="space-y-4 text-left animate-fade-in">
-          <h1 className="text-4xl md:text-6xl font-display font-extrabold tracking-tight text-primary leading-tight">
-            Today is a <br />
-            <span className="text-accent italic font-medium">New Beginning</span>
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-xl font-sans leading-relaxed">
-            Capture your thoughts, track your habits, and reflect on your journey in your digital sanctuary.
-          </p>
+        <div className="space-y-5 text-left animate-fade-in">
+          {life.dayOfLife !== null && life.daysLeft !== null ? (
+            <>
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
+                <span className="h-[1px] w-6 bg-primary" />
+                Day {life.dayOfLife.toLocaleString()} of ~{(30000).toLocaleString()}
+              </div>
+              <h1 className="text-4xl md:text-6xl font-display font-extrabold tracking-tight leading-[1.05]">
+                <span className="text-foreground">About </span>
+                <span className="text-primary">{life.daysLeft.toLocaleString()}</span>
+                <span className="text-foreground"> days</span>
+                <br />
+                <span className="text-accent italic font-medium">to become who you want.</span>
+              </h1>
+              <p className="text-base md:text-lg text-muted-foreground max-w-xl font-sans leading-relaxed">
+                {life.hoursLeftToday}h {life.remainingMinutesToday}m left today. Log what matters. Skip what doesn't.
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 className="text-4xl md:text-6xl font-display font-extrabold tracking-tight text-foreground leading-[1.05]">
+                How many days <br />
+                <span className="text-primary italic font-medium">do you have left?</span>
+              </h1>
+              <p className="text-base md:text-lg text-muted-foreground max-w-xl font-sans leading-relaxed">
+                Set your date of birth once and this app starts counting what matters. Top-right → cake icon.
+              </p>
+            </>
+          )}
         </div>
       </section>
 
@@ -210,8 +233,10 @@ const Index = () => {
 
       {/* Footer */}
       <footer className="py-20 text-center bg-muted/20">
-        <p className="text-sm text-muted-foreground font-sans tracking-wide">
-          Your thoughts, securely stored in your private digital sanctuary
+        <p className="text-sm text-muted-foreground font-sans tracking-wide italic">
+          {life.daysLeft !== null
+            ? `Today is one of about ${life.daysLeft.toLocaleString()}. Don't give it away cheap.`
+            : `The trouble is, you think you have time. — Jack Kornfield`}
         </p>
       </footer>
     </div>

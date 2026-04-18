@@ -16,7 +16,9 @@ import Rules from "./pages/Rules";
 import Habits from "./pages/Habits";
 import Tasks from "./pages/Tasks";
 import Install from "./pages/Install";
+import Life from "./pages/Life";
 import NotFound from "./pages/NotFound";
+import { useTabTitleCountdown } from "./hooks/useTabTitleCountdown";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +27,11 @@ function PageViewTracker() {
   useEffect(() => {
     saasmaker.analytics.track({ name: 'page_view', url: location.pathname }).catch(() => {});
   }, [location.pathname]);
+  return null;
+}
+
+function TabTitleCountdown() {
+  useTabTitleCountdown();
   return null;
 }
 
@@ -44,12 +51,14 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <PageViewTracker />
+          <TabTitleCountdown />
           <SaaSMakerFeedback />
           <ErrorBoundary>
             <Routes>
               {/* Routes with persistent sidebar layout */}
               <Route element={<LayoutWrapper />}>
                 <Route path="/" element={<Index />} />
+                <Route path="/life" element={<Life />} />
                 <Route path="/schedule" element={<Schedule />} />
                 <Route path="/rules" element={<Rules />} />
                 <Route path="/habits" element={<Habits />} />

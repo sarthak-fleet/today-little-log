@@ -5,6 +5,8 @@ import { BottomNav } from './BottomNav';
 import { ChatBot } from './ChatBot';
 import { Navbar } from './Navbar';
 import { SavingProvider, useSaving } from './SavingContext';
+import { FooterStamp } from './FooterStamp';
+import { ShockCard } from './ShockCard';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -37,6 +39,8 @@ export function AppLayout({ children }: AppLayoutProps) {
       </div>
       <BottomNav />
       <ChatBot />
+      <FooterStamp />
+      <ShockCard />
     </SidebarProvider>
   );
 }

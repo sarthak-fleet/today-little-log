@@ -8,8 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { LogOut, LogIn, Loader2, Cake, Moon, Sun } from 'lucide-react';
 import { differenceInDays, parseISO, isValid, format, getDaysInMonth, endOfMonth, endOfYear, differenceInCalendarDays } from 'date-fns';
-
-const AVERAGE_LIFESPAN_DAYS = 30000;
+import { useLifeMath, AVERAGE_LIFESPAN_DAYS } from '@/hooks/useLifeMath';
 
 type TimeView = 'month' | 'year' | 'life';
 
@@ -23,9 +22,10 @@ export function Navbar({ isSaving = false }: NavbarProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const isDark = (resolvedTheme ?? 'light') === 'dark';
   const [timeView, setTimeView] = useState<TimeView>('month');
+  const life = useLifeMath(1000); // 1s ticker for live today countdown
 
   const isLoggedIn = !!user;
-  const today = new Date();
+  const today = life.now;
 
   const getDayOfLife = () => {
     if (!profile?.dob) return null;
@@ -93,11 +93,16 @@ export function Navbar({ isSaving = false }: NavbarProps) {
     setTheme(isDark ? 'light' : 'dark');
   };
 
+  // Live today ticker HH:MM:SS until midnight (readable waking-window urgency)
+  const secsLeftToday = Math.max(0, Math.floor((new Date(today).setHours(23, 59, 59, 999) - today.getTime()) / 1000));
+  const hhmmss = `${String(Math.floor(secsLeftToday / 3600)).padStart(2, '0')}:${String(Math.floor((secsLeftToday % 3600) / 60)).padStart(2, '0')}:${String(secsLeftToday % 60).padStart(2, '0')}`;
+  const crunch = life.isEndOfDayCrunch;
+
   return (
-    <header className="py-4 px-6 bg-background/80 backdrop-blur-md sticky top-0 z-50">
+    <header className="py-4 px-6 bg-background/80 backdrop-blur-md sticky top-0 z-50 border-b border-border/50">
       <div className="max-w-6xl mx-auto flex items-center justify-between">
         {/* Left: Date + Time counter */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-5">
           <div className="flex flex-col">
             <span className="text-sm font-medium text-foreground">
               {format(today, 'EEEE')}
@@ -107,30 +112,43 @@ export function Navbar({ isSaving = false }: NavbarProps) {
             </span>
           </div>
 
-          {/* Time remaining counter */}
+          {/* Time remaining counter - bolder */}
           <button
             onClick={cycleView}
-            className="flex items-center gap-2 text-sm hover:opacity-80 transition-opacity cursor-pointer group"
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer group"
             title="Click to cycle: month → year → life"
           >
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+            <div className="flex flex-col items-start leading-tight">
+              <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-[0.18em]">
                 {display.label}
               </span>
-              <span className="font-display font-bold text-foreground">
+              <span className="font-display font-extrabold text-foreground text-lg md:text-xl">
                 {display.value}
               </span>
             </div>
-            <div className="hidden sm:flex items-center gap-1">
-              <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
+            <div className="hidden sm:flex flex-col items-start gap-1">
+              <div className="w-20 h-1.5 rounded-full bg-muted overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-primary transition-all duration-500"
+                  className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
                   style={{ width: `${display.percent}%` }}
                 />
               </div>
-              <span className="text-xs text-muted-foreground">{display.percent}%</span>
+              <span className="text-[10px] text-muted-foreground font-mono">{display.percent}% spent</span>
             </div>
           </button>
+
+          {/* Live today tick */}
+          <div
+            className={`hidden md:flex flex-col items-start leading-tight pl-5 border-l border-border/60 ${crunch ? 'animate-pulse' : ''}`}
+            title="Time left today"
+          >
+            <span className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${crunch ? 'text-destructive' : 'text-muted-foreground'}`}>
+              Today
+            </span>
+            <span className={`font-mono font-bold text-sm md:text-base tabular-nums ${crunch ? 'text-destructive' : 'text-foreground'}`}>
+              {hhmmss}
+            </span>
+          </div>
         </div>
 
         {/* Right: DOB setter (if logged in & no DOB) + Dark mode toggle + User section */}

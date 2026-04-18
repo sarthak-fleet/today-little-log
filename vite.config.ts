@@ -18,12 +18,12 @@ export default defineConfig(({ mode }) => ({
       registerType: "prompt",
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "pwa-192x192.png", "pwa-512x512.png"],
       manifest: {
-        name: "Today Little Log - Journal, Habits, Tasks & Schedule",
-        short_name: "Little Log",
+        name: "Today — every day counts",
+        short_name: "Today",
         description:
-          "Today Little Log is a calm, focused daily journal and habit tracker with tasks, schedules, and offline support.",
-        theme_color: "#1a1a2e",
-        background_color: "#1a1a2e",
+          "A finite-time journal. Confronts you with how much life is left so today doesn't slip by.",
+        theme_color: "#e86a1f",
+        background_color: "#faf6ec",
         display: "standalone",
         orientation: "portrait",
         scope: "/",
