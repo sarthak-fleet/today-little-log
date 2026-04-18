@@ -14,4 +14,5 @@ export {
   profiles, projects, tasks, habits, habitLogs,
   emotions, journalEntries, lifeRules, schedules, timeSessions,
   userStats, quickLogs, weightLogs, urgeLogs,
+  dailyCheckins, devLogs, weeklyReviews,
 } from './schema';

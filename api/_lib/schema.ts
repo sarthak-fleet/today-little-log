@@ -112,6 +112,44 @@ export const urgeLogs = sqliteTable('urge_logs', {
   updated_at: updatedAt(),
 });
 
+export const dailyCheckins = sqliteTable('daily_checkins', {
+  id: id(),
+  user_id: userId(),
+  date: text('date').notNull(),
+  am_intents: text('am_intents', { mode: 'json' }).$type<string[]>(),
+  am_regret: text('am_regret'),
+  sleep_hours: real('sleep_hours'),
+  psi_score: integer('psi_score'),
+  pm_wins: text('pm_wins'),
+  pm_wastes: text('pm_wastes'),
+  pm_score: integer('pm_score'),
+  hit: integer('hit', { mode: 'boolean' }).notNull().default(false),
+  created_at: createdAt(),
+  updated_at: updatedAt(),
+}, (t) => [uniqueIndex('daily_checkins_user_date_idx').on(t.user_id, t.date)]);
+
+export const devLogs = sqliteTable('dev_logs', {
+  id: id(),
+  user_id: userId(),
+  date: text('date').notNull(),
+  leetcode_count: integer('leetcode_count').notNull().default(0),
+  deep_work_minutes: integer('deep_work_minutes').notNull().default(0),
+  commits: integer('commits').notNull().default(0),
+  summary: text('summary'),
+  created_at: createdAt(),
+  updated_at: updatedAt(),
+}, (t) => [uniqueIndex('dev_logs_user_date_idx').on(t.user_id, t.date)]);
+
+export const weeklyReviews = sqliteTable('weekly_reviews', {
+  id: id(),
+  user_id: userId(),
+  week_start: text('week_start').notNull(),
+  achieved: text('achieved'),
+  gratitude: text('gratitude'),
+  created_at: createdAt(),
+  updated_at: updatedAt(),
+}, (t) => [uniqueIndex('weekly_reviews_user_week_idx').on(t.user_id, t.week_start)]);
+
 export const projects = sqliteTable('projects', {
   id: id(),
   user_id: userId(),
@@ -131,6 +169,8 @@ export const tasks = sqliteTable('tasks', {
   status: text('status').notNull().default('todo'),
   sort_order: integer('sort_order').notNull().default(0),
   project_id: text('project_id').references(() => projects.id),
+  quadrant: text('quadrant'),
+  mana_cost: integer('mana_cost'),
   created_at: createdAt(),
   updated_at: updatedAt(),
 });

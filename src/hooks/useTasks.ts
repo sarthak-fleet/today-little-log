@@ -10,6 +10,8 @@ export interface TaskItem {
   status: 'todo' | 'done';
   sort_order: number;
   created_at: string;
+  quadrant?: 'q1' | 'q2' | 'q3' | 'q4' | null;
+  mana_cost?: number | null;
 }
 
 const GUEST_TASKS_KEY = 'guest-tasks-data';
@@ -22,6 +24,8 @@ interface TaskRow {
   status: string;
   sort_order: number | null;
   created_at: string;
+  quadrant?: string | null;
+  mana_cost?: number | null;
 }
 
 const readGuestTasks = (): TaskItem[] => {
@@ -63,6 +67,8 @@ export function useTasks() {
             status: t.status as 'todo' | 'done',
             sort_order: t.sort_order ?? 0,
             created_at: t.created_at,
+            quadrant: (t.quadrant ?? null) as TaskItem['quadrant'],
+            mana_cost: t.mana_cost ?? null,
           }));
           setTasks(mapped);
 
@@ -92,6 +98,8 @@ export function useTasks() {
               status: t.status as 'todo' | 'done',
               sort_order: t.sort_order ?? 0,
               created_at: t.created_at,
+              quadrant: (t.quadrant ?? null) as TaskItem['quadrant'],
+              mana_cost: t.mana_cost ?? null,
             })));
             localStorage.removeItem(GUEST_TASKS_KEY);
           }

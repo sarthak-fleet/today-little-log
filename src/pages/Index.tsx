@@ -9,6 +9,9 @@ import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useAuth } from '@/hooks/useAuth';
 import { useLifeMath } from '@/hooks/useLifeMath';
 import { IdentitySetter } from '@/components/IdentitySetter';
+import { AmRitual } from '@/components/AmRitual';
+import { PmRitual } from '@/components/PmRitual';
+import { WeeklyReview } from '@/components/WeeklyReview';
 import { List, CalendarDays, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -114,6 +117,21 @@ const Index = () => {
         {/* Highest-self identity */}
         <section className="animate-slide-up" style={{ animationDelay: '0.05s' }}>
           <IdentitySetter />
+        </section>
+
+        {/* AM ritual */}
+        <section className="animate-slide-up" style={{ animationDelay: '0.08s' }}>
+          <AmRitual />
+        </section>
+
+        {/* PM ritual */}
+        <section className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
+          <PmRitual />
+        </section>
+
+        {/* Weekly review (Sundays or when in progress) */}
+        <section className="animate-slide-up" style={{ animationDelay: '0.12s' }}>
+          <WeeklyReview />
         </section>
 
         {/* Emotion Logger - Styled as a floating card */}
