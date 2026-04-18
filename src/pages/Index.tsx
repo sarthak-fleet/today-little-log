@@ -15,6 +15,7 @@ import { WeeklyReview } from '@/components/WeeklyReview';
 import { NowRecommender } from '@/components/NowRecommender';
 import { NowCard } from '@/components/NowCard';
 import { CommitmentAudit } from '@/components/CommitmentAudit';
+import { FocusMode } from '@/components/FocusMode';
 import { List, CalendarDays, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -125,6 +126,11 @@ const Index = () => {
         {/* Commitment audit — Thu/Fri only, auto-hides other days */}
         <section className="animate-slide-up" style={{ animationDelay: '0.04s' }}>
           <CommitmentAudit />
+        </section>
+
+        {/* Focus mode — pomodoro + tab-switch penalty */}
+        <section className="animate-slide-up" style={{ animationDelay: '0.045s' }}>
+          <FocusMode />
         </section>
 
         {/* Highest-self identity */}
