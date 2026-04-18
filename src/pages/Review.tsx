@@ -7,6 +7,8 @@ import { useUrgeLogs } from '@/hooks/useUrgeLogs';
 import { useGoals } from '@/hooks/useGoals';
 import { format, subDays, startOfWeek } from 'date-fns';
 import { TrendingDown, TrendingUp, Scale, Code2, Flame, Target, AlertTriangle, Brain } from 'lucide-react';
+import { WeeklyAutoReport } from '@/components/WeeklyAutoReport';
+import { RewardsStore } from '@/components/RewardsStore';
 
 /**
  * The only dashboard that matters. Week-over-week deltas across
@@ -161,6 +163,12 @@ const Review = () => {
             goodDirection="up"
           />
         </div>
+      </section>
+
+      {/* AI review + rewards store */}
+      <section className="px-4 max-w-4xl mx-auto pb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <WeeklyAutoReport />
+        <RewardsStore />
       </section>
 
       {/* Behaviour breakdown */}
