@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^2.0.41",
+    "@better-auth/drizzle-adapter": "^1.6.5",
     "@fontsource/playfair-display": "^5.2.8",
     "@fontsource/source-sans-pro": "^5.2.5",
     "@hello-pangea/dnd": "^17.0.0",
