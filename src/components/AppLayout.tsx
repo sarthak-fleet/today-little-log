@@ -9,6 +9,7 @@ import { FooterStamp } from './FooterStamp';
 import { ShockCard } from './ShockCard';
 import { QuickLogFab } from './QuickLogFab';
 import { UrgeButton } from './UrgeButton';
+import { SleepLock } from './SleepLock';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -45,6 +46,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       <ShockCard />
       <QuickLogFab />
       <UrgeButton />
+      <SleepLock />
     </SidebarProvider>
   );
 }

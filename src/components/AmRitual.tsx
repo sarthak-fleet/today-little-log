@@ -4,13 +4,16 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Sunrise, Check, Gauge } from 'lucide-react';
+import { Sunrise, Check, Gauge, Sparkles, Loader2 } from 'lucide-react';
+import { scorePsi } from '@/lib/psiScore';
 
 const MAX_INTENTS = 3;
 
-function PsiSlider() {
+function PsiSlider({ regret }: { regret: string }) {
   const { todayRow, save } = useDailyCheckins();
   const [value, setValue] = useState<number>(todayRow?.psi_score ?? 50);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
     if (todayRow?.psi_score != null) setValue(todayRow.psi_score);
@@ -21,13 +24,35 @@ function PsiSlider() {
     : value >= 40 ? 'text-primary'
     : 'text-emerald-600';
 
+  const aiScore = async () => {
+    if (!regret.trim()) { setErr('Write the regret line first so the model has something to score.'); return; }
+    setErr(null);
+    setLoading(true);
+    const result = await scorePsi(regret);
+    setLoading(false);
+    if (result.error) { setErr(result.error); return; }
+    setValue(result.score);
+    await save({ psi_score: result.score });
+  };
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
           <Gauge className="h-3 w-3" /> Brain pressure (PSI)
         </label>
-        <span className={`text-sm font-display font-bold tabular-nums ${tone}`}>{value}</span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={aiScore}
+            disabled={loading}
+            className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-primary hover:underline disabled:opacity-50"
+            title="Score from the regret line using your AI key"
+          >
+            {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+            AI score
+          </button>
+          <span className={`text-sm font-display font-bold tabular-nums ${tone}`}>{value}</span>
+        </div>
       </div>
       <input
         type="range"
@@ -44,6 +69,7 @@ function PsiSlider() {
         <span>steady</span>
         <span className="text-destructive">about to explode</span>
       </div>
+      {err && <p className="text-[10px] text-destructive">{err}</p>}
     </div>
   );
 }
@@ -143,7 +169,7 @@ export function AmRitual() {
         </div>
       </div>
 
-      <PsiSlider />
+      <PsiSlider regret={regret} />
 
       <div className="flex justify-between items-center">
         <span className="text-[11px] text-muted-foreground">

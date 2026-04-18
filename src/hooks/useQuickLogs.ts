@@ -4,7 +4,7 @@ import { useAuth } from './useAuth';
 import { useUserStats } from './useUserStats';
 import { XP_REWARDS } from '@/lib/xp';
 
-export type QuickLogKind = 'water' | 'workout' | 'temptation' | 'win' | 'note';
+export type QuickLogKind = 'water' | 'workout' | 'temptation' | 'win' | 'note' | 'schedule_checkin';
 
 export interface QuickLog {
   id: string;
