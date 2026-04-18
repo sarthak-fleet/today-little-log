@@ -13,6 +13,7 @@ import { AmRitual } from '@/components/AmRitual';
 import { PmRitual } from '@/components/PmRitual';
 import { WeeklyReview } from '@/components/WeeklyReview';
 import { NowRecommender } from '@/components/NowRecommender';
+import { NowCard } from '@/components/NowCard';
 import { List, CalendarDays, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -115,6 +116,11 @@ const Index = () => {
 
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-4 space-y-8 pb-20">
+        {/* Shift-aware NOW card — the new primary surface */}
+        <section className="animate-slide-up" style={{ animationDelay: '0.03s' }}>
+          <NowCard />
+        </section>
+
         {/* Highest-self identity */}
         <section className="animate-slide-up" style={{ animationDelay: '0.05s' }}>
           <IdentitySetter />

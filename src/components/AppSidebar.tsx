@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Feather, Target, Clock, BookOpen, CheckSquare, Skull, Scale, Apple, Trophy } from 'lucide-react';
+import { Feather, Target, Clock, BookOpen, CheckSquare, Skull, Scale, Apple, Trophy, Lock, LineChart } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -19,13 +19,15 @@ import { format } from 'date-fns';
 // Home / Schedule / Tasks respectively — fewer tabs, less visual noise.
 const navItems = [
   { title: 'Home', url: '/', icon: Feather, shortcut: 'H' },
+  { title: 'Protocol', url: '/protocol', icon: Lock, shortcut: 'P' },
+  { title: 'Review', url: '/review', icon: LineChart, shortcut: 'V' },
   { title: 'Life', url: '/life', icon: Skull, shortcut: 'L' },
   { title: 'Goals', url: '/goals', icon: Trophy, shortcut: 'G' },
   { title: 'Body', url: '/weight', icon: Scale, shortcut: 'B' },
   { title: 'Food', url: '/food', icon: Apple, shortcut: 'F' },
-  { title: 'Habits', url: '/habits', icon: Target, shortcut: 'A' },
   { title: 'Tasks', url: '/tasks', icon: CheckSquare, shortcut: 'T' },
   { title: 'Schedule', url: '/schedule', icon: Clock, shortcut: 'S' },
+  { title: 'Habits', url: '/habits', icon: Target, shortcut: 'A' },
   { title: 'Rules', url: '/rules', icon: BookOpen, shortcut: 'R' },
 ];
 
