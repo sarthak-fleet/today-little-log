@@ -23,7 +23,9 @@ const parseEntryContent = (content: string): Record<string, string> => {
   try {
     const parsed = JSON.parse(content);
     if (typeof parsed === 'object' && parsed !== null) return parsed;
-  } catch {}
+  } catch {
+    // fall through to plain-text fallback below
+  }
   return { general: content };
 };
 

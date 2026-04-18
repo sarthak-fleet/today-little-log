@@ -14,6 +14,16 @@ export interface TaskItem {
 
 const GUEST_TASKS_KEY = 'guest-tasks-data';
 
+interface TaskRow {
+  id: string;
+  title: string;
+  notes: string | null;
+  estimate_minutes: number | null;
+  status: string;
+  sort_order: number | null;
+  created_at: string;
+}
+
 const readGuestTasks = (): TaskItem[] => {
   try {
     const raw = localStorage.getItem(GUEST_TASKS_KEY);
@@ -43,7 +53,7 @@ export function useTasks() {
     const loadTasks = async () => {
       if (isLoggedIn && user) {
         try {
-          const data = await apiFetch<any[]>('/api/tasks');
+          const data = await apiFetch<TaskRow[]>('/api/tasks');
 
           const mapped: TaskItem[] = data.map((t) => ({
             id: t.id,
@@ -73,7 +83,7 @@ export function useTasks() {
               });
             }
             // Reload after migration
-            const reloaded = await apiFetch<any[]>('/api/tasks');
+            const reloaded = await apiFetch<TaskRow[]>('/api/tasks');
             setTasks(reloaded.map((t) => ({
               id: t.id,
               title: t.title,

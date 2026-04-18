@@ -22,6 +22,22 @@ export interface HabitLog {
 const HABITS_STORAGE_KEY = 'habits-data';
 const HABIT_LOGS_STORAGE_KEY = 'habit-logs-data';
 
+interface HabitRow {
+  id: string;
+  title: string;
+  target_type: string;
+  track_type: string;
+  frequency: string;
+  target_value: number;
+}
+
+interface HabitLogRow {
+  id: string;
+  habit_id: string;
+  date: string;
+  value: number;
+}
+
 const dedupeLogs = (inputLogs: HabitLog[]): HabitLog[] => {
   const map = new Map<string, HabitLog>();
   inputLogs.forEach((log) => {
@@ -41,7 +57,7 @@ export function useHabits() {
   const loadHabits = useCallback(async () => {
     if (user) {
       try {
-        const habitsData = await apiFetch<any[]>('/api/habits');
+        const habitsData = await apiFetch<HabitRow[]>('/api/habits');
         const mappedHabits: Habit[] = (habitsData || []).map(h => ({
           id: h.id,
           title: h.title,
@@ -69,7 +85,7 @@ export function useHabits() {
             });
           }
           // Reload after migration
-          const reloadedHabits = await apiFetch<any[]>('/api/habits');
+          const reloadedHabits = await apiFetch<HabitRow[]>('/api/habits');
           if (reloadedHabits) {
             setHabits(reloadedHabits.map(h => ({
               id: h.id,
@@ -87,7 +103,7 @@ export function useHabits() {
 
       // Load logs
       try {
-        const logsData = await apiFetch<any[]>('/api/habit-logs');
+        const logsData = await apiFetch<HabitLogRow[]>('/api/habit-logs');
         const mappedLogs = (logsData || []).map(l => ({
           id: l.id,
           habit_id: l.habit_id,
@@ -127,7 +143,7 @@ export function useHabits() {
 
     if (user) {
       try {
-        const data = await apiFetch<any>('/api/habits', {
+        const data = await apiFetch<HabitRow>('/api/habits', {
           method: 'POST',
           body: JSON.stringify({
             title: habit.title,
@@ -217,7 +233,7 @@ export function useHabits() {
 
     if (user) {
       try {
-        const data = await apiFetch<any>('/api/habit-logs', {
+        const data = await apiFetch<HabitLogRow>('/api/habit-logs', {
           method: 'POST',
           body: JSON.stringify({ habit_id: habitId, date, value }),
         });
