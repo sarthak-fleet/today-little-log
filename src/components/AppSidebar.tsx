@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Feather, Target, Clock, BookOpen, CheckSquare, Skull, Scale, Code2, LayoutGrid, Apple, Trophy, Sparkles } from 'lucide-react';
+import { Feather, Target, Clock, BookOpen, CheckSquare, Skull, Scale, Apple, Trophy } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -15,17 +15,16 @@ import {
 } from '@/components/ui/sidebar';
 import { format } from 'date-fns';
 
+// Core nav. /now, /dev, /eisenhower still route but live as sections inside
+// Home / Schedule / Tasks respectively — fewer tabs, less visual noise.
 const navItems = [
-  { title: 'Journal', url: '/', icon: Feather, shortcut: 'J' },
-  { title: 'Now', url: '/now', icon: Sparkles, shortcut: 'N' },
+  { title: 'Home', url: '/', icon: Feather, shortcut: 'H' },
   { title: 'Life', url: '/life', icon: Skull, shortcut: 'L' },
   { title: 'Goals', url: '/goals', icon: Trophy, shortcut: 'G' },
-  { title: 'Weight', url: '/weight', icon: Scale, shortcut: 'W' },
+  { title: 'Body', url: '/weight', icon: Scale, shortcut: 'B' },
   { title: 'Food', url: '/food', icon: Apple, shortcut: 'F' },
-  { title: 'Dev', url: '/dev', icon: Code2, shortcut: 'D' },
-  { title: 'Habits', url: '/habits', icon: Target, shortcut: 'H' },
+  { title: 'Habits', url: '/habits', icon: Target, shortcut: 'A' },
   { title: 'Tasks', url: '/tasks', icon: CheckSquare, shortcut: 'T' },
-  { title: 'Priority', url: '/eisenhower', icon: LayoutGrid, shortcut: 'P' },
   { title: 'Schedule', url: '/schedule', icon: Clock, shortcut: 'S' },
   { title: 'Rules', url: '/rules', icon: BookOpen, shortcut: 'R' },
 ];

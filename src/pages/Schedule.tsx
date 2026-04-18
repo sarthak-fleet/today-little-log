@@ -4,6 +4,7 @@ import { GuestNotice } from '@/components/GuestNotice';
 import { useSchedule } from '@/hooks/useSchedule';
 import { ScheduleCheckin } from '@/components/ScheduleCheckin';
 import { SleepTargetSetter } from '@/components/SleepTargetSetter';
+import { CraftHoursWidget } from '@/components/CraftHoursWidget';
 
 const Schedule = () => {
   const { blocks, isLoaded, isSaving, updateBlocks, clearAll, isLoggedIn } = useSchedule();
@@ -25,6 +26,7 @@ const Schedule = () => {
         </div>
 
         <SleepTargetSetter />
+        <CraftHoursWidget />
         <ScheduleCheckin />
 
         <ScheduleMaker

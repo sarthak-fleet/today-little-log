@@ -12,6 +12,7 @@ import { IdentitySetter } from '@/components/IdentitySetter';
 import { AmRitual } from '@/components/AmRitual';
 import { PmRitual } from '@/components/PmRitual';
 import { WeeklyReview } from '@/components/WeeklyReview';
+import { NowRecommender } from '@/components/NowRecommender';
 import { List, CalendarDays, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -122,6 +123,11 @@ const Index = () => {
         {/* AM ritual */}
         <section className="animate-slide-up" style={{ animationDelay: '0.08s' }}>
           <AmRitual />
+        </section>
+
+        {/* Now recommender — replaces dedicated /now tab */}
+        <section className="animate-slide-up" style={{ animationDelay: '0.09s' }}>
+          <NowRecommender />
         </section>
 
         {/* PM ritual */}

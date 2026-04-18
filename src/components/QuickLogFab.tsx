@@ -18,6 +18,7 @@ const OPTIONS: { kind: QuickLogKind; label: string; icon: React.ComponentType<{ 
 
 const KIND_ICON: Record<QuickLogKind, React.ComponentType<{ className?: string }>> = {
   water: Droplet, workout: Dumbbell, temptation: AlertTriangle, win: Trophy, note: StickyNote,
+  schedule_checkin: StickyNote,
 };
 
 /**
