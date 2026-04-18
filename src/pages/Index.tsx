@@ -14,6 +14,7 @@ import { PmRitual } from '@/components/PmRitual';
 import { WeeklyReview } from '@/components/WeeklyReview';
 import { NowRecommender } from '@/components/NowRecommender';
 import { NowCard } from '@/components/NowCard';
+import { CommitmentAudit } from '@/components/CommitmentAudit';
 import { List, CalendarDays, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -119,6 +120,11 @@ const Index = () => {
         {/* Shift-aware NOW card — the new primary surface */}
         <section className="animate-slide-up" style={{ animationDelay: '0.03s' }}>
           <NowCard />
+        </section>
+
+        {/* Commitment audit — Thu/Fri only, auto-hides other days */}
+        <section className="animate-slide-up" style={{ animationDelay: '0.04s' }}>
+          <CommitmentAudit />
         </section>
 
         {/* Highest-self identity */}
