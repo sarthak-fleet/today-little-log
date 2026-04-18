@@ -1,0 +1,32 @@
+{
+  "name": "@saas-maker/ai",
+  "version": "0.1.0",
+  "description": "Vendored copy of @saas-maker/ai dist so Vercel builds without needing the sibling repo.",
+  "private": true,
+  "files": ["dist"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.mjs",
+      "require": "./dist/server.js"
+    }
+  },
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "peerDependencies": {
+    "@ai-sdk/openai-compatible": ">=1.0.0",
+    "ai": ">=4.0.0",
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "ai": { "optional": true },
+    "@ai-sdk/openai-compatible": { "optional": true }
+  }
+}
