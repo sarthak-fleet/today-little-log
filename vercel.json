@@ -3,6 +3,7 @@
   "buildCommand": "node scripts/bundle-api.mjs && pnpm build",
   "outputDirectory": "dist",
   "rewrites": [
+    { "source": "/api/auth/:path*", "destination": "/api/auth?authPath=:path*" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
