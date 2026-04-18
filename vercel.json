@@ -1,5 +1,8 @@
 {
   "framework": "vite",
   "buildCommand": "node scripts/bundle-api.mjs && pnpm build",
-  "outputDirectory": "dist"
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
 }
