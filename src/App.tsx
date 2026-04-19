@@ -22,7 +22,6 @@ import Dev from "./pages/Dev";
 import Eisenhower from "./pages/Eisenhower";
 import Food from "./pages/Food";
 import Goals from "./pages/Goals";
-import WhatToDo from "./pages/WhatToDo";
 import Protocol from "./pages/Protocol";
 import Review from "./pages/Review";
 import NotFound from "./pages/NotFound";
@@ -72,7 +71,6 @@ const App = () => (
                 <Route path="/eisenhower" element={<Eisenhower />} />
                 <Route path="/food" element={<Food />} />
                 <Route path="/goals" element={<Goals />} />
-                <Route path="/now" element={<WhatToDo />} />
                 <Route path="/protocol" element={<Protocol />} />
                 <Route path="/review" element={<Review />} />
                 <Route path="/schedule" element={<Schedule />} />

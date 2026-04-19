@@ -11,8 +11,6 @@ import { useLifeMath } from '@/hooks/useLifeMath';
 import { IdentitySetter } from '@/components/IdentitySetter';
 import { AmRitual } from '@/components/AmRitual';
 import { PmRitual } from '@/components/PmRitual';
-import { WeeklyReview } from '@/components/WeeklyReview';
-import { NowRecommender } from '@/components/NowRecommender';
 import { NowCard } from '@/components/NowCard';
 import { CommitmentAudit } from '@/components/CommitmentAudit';
 import { FocusMode } from '@/components/FocusMode';
@@ -143,19 +141,9 @@ const Index = () => {
           <AmRitual />
         </section>
 
-        {/* Now recommender — replaces dedicated /now tab */}
-        <section className="animate-slide-up" style={{ animationDelay: '0.09s' }}>
-          <NowRecommender />
-        </section>
-
         {/* PM ritual */}
         <section className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
           <PmRitual />
-        </section>
-
-        {/* Weekly review (Sundays or when in progress) */}
-        <section className="animate-slide-up" style={{ animationDelay: '0.12s' }}>
-          <WeeklyReview />
         </section>
 
         {/* Emotion Logger - Styled as a floating card */}

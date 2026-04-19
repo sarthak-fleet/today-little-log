@@ -10,7 +10,6 @@ import { ShockCard } from './ShockCard';
 import { QuickLogFab } from './QuickLogFab';
 import { UrgeButton } from './UrgeButton';
 import { SleepLock } from './SleepLock';
-import { AICoach } from './AICoach';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -47,7 +46,6 @@ export function AppLayout({ children }: AppLayoutProps) {
       <ShockCard />
       <QuickLogFab />
       <UrgeButton />
-      <AICoach />
       <SleepLock />
     </SidebarProvider>
   );
