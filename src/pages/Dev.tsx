@@ -1,4 +1,5 @@
 import { DevRitualTracker } from '@/components/DevRitualTracker';
+import { CraftTrack } from '@/components/CraftTrack';
 import { Code2 } from 'lucide-react';
 
 const Dev = () => {
@@ -10,14 +11,15 @@ const Dev = () => {
           <span className="text-xs font-semibold uppercase tracking-[0.25em]">Craft</span>
         </div>
         <h1 className="text-4xl md:text-5xl font-display font-extrabold leading-tight text-foreground">
-          Better engineer. <span className="text-primary italic font-medium">Every day.</span>
+          AI-native engineer. <span className="text-primary italic font-medium">Ship the artifacts.</span>
         </h1>
         <p className="mt-3 text-base text-muted-foreground">
-          Deep work, leet reps, commits. Compounding skill beats talent without log.
+          14 shippable skills. RAG → agents → evals → MCP → fine-tunes. Evidence URL required per row.
         </p>
       </section>
 
-      <section className="px-4 max-w-4xl mx-auto pb-20">
+      <section className="px-4 max-w-4xl mx-auto pb-8 space-y-4">
+        <CraftTrack />
         <DevRitualTracker />
       </section>
     </div>

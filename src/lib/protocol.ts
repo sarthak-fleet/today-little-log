@@ -147,19 +147,43 @@ export const RULES: Rule[] = [
 ];
 
 // ── Week-over-week milestones ────────────────────────────────
+// Priority pivot: AI-native engineering craft > applying for jobs.
+// Measured by artifacts shipped (RAG apps, agents, eval harnesses,
+// MCP servers, fine-tunes, prompt libraries), not leet count.
 
 export interface WeekMilestone {
   week: number;
-  weightDelta: number | null; // kg change from baseline
-  leetcodeTotal: number;
-  appsSent: number;
-  ritualHitRate: number; // 0-1
+  weightDelta: number | null;
+  aiArtifacts: number;       // RAG / agent / eval / MCP / tool / fine-tune shipped
+  craftHours: number;        // deep-work hours on AI-native systems
+  leisureHours: number;      // earned entertainment budget (strict cap)
+  ritualHitRate: number;
 }
 
 export const MILESTONES: WeekMilestone[] = [
-  { week: 1, weightDelta: 0, leetcodeTotal: 7, appsSent: 0, ritualHitRate: 0.9 },
-  { week: 2, weightDelta: -1, leetcodeTotal: 20, appsSent: 5, ritualHitRate: 1.0 },
-  { week: 4, weightDelta: -3, leetcodeTotal: 40, appsSent: 10, ritualHitRate: 1.0 },
-  { week: 8, weightDelta: -7, leetcodeTotal: 80, appsSent: 20, ritualHitRate: 0.95 },
-  { week: 12, weightDelta: -12, leetcodeTotal: 120, appsSent: 40, ritualHitRate: 0.9 },
+  { week: 1,  weightDelta: 0,  aiArtifacts: 1,  craftHours: 15, leisureHours: 6, ritualHitRate: 0.9 },
+  { week: 2,  weightDelta: -1, aiArtifacts: 2,  craftHours: 18, leisureHours: 7, ritualHitRate: 1.0 },
+  { week: 4,  weightDelta: -3, aiArtifacts: 4,  craftHours: 20, leisureHours: 8, ritualHitRate: 1.0 },
+  { week: 8,  weightDelta: -7, aiArtifacts: 8,  craftHours: 22, leisureHours: 8, ritualHitRate: 0.95 },
+  { week: 12, weightDelta: -12, aiArtifacts: 14, craftHours: 22, leisureHours: 8, ritualHitRate: 0.9 },
 ];
+
+// ── Leisure budget (the "so Jack isn't a dull boy" layer) ────
+// Strict but real: plan rest, earn rest, cap rest. Uses quick_logs
+// kind='note' with value_text prefixed LEISURE: to compute weekly usage.
+
+export interface LeisureSlot {
+  category: 'tv-movie' | 'gaming' | 'anime' | 'social' | 'walk';
+  hoursPerWeek: number;
+  note: string;
+}
+
+export const LEISURE_BUDGET: LeisureSlot[] = [
+  { category: 'tv-movie', hoursPerWeek: 3, note: '~2 movies OR 6 episodes. Friday + Saturday night only.' },
+  { category: 'gaming',   hoursPerWeek: 2, note: 'Weekend afternoon. Never after 22:00.' },
+  { category: 'anime',    hoursPerWeek: 2, note: 'Saturday/Sunday. 4 episodes max.' },
+  { category: 'social',   hoursPerWeek: 4, note: 'Friends, dinners. Uncapped if earned (no ritual breaks that week).' },
+  { category: 'walk',     hoursPerWeek: 3, note: 'Not counted as leisure — daily fresh air required.' },
+];
+
+export const LEISURE_TOTAL = LEISURE_BUDGET.filter((b) => b.category !== 'walk').reduce((s, b) => s + b.hoursPerWeek, 0);

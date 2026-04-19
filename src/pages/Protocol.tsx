@@ -107,9 +107,10 @@ const Protocol = () => {
               <tr>
                 <th className="px-3 py-2 text-left">Week</th>
                 <th className="px-3 py-2 text-right">Weight Δ</th>
-                <th className="px-3 py-2 text-right">LeetCode total</th>
-                <th className="px-3 py-2 text-right">Apps sent</th>
-                <th className="px-3 py-2 text-right">Ritual hit rate</th>
+                <th className="px-3 py-2 text-right">AI artifacts</th>
+                <th className="px-3 py-2 text-right">Craft hrs</th>
+                <th className="px-3 py-2 text-right">Leisure hrs</th>
+                <th className="px-3 py-2 text-right">Ritual hit</th>
               </tr>
             </thead>
             <tbody>
@@ -117,8 +118,9 @@ const Protocol = () => {
                 <tr key={m.week} className="border-t border-border">
                   <td className="px-3 py-2 font-mono">W{m.week}</td>
                   <td className="px-3 py-2 text-right font-mono">{m.weightDelta == null ? '—' : `${m.weightDelta} kg`}</td>
-                  <td className="px-3 py-2 text-right font-mono">{m.leetcodeTotal}</td>
-                  <td className="px-3 py-2 text-right font-mono">{m.appsSent}</td>
+                  <td className="px-3 py-2 text-right font-mono">{m.aiArtifacts}</td>
+                  <td className="px-3 py-2 text-right font-mono">{m.craftHours}h</td>
+                  <td className="px-3 py-2 text-right font-mono">{m.leisureHours}h</td>
                   <td className="px-3 py-2 text-right font-mono">{Math.round(m.ritualHitRate * 100)}%</td>
                 </tr>
               ))}
