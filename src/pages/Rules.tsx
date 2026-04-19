@@ -3,7 +3,7 @@ import { useReportSaving } from '@/components/SavingContext';
 import { GuestNotice } from '@/components/GuestNotice';
 import { useAuth } from '@/hooks/useAuth';
 import { useLifeRules } from '@/hooks/useLifeRules';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, BookOpen } from 'lucide-react';
 import { RulesSkeleton } from '@/components/PageSkeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,17 +45,24 @@ const Rules = () => {
   if (loading || isLoading) return <RulesSkeleton />;
 
   return (
-    <>
-      {/* Guest mode notice */}
+    <div className="min-h-screen bg-background text-foreground">
+      <section className="pt-10 pb-6 px-4 max-w-4xl mx-auto">
+        <div className="flex items-center gap-3 text-primary/80 mb-3">
+          <BookOpen className="h-5 w-5" />
+          <span className="text-xs font-semibold uppercase tracking-[0.25em]">Rules</span>
+        </div>
+        <h1 className="text-4xl md:text-5xl font-display font-extrabold leading-tight text-foreground">
+          Write them down. <span className="text-primary italic font-medium">Live them.</span>
+        </h1>
+      </section>
+
       {!isLoggedIn && (
-        <div className="max-w-3xl mx-auto px-4 pt-4">
+        <div className="max-w-4xl mx-auto px-4 pb-4">
           <GuestNotice message="Log in to save your rules across devices" />
         </div>
       )}
 
-      {/* Main Content */}
-      <div className="max-w-3xl mx-auto px-4 py-6 md:py-8">
-        <h2 className="text-xl font-display font-semibold text-foreground mb-6">Rules for Life</h2>
+      <div className="max-w-4xl mx-auto px-4 pb-20">
 
         {/* Add new rule */}
         <div className="flex gap-2 mb-8">
@@ -120,7 +127,7 @@ const Rules = () => {
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

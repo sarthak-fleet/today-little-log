@@ -139,16 +139,24 @@ const Habits = () => {
   if (!isLoaded) return <HabitsSkeleton />;
 
   return (
-    <>
-      {/* Guest mode notice */}
+    <div className="min-h-screen bg-background text-foreground">
+      <section className="pt-10 pb-6 px-4 max-w-4xl mx-auto">
+        <div className="flex items-center gap-3 text-primary/80 mb-3">
+          <Target className="h-5 w-5" />
+          <span className="text-xs font-semibold uppercase tracking-[0.25em]">Habits</span>
+        </div>
+        <h1 className="text-4xl md:text-5xl font-display font-extrabold leading-tight text-foreground">
+          Repetition. <span className="text-primary italic font-medium">The only shortcut.</span>
+        </h1>
+      </section>
+
       {!isLoggedIn && (
-        <div className="max-w-3xl mx-auto px-4 pt-4">
+        <div className="max-w-4xl mx-auto px-4 pb-4">
           <GuestNotice message="Log in to save your habits across devices" />
         </div>
       )}
 
-      {/* Main Content */}
-      <div className="max-w-3xl mx-auto px-4 py-6 md:py-8">
+      <div className="max-w-4xl mx-auto px-4 pb-20">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-display font-semibold text-foreground">Your Habits</h2>
           <Dialog open={isDialogOpen} onOpenChange={(open) => open ? handleOpenDialog() : handleCloseDialog()}>
@@ -447,7 +455,7 @@ const Habits = () => {
           )}
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 };
 

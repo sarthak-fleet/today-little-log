@@ -4,7 +4,7 @@ import { Scale } from 'lucide-react';
 const Weight = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <section className="pt-10 pb-6 px-4 max-w-3xl mx-auto">
+      <section className="pt-10 pb-6 px-4 max-w-4xl mx-auto">
         <div className="flex items-center gap-3 text-primary/80 mb-3">
           <Scale className="h-5 w-5" />
           <span className="text-xs font-semibold uppercase tracking-[0.25em]">Body</span>
@@ -17,7 +17,7 @@ const Weight = () => {
         </p>
       </section>
 
-      <section className="px-4 max-w-3xl mx-auto pb-20">
+      <section className="px-4 max-w-4xl mx-auto pb-20">
         <WeightTracker />
       </section>
     </div>

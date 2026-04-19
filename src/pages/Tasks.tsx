@@ -162,27 +162,29 @@ const Tasks = () => {
   const progressPercent = taskCounts.total > 0 ? Math.round((taskCounts.done / taskCounts.total) * 100) : 0;
 
   return (
-    <>
+    <div className="min-h-screen bg-background text-foreground">
+      <section className="pt-10 pb-6 px-4 max-w-4xl mx-auto">
+        <div className="flex items-center gap-3 text-primary/80 mb-3">
+          <ListChecks className="h-5 w-5" />
+          <span className="text-xs font-semibold uppercase tracking-[0.25em]">Tasks</span>
+        </div>
+        <h1 className="text-4xl md:text-5xl font-display font-extrabold leading-tight text-foreground">
+          Ship it. <span className="text-primary italic font-medium">Or cut it.</span>
+        </h1>
+        <p className="mt-3 text-base text-muted-foreground">
+          {taskCounts.open} open{totalMinutes > 0 && ` · ~${totalMinutes} min`} · {taskCounts.done}/{taskCounts.total} done
+        </p>
+      </section>
+
       {!isLoggedIn && (
-        <div className="max-w-3xl mx-auto px-4 pt-4">
+        <div className="max-w-4xl mx-auto px-4 pb-4">
           <GuestNotice message="Log in to save your tasks across devices" />
         </div>
       )}
 
-      <div className="max-w-3xl mx-auto px-4 py-6 md:py-8 space-y-8">
-        {/* Header with progress */}
+      <div className="max-w-4xl mx-auto px-4 pb-20 space-y-8">
+        {/* Progress bar */}
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-display font-semibold text-foreground">Tasks</h2>
-              <p className="text-sm text-muted-foreground">
-                {taskCounts.open} open{totalMinutes > 0 && ` · ~${totalMinutes} min`}
-              </p>
-            </div>
-            <span className="text-xs font-medium text-muted-foreground tabular-nums">
-              {taskCounts.done}/{taskCounts.total}
-            </span>
-          </div>
           {taskCounts.total > 0 && (
             <div className="flex items-center gap-2">
               <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
@@ -320,7 +322,7 @@ const Tasks = () => {
           </DragDropContext>
         </Tabs>
       </div>
-    </>
+    </div>
   );
 };
 
