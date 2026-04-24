@@ -23,6 +23,17 @@ export function useAuth(options: UseAuthOptions = {}) {
   const { data: sessionData, isPending } = authClient.useSession();
   const [profile, setProfile] = useState<Profile | null>(null);
 
+  const fetchProfile = async () => {
+    try {
+      const data = await apiFetch<Profile | null>('/api/profiles');
+      setProfile(data);
+      setCachedDob(data?.dob ?? null);
+      window.dispatchEvent(new Event('tll:dob-changed'));
+    } catch (error) {
+      console.error('Failed to fetch profile:', error);
+    }
+  };
+
   useEffect(() => {
     if (sessionData?.user) {
       if (includeProfile) {
@@ -34,17 +45,6 @@ export function useAuth(options: UseAuthOptions = {}) {
       setProfile(null);
     }
   }, [sessionData?.user?.id, includeProfile]);
-
-  const fetchProfile = async () => {
-    try {
-      const data = await apiFetch<Profile | null>('/api/profiles');
-      setProfile(data);
-      setCachedDob(data?.dob ?? null);
-      window.dispatchEvent(new Event('tll:dob-changed'));
-    } catch (error) {
-      console.error('Failed to fetch profile:', error);
-    }
-  };
 
   const signOut = async () => {
     setCachedDob(null);

@@ -70,6 +70,17 @@ export function FocusMode() {
     };
   }, [session]);
 
+  const finish = useCallback(async () => {
+    if (!session) return;
+    setCompleted(true);
+    const min = Math.floor(elapsed / 60);
+    const clean = session.interruptions === 0;
+    await award(min + (clean ? 20 : 0), clean ? 5 : 2);
+    await saveDev({ deep_work_minutes: min, summary: `Focus: ${session.taskTitle}` });
+    await logQuick('win', min, `FOCUS ${min}min · ${session.taskTitle} · ${session.interruptions} interrupts`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, elapsed, award, saveDev, logQuick]);
+
   // ── tab visibility watcher ───────────────────
   useEffect(() => {
     if (!session) return;
@@ -123,19 +134,6 @@ export function FocusMode() {
     await award(0, -3);
     writeSession(null);
   };
-
-  const finish = useCallback(async () => {
-    if (!session) return;
-    setCompleted(true);
-    const min = Math.floor(elapsed / 60);
-    const clean = session.interruptions === 0;
-    // XP: base = minutes, bonus 20 if clean
-    await award(min + (clean ? 20 : 0), clean ? 5 : 2);
-    // Log to dev_logs so /review sees it.
-    await saveDev({ deep_work_minutes: min, summary: `Focus: ${session.taskTitle}` });
-    await logQuick('win', min, `FOCUS ${min}min · ${session.taskTitle} · ${session.interruptions} interrupts`);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session, elapsed, award, saveDev, logQuick]);
 
   const logInterruption = async () => {
     if (!interruption.trim() || !session) return;

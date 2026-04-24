@@ -21,6 +21,8 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": "off",
+      // Codebase syncs local state from server data inside effects throughout — warn only
+      "react-hooks/set-state-in-effect": "warn",
     },
   },
 );

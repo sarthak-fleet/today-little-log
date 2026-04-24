@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -35,7 +35,7 @@ export function EisenhowerBoard({ tasks: incoming, onToggle, onDelete }: Props) 
   const [tasks, setTasks] = useState<Task[]>(incoming);
 
   // Sync when parent changes.
-  useMemo(() => { setTasks(incoming); }, [incoming]);
+  useEffect(() => { setTasks(incoming); }, [incoming]);
 
   const grouped = useMemo(() => {
     const map: Record<Quadrant, Task[]> & { unassigned: Task[] } = { q1: [], q2: [], q3: [], q4: [], unassigned: [] };
