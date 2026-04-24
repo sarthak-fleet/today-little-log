@@ -60,8 +60,8 @@ importers:
         specifier: ^1.2.8
         version: 1.2.8(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@saas-maker/ai':
-        specifier: file:vendor/saas-maker-ai
-        version: file:vendor/saas-maker-ai(@ai-sdk/openai-compatible@2.0.41(zod@4.3.6))(ai@6.0.168(zod@4.3.6))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+        specifier: 0.1.0
+        version: 0.1.0(@ai-sdk/openai-compatible@2.0.41(zod@4.3.6))(ai@6.0.168(zod@4.3.6))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@saas-maker/changelog-widget':
         specifier: 0.2.1
         version: 0.2.1(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -2476,8 +2476,8 @@ packages:
       rollup:
         optional: true
 
-  '@saas-maker/ai@file:vendor/saas-maker-ai':
-    resolution: {directory: vendor/saas-maker-ai, type: directory}
+  '@saas-maker/ai@0.1.0':
+    resolution: {integrity: sha512-bRkPhPBLuumk2MOrBAaP5HtTnLZq0J2xu5jsi1N1O9UOMZfPqWnukekOmmLYntZa6n4NbNuCXm3FurOBngGBRQ==}
     peerDependencies:
       '@ai-sdk/openai-compatible': '>=1.0.0'
       ai: '>=4.0.0'
@@ -6536,7 +6536,7 @@ snapshots:
     optionalDependencies:
       rollup: 2.80.0
 
-  '@saas-maker/ai@file:vendor/saas-maker-ai(@ai-sdk/openai-compatible@2.0.41(zod@4.3.6))(ai@6.0.168(zod@4.3.6))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
+  '@saas-maker/ai@0.1.0(@ai-sdk/openai-compatible@2.0.41(zod@4.3.6))(ai@6.0.168(zod@4.3.6))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
     dependencies:
       react: 19.2.5
       react-dom: 19.2.5(react@19.2.5)
