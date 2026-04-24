@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Check, Pencil, Heart, DollarSign, Users, Briefcase, BookOpen, Sparkles, FolderKanban, ChevronDown } from 'lucide-react';
-import { JournalEntry, EntryType } from '@/hooks/useJournalEntries';
+import { type JournalEntry, type EntryType } from '@/hooks/useJournalEntries';
 import { EntryEditor } from './EntryEditor';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';

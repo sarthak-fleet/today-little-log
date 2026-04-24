@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { History, MessageSquare, X } from 'lucide-react';
-import { useEmotions, EMOTION_OPTIONS, Emotion } from '@/hooks/useEmotions';
+import { useEmotions, EMOTION_OPTIONS, type Emotion } from '@/hooks/useEmotions';
 import { format, formatDistanceToNow } from 'date-fns';
 
 export function EmotionLogger() {

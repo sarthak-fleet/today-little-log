@@ -8,8 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Trash2, Clock, StickyNote, Plus, ListChecks, CheckCheck } from 'lucide-react';
 import { TasksSkeleton } from '@/components/PageSkeleton';
-import { useTasks, TaskItem } from '@/hooks/useTasks';
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import { useTasks, type TaskItem } from '@/hooks/useTasks';
+import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd';
 
 const TaskRow = ({
   task,

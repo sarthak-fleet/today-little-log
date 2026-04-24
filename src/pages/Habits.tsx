@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useReportSaving } from '@/components/SavingContext';
 import { GuestNotice } from '@/components/GuestNotice';
 import { HabitHistory } from '@/components/HabitHistory';
-import { useHabits, Habit } from '@/hooks/useHabits';
+import { useHabits, type Habit } from '@/hooks/useHabits';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

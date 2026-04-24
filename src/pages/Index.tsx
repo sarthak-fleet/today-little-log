@@ -18,7 +18,7 @@ import { List, CalendarDays, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { EntryType } from '@/hooks/useJournalEntries';
+import { type EntryType } from '@/hooks/useJournalEntries';
 import { JournalSkeleton } from '@/components/PageSkeleton';
 
 const Index = () => {

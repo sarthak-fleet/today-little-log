@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Check, Pencil, X } from 'lucide-react';
-import { EntryType, JournalEntry } from '@/hooks/useJournalEntries';
+import { type EntryType, type JournalEntry } from '@/hooks/useJournalEntries';
 
 interface EntryEditorProps {
   entry?: JournalEntry;

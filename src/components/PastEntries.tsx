@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { JournalEntry, EntryType } from '@/hooks/useJournalEntries';
+import { type JournalEntry, type EntryType } from '@/hooks/useJournalEntries';
 import { BookOpen, Pencil, Trash2, Check, X, Calendar, CalendarDays, Heart, DollarSign, Users, Briefcase, Sparkles, FolderKanban } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';

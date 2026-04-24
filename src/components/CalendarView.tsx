@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
-import { JournalEntry, EntryType } from '@/hooks/useJournalEntries';
+import { type JournalEntry, type EntryType } from '@/hooks/useJournalEntries';
 import { format } from 'date-fns';
 import { X, Pencil, Trash2, Check, CalendarDays, Calendar as CalendarIcon, Heart, DollarSign, Users, Briefcase, BookOpen, Sparkles, FolderKanban } from 'lucide-react';
 import { Button } from '@/components/ui/button';
