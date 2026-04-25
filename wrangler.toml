@@ -1,0 +1,8 @@
+name = "today-little-log"
+pages_build_output_dir = "dist"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+# Non-secret env vars (secrets set via dashboard or wrangler pages secret put)
+BETTER_AUTH_URL = "https://today-little-log.pages.dev"
