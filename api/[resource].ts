@@ -14,6 +14,8 @@ import {
   goals,
   goalActions,
   manaState,
+  scoreboardItems,
+  scoreboardLogs,
 } from './_lib/db';
 import { getUserId } from './_lib/auth';
 
@@ -376,6 +378,89 @@ const handleMana: Handler = async (req, res, userId) => {
   return res.status(405).json({ error: 'Method not allowed' });
 };
 
+// ── scoreboard-items ───────────────────────────────────────
+const handleScoreboardItems: Handler = async (req, res, userId) => {
+  if (req.method === 'GET') {
+    const rows = await db.select().from(scoreboardItems)
+      .where(eq(scoreboardItems.user_id, userId))
+      .orderBy(asc(scoreboardItems.position), asc(scoreboardItems.created_at));
+    return res.status(200).json(rows);
+  }
+  if (req.method === 'POST') {
+    const { id: itemId, label, kind, position, archived } = req.body ?? {};
+    if (itemId) {
+      const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+      if (label !== undefined) updates.label = label;
+      if (kind !== undefined) updates.kind = kind;
+      if (position !== undefined) updates.position = position;
+      if (archived !== undefined) updates.archived = Boolean(archived);
+      const [row] = await db.update(scoreboardItems).set(updates)
+        .where(and(eq(scoreboardItems.id, itemId), eq(scoreboardItems.user_id, userId)))
+        .returning();
+      if (!row) return res.status(404).json({ error: 'Item not found' });
+      return res.status(200).json(row);
+    }
+    if (!label) return res.status(400).json({ error: 'label required' });
+    const [inserted] = await db.insert(scoreboardItems).values({
+      user_id: userId,
+      label,
+      kind: kind === 'output' ? 'output' : 'check',
+      position: position ?? 0,
+      archived: false,
+    }).returning();
+    return res.status(201).json(inserted);
+  }
+  if (req.method === 'DELETE') {
+    const itemId = typeof req.query.id === 'string' ? req.query.id : '';
+    if (!itemId) return res.status(400).json({ error: 'id required' });
+    await db.delete(scoreboardItems)
+      .where(and(eq(scoreboardItems.id, itemId), eq(scoreboardItems.user_id, userId)));
+    return res.status(204).end();
+  }
+  return res.status(405).json({ error: 'Method not allowed' });
+};
+
+// ── scoreboard-logs ────────────────────────────────────────
+const handleScoreboardLogs: Handler = async (req, res, userId) => {
+  if (req.method === 'GET') {
+    const since = typeof req.query.since === 'string' ? req.query.since : undefined;
+    const rows = since
+      ? await db.select().from(scoreboardLogs)
+          .where(and(eq(scoreboardLogs.user_id, userId), gte(scoreboardLogs.date, since)))
+          .orderBy(desc(scoreboardLogs.date))
+      : await db.select().from(scoreboardLogs)
+          .where(eq(scoreboardLogs.user_id, userId))
+          .orderBy(desc(scoreboardLogs.date))
+          .limit(500);
+    return res.status(200).json(rows);
+  }
+  if (req.method === 'POST') {
+    const { item_id, date, value_bool, value_text } = req.body ?? {};
+    if (!item_id || !date) return res.status(400).json({ error: 'item_id + date required' });
+    const [item] = await db.select().from(scoreboardItems)
+      .where(and(eq(scoreboardItems.id, item_id), eq(scoreboardItems.user_id, userId))).limit(1);
+    if (!item) return res.status(404).json({ error: 'Item not found' });
+    const [existing] = await db.select().from(scoreboardLogs)
+      .where(and(eq(scoreboardLogs.item_id, item_id), eq(scoreboardLogs.date, date))).limit(1);
+    const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (value_bool !== undefined) updates.value_bool = Boolean(value_bool);
+    if (value_text !== undefined) updates.value_text = value_text;
+    if (!existing) {
+      const [inserted] = await db.insert(scoreboardLogs).values({
+        user_id: userId, item_id, date,
+        value_bool: Boolean(value_bool ?? false),
+        value_text: value_text ?? null,
+      }).returning();
+      return res.status(201).json(inserted);
+    }
+    const [row] = await db.update(scoreboardLogs).set(updates)
+      .where(and(eq(scoreboardLogs.item_id, item_id), eq(scoreboardLogs.date, date)))
+      .returning();
+    return res.status(200).json(row);
+  }
+  return res.status(405).json({ error: 'Method not allowed' });
+};
+
 // ── router ─────────────────────────────────────────────────
 const handlers: Record<string, Handler> = {
   'user-stats': handleUserStats,
@@ -390,6 +475,8 @@ const handlers: Record<string, Handler> = {
   'goals': handleGoals,
   'goal-actions': handleGoalActions,
   'mana': handleMana,
+  'scoreboard-items': handleScoreboardItems,
+  'scoreboard-logs': handleScoreboardLogs,
 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

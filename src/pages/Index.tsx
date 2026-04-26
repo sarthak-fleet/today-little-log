@@ -12,6 +12,7 @@ import { IdentitySetter } from '@/components/IdentitySetter';
 import { AmRitual } from '@/components/AmRitual';
 import { PmRitual } from '@/components/PmRitual';
 import { NowCard } from '@/components/NowCard';
+import { Scoreboard } from '@/components/Scoreboard';
 import { CommitmentAudit } from '@/components/CommitmentAudit';
 import { FocusMode } from '@/components/FocusMode';
 import { List, CalendarDays, Search, X } from 'lucide-react';
@@ -116,6 +117,11 @@ const Index = () => {
 
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-4 space-y-8 pb-20">
+        {/* Daily scoreboard — user-defined checks/outputs, no-zero-day streak */}
+        <section className="animate-slide-up" style={{ animationDelay: '0.02s' }}>
+          <Scoreboard />
+        </section>
+
         {/* Shift-aware NOW card — the new primary surface */}
         <section className="animate-slide-up" style={{ animationDelay: '0.03s' }}>
           <NowCard />

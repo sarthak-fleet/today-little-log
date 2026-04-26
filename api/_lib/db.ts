@@ -16,4 +16,5 @@ export {
   userStats, quickLogs, weightLogs, urgeLogs,
   dailyCheckins, devLogs, weeklyReviews,
   foodItems, foodLogs, goals, goalActions, manaState,
+  scoreboardItems, scoreboardLogs,
 } from './schema';

@@ -313,3 +313,28 @@ export const timeSessions = sqliteTable('time_sessions', {
   project_id: text('project_id').references(() => projects.id),
   created_at: createdAt(),
 });
+
+// ── Daily scoreboard ─────────────────────────────────────────
+// User-defined daily checks/outputs. Drives the no-zero-day streak.
+export const scoreboardItems = sqliteTable('scoreboard_items', {
+  id: id(),
+  user_id: userId(),
+  label: text('label').notNull(),
+  // 'check' = boolean toggle; 'output' = short text/URL line.
+  kind: text('kind').notNull().default('check'),
+  position: integer('position').notNull().default(0),
+  archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
+  created_at: createdAt(),
+  updated_at: updatedAt(),
+});
+
+export const scoreboardLogs = sqliteTable('scoreboard_logs', {
+  id: id(),
+  user_id: userId(),
+  item_id: text('item_id').notNull().references(() => scoreboardItems.id, { onDelete: 'cascade' }),
+  date: text('date').notNull(),
+  value_bool: integer('value_bool', { mode: 'boolean' }).notNull().default(false),
+  value_text: text('value_text'),
+  created_at: createdAt(),
+  updated_at: updatedAt(),
+}, (t) => [uniqueIndex('scoreboard_logs_item_date_idx').on(t.item_id, t.date)]);
