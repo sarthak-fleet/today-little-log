@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useReportSaving } from '@/components/SavingContext';
 import { GuestNotice } from '@/components/GuestNotice';
-import { HabitHistory } from '@/components/HabitHistory';
 import { useHabits, type Habit } from '@/hooks/useHabits';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -397,14 +396,6 @@ const Habits = () => {
           </div>
         )}
       </div>
-
-      <HabitHistory
-        habit={historyHabit}
-        logs={logs}
-        open={historyOpen}
-        onOpenChange={setHistoryOpen}
-        onUpdateLog={logHabit}
-      />
 
       <Dialog open={logModal.open} onOpenChange={(open) => { if (!open) handleCloseLog(); }}>
         <DialogContent>

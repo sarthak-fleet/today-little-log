@@ -9,9 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { LogOut, LogIn, Loader2, Cake, Moon, Sun } from 'lucide-react';
 import { differenceInDays, parseISO, isValid, format, getDaysInMonth, endOfMonth, endOfYear, differenceInCalendarDays } from 'date-fns';
 import { useLifeMath, AVERAGE_LIFESPAN_DAYS } from '@/hooks/useLifeMath';
-import { LifeScoreBadge } from './LifeScoreBadge';
 import { StreakBadge } from './StreakBadge';
-import { ManaBadge } from './ManaBadge';
 
 type TimeView = 'month' | 'year' | 'life';
 

@@ -11,19 +11,10 @@ import { saasmaker } from "./lib/saasmaker";
 import { SaaSMakerFeedback } from "./components/saasmaker-feedback";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import Schedule from "./pages/Schedule";
-import Rules from "./pages/Rules";
 import Habits from "./pages/Habits";
 import Tasks from "./pages/Tasks";
-import Install from "./pages/Install";
 import Life from "./pages/Life";
-import Weight from "./pages/Weight";
-import Dev from "./pages/Dev";
 import Eisenhower from "./pages/Eisenhower";
-import Food from "./pages/Food";
-import Goals from "./pages/Goals";
-import Protocol from "./pages/Protocol";
-import Review from "./pages/Review";
 import NotFound from "./pages/NotFound";
 import { useTabTitleCountdown } from "./hooks/useTabTitleCountdown";
 
@@ -62,26 +53,14 @@ const App = () => (
           <SaaSMakerFeedback />
           <ErrorBoundary>
             <Routes>
-              {/* Routes with persistent sidebar layout */}
               <Route element={<LayoutWrapper />}>
                 <Route path="/" element={<Index />} />
                 <Route path="/life" element={<Life />} />
-                <Route path="/weight" element={<Weight />} />
-                <Route path="/dev" element={<Dev />} />
-                <Route path="/eisenhower" element={<Eisenhower />} />
-                <Route path="/food" element={<Food />} />
-                <Route path="/goals" element={<Goals />} />
-                <Route path="/protocol" element={<Protocol />} />
-                <Route path="/review" element={<Review />} />
-                <Route path="/schedule" element={<Schedule />} />
-                <Route path="/rules" element={<Rules />} />
                 <Route path="/habits" element={<Habits />} />
                 <Route path="/tasks" element={<Tasks />} />
+                <Route path="/eisenhower" element={<Eisenhower />} />
               </Route>
-              {/* Routes without layout */}
               <Route path="/auth" element={<Auth />} />
-              <Route path="/install" element={<Install />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </ErrorBoundary>

@@ -1,12 +1,11 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Feather, Target, Clock, BookOpen, CheckSquare } from 'lucide-react';
+import { Feather, Target, CheckSquare, Skull } from 'lucide-react';
 
 const navItems = [
   { title: 'Journal', url: '/', icon: Feather },
-  { title: 'Habits', url: '/habits', icon: Target },
   { title: 'Tasks', url: '/tasks', icon: CheckSquare },
-  { title: 'Schedule', url: '/schedule', icon: Clock },
-  { title: 'Rules', url: '/rules', icon: BookOpen },
+  { title: 'Habits', url: '/habits', icon: Target },
+  { title: 'Life', url: '/life', icon: Skull },
 ];
 
 export function BottomNav() {

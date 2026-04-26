@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Feather, Clock, CheckSquare, Skull, Scale, Lock, LineChart, Code2 } from 'lucide-react';
+import { Feather, CheckSquare, Skull, Target } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -15,19 +15,11 @@ import {
 } from '@/components/ui/sidebar';
 import { format } from 'date-fns';
 
-// Core nav. /now, /dev, /eisenhower still route but live as sections inside
-// Home / Schedule / Tasks respectively — fewer tabs, less visual noise.
-// Core 8. /food, /habits, /rules, /eisenhower, /dev still routable
-// for direct links + legacy data, but not surfaced.
 const navItems = [
   { title: 'Home', url: '/', icon: Feather, shortcut: 'H' },
-  { title: 'Protocol', url: '/protocol', icon: Lock, shortcut: 'P' },
-  { title: 'Review', url: '/review', icon: LineChart, shortcut: 'V' },
-  { title: 'Dev', url: '/dev', icon: Code2, shortcut: 'D' },
-  { title: 'Life', url: '/life', icon: Skull, shortcut: 'L' },
-  { title: 'Body', url: '/weight', icon: Scale, shortcut: 'B' },
   { title: 'Tasks', url: '/tasks', icon: CheckSquare, shortcut: 'T' },
-  { title: 'Schedule', url: '/schedule', icon: Clock, shortcut: 'S' },
+  { title: 'Habits', url: '/habits', icon: Target, shortcut: 'B' },
+  { title: 'Life', url: '/life', icon: Skull, shortcut: 'L' },
 ];
 
 export function AppSidebar() {

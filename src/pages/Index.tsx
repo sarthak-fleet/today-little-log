@@ -4,21 +4,15 @@ import { PastEntries } from '@/components/PastEntries';
 import { CalendarView } from '@/components/CalendarView';
 import { useReportSaving } from '@/components/SavingContext';
 import { GuestNotice } from '@/components/GuestNotice';
-import { EmotionLogger } from '@/components/EmotionLogger';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useAuth } from '@/hooks/useAuth';
 import { useLifeMath } from '@/hooks/useLifeMath';
-import { IdentitySetter } from '@/components/IdentitySetter';
 import { AmRitual } from '@/components/AmRitual';
 import { PmRitual } from '@/components/PmRitual';
-import { NowCard } from '@/components/NowCard';
 import { Scoreboard } from '@/components/Scoreboard';
-import { CommitmentAudit } from '@/components/CommitmentAudit';
-import { FocusMode } from '@/components/FocusMode';
 import { List, CalendarDays, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
 import { type EntryType } from '@/hooks/useJournalEntries';
 import { JournalSkeleton } from '@/components/PageSkeleton';
 
@@ -122,45 +116,16 @@ const Index = () => {
           <Scoreboard />
         </section>
 
-        {/* Shift-aware NOW card — the new primary surface */}
-        <section className="animate-slide-up" style={{ animationDelay: '0.03s' }}>
-          <NowCard />
-        </section>
-
-        {/* Commitment audit — Thu/Fri only, auto-hides other days */}
-        <section className="animate-slide-up" style={{ animationDelay: '0.04s' }}>
-          <CommitmentAudit />
-        </section>
-
-        {/* Focus mode — pomodoro + tab-switch penalty */}
-        <section className="animate-slide-up" style={{ animationDelay: '0.045s' }}>
-          <FocusMode />
-        </section>
-
-        {/* Highest-self identity */}
-        <section className="animate-slide-up" style={{ animationDelay: '0.05s' }}>
-          <IdentitySetter />
-        </section>
-
         {/* AM ritual */}
-        <section className="animate-slide-up" style={{ animationDelay: '0.08s' }}>
+        <section className="animate-slide-up" style={{ animationDelay: '0.05s' }}>
           <AmRitual />
         </section>
 
         {/* PM ritual */}
-        <section className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
+        <section className="animate-slide-up" style={{ animationDelay: '0.08s' }}>
           <PmRitual />
         </section>
 
-        {/* Emotion Logger - Styled as a floating card */}
-        <section className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
-          <div className="bg-card rounded-3xl p-6 shadow-soft border-none">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-6">How are you feeling?</h2>
-            <EmotionLogger />
-          </div>
-        </section>
-
-        {/* spacing */}
         <div className="h-4" />
 
         {/* Today's Entry - The core focus */}

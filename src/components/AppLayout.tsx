@@ -2,14 +2,9 @@ import { ReactNode, useState } from 'react';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
 import { BottomNav } from './BottomNav';
-import { ChatBot } from './ChatBot';
 import { Navbar } from './Navbar';
 import { SavingProvider, useSaving } from './SavingContext';
 import { FooterStamp } from './FooterStamp';
-import { ShockCard } from './ShockCard';
-import { QuickLogFab } from './QuickLogFab';
-import { UrgeButton } from './UrgeButton';
-import { SleepLock } from './SleepLock';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -41,12 +36,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         </SidebarInset>
       </div>
       <BottomNav />
-      <ChatBot />
       <FooterStamp />
-      <ShockCard />
-      <QuickLogFab />
-      <UrgeButton />
-      <SleepLock />
     </SidebarProvider>
   );
 }
