@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Little Log - Your Digital Sanctuary</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<!-- Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "inverse-surface": "#0b0f10",
+                    "primary-fixed-dim": "#aadcf4",
+                    "on-tertiary-fixed": "#2f4155",
+                    "secondary-dim": "#465467",
+                    "on-surface": "#2a3439",
+                    "inverse-primary": "#afe1fa",
+                    "tertiary-container": "#d1e4fe",
+                    "outline": "#717c82",
+                    "primary": "#326479",
+                    "surface-bright": "#f7f9fb",
+                    "surface-variant": "#d9e4ea",
+                    "primary-container": "#bde9ff",
+                    "background": "#f7f9fb",
+                    "tertiary-fixed-dim": "#c3d6ef",
+                    "on-tertiary-fixed-variant": "#4b5d72",
+                    "on-secondary-container": "#445365",
+                    "on-background": "#2a3439",
+                    "error-dim": "#4e0309",
+                    "surface-container-highest": "#d9e4ea",
+                    "surface-container-high": "#e1e9ee",
+                    "tertiary-fixed": "#d1e4fe",
+                    "tertiary-dim": "#435569",
+                    "on-secondary-fixed": "#324052",
+                    "surface-container": "#e8eff3",
+                    "primary-dim": "#24586d",
+                    "on-primary-fixed-variant": "#2f6176",
+                    "on-primary": "#f0f9ff",
+                    "on-error-container": "#752121",
+                    "error": "#9f403d",
+                    "on-tertiary": "#f7f9ff",
+                    "secondary-fixed": "#d4e4fa",
+                    "outline-variant": "#a9b4b9",
+                    "secondary": "#526073",
+                    "on-primary-container": "#23586c",
+                    "inverse-on-surface": "#9a9d9f",
+                    "secondary-container": "#d4e4fa",
+                    "surface-container-lowest": "#ffffff",
+                    "error-container": "#fe8983",
+                    "on-primary-fixed": "#074559",
+                    "on-secondary-fixed-variant": "#4e5d6f",
+                    "surface-dim": "#cfdce3",
+                    "primary-fixed": "#bde9ff",
+                    "surface-tint": "#326479",
+                    "on-surface-variant": "#566166",
+                    "on-error": "#fff7f6",
+                    "surface-container-low": "#f0f4f7",
+                    "on-secondary": "#f7f9ff",
+                    "tertiary": "#4e6176",
+                    "surface": "#f7f9fb",
+                    "on-tertiary-container": "#415368",
+                    "secondary-fixed-dim": "#c6d6ec"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "display": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen selection:bg-primary-container selection:text-on-primary-container">
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 z-50 w-full bg-[#f7f9fb]/80 dark:bg-slate-900/80 backdrop-blur-xl flex justify-between items-center px-8 py-4">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary cursor-pointer">menu</span>
+<span class="text-xl font-manrope font-extrabold text-[#326479] dark:text-sky-200 tracking-tight">Little Log</span>
+</div>
+<nav class="hidden md:flex gap-8">
+<a class="text-[#326479] dark:text-sky-300 font-bold font-manrope" href="#">Today</a>
+<a class="text-[#566166] dark:text-slate-400 hover:bg-[#f0f4f7] dark:hover:bg-slate-800 transition-colors px-3 py-1 rounded-lg" href="#">Journal</a>
+<a class="text-[#566166] dark:text-slate-400 hover:bg-[#f0f4f7] dark:hover:bg-slate-800 transition-colors px-3 py-1 rounded-lg" href="#">Streaks</a>
+</nav>
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-variant">
+<img alt="User profile" data-alt="close-up portrait of a serene person with gentle lighting and soft bokeh background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-rDYHcWC7xtffiAcoMPOG4SKmwNpDp6KyQOdvGPrl4fXz5bAWoEkK8RcpufNg61nyEGDUCbDdG2XH7Wa9Dd4ifqd5TTW6LW2dHYVshm-rGmz5z_Wgy7MxW3pnjpZwSne8WgOjl316yCFoOoB4XxnjgJfpLwKQzPMK2KJYdR3w8SKS12F9RpIwe-vHPjx82KfDD7yMIIMHGUvey5vjHI1Z2fJ4l-9wL7b4_WvvsZpP7sUd-R6i8RlpapLwRgE65HUCytv9mEYUpLxs"/>
+</div>
+</header>
+<main class="pt-28 pb-32 px-6 max-w-6xl mx-auto space-y-12">
+<!-- Welcome Header -->
+<section class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h1 class="text-5xl md:text-6xl font-extrabold text-on-background tracking-tighter mb-2">Good morning.</h1>
+<p class="text-lg text-on-surface-variant font-medium tracking-wide">Tuesday, October 24th</p>
+</div>
+<div class="hidden md:block">
+<button class="bg-gradient-to-r from-primary to-primary-dim text-on-primary px-6 py-3 rounded-xl font-semibold shadow-sm hover:opacity-90 transition-opacity">
+                    Add Entry
+                </button>
+</div>
+</section>
+<!-- Bento Grid Content -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+<!-- Reflection Float (Signature Component) -->
+<div class="md:col-span-8 relative overflow-hidden bg-surface-container-lowest rounded-[2rem] p-10 flex flex-col justify-between min-h-[320px]">
+<div class="absolute top-0 right-0 w-48 h-48 bg-tertiary-container/30 blur-[80px] -mr-20 -mt-20 rounded-full"></div>
+<div class="relative z-10">
+<span class="text-xs font-bold text-primary uppercase tracking-[0.2em] mb-4 block">Prompt of the Day</span>
+<h2 class="text-3xl md:text-4xl font-bold text-on-background leading-tight max-w-xl">What is one thing that made you feel surprisingly calm today?</h2>
+</div>
+<div class="relative z-10 mt-8">
+<button class="bg-primary text-on-primary px-8 py-4 rounded-full font-bold flex items-center gap-3 w-fit shadow-lg shadow-primary/10 hover:scale-105 transition-transform">
+                        Reflect Now
+                        <span class="material-symbols-outlined text-lg">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Streaks Section -->
+<div class="md:col-span-4 bg-surface-container-low rounded-[2rem] p-8 flex flex-col items-center justify-center text-center">
+<div class="relative w-32 h-32 flex items-center justify-center mb-6">
+<svg class="absolute inset-0 w-full h-full -rotate-90">
+<circle class="text-surface-container-high" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-primary" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-dasharray="364" stroke-dashoffset="100" stroke-linecap="round" stroke-width="8"></circle>
+</svg>
+<div class="flex flex-col items-center">
+<span class="text-4xl font-extrabold font-display text-primary">12</span>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Days</span>
+</div>
+</div>
+<h3 class="text-xl font-bold mb-1">Consistency Flow</h3>
+<p class="text-sm text-on-surface-variant max-w-[200px]">You’re in your longest streak this month. Keep breathing.</p>
+<div class="mt-6 flex gap-1">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<div class="w-2 h-2 rounded-full bg-primary/20"></div>
+<div class="w-2 h-2 rounded-full bg-primary/20"></div>
+</div>
+</div>
+<!-- Habit Grid -->
+<div class="md:col-span-7 bg-surface-container-low rounded-[2rem] p-8">
+<div class="flex justify-between items-center mb-10">
+<h3 class="text-2xl font-bold">Habit Rituals</h3>
+<span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Oct 18 — 24</span>
+</div>
+<div class="space-y-8">
+<!-- Habit Row 1 -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-4 min-w-[140px]">
+<div class="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-container">self_improvement</span>
+</div>
+<span class="font-semibold text-on-surface">Meditation</span>
+</div>
+<div class="flex gap-2">
+<div class="w-8 h-8 rounded-lg bg-primary"></div>
+<div class="w-8 h-8 rounded-lg bg-primary"></div>
+<div class="w-8 h-8 rounded-lg bg-primary-container"></div>
+<div class="w-8 h-8 rounded-lg bg-primary"></div>
+<div class="w-8 h-8 rounded-lg bg-primary"></div>
+<div class="w-8 h-8 rounded-lg bg-primary"></div>
+<div class="w-8 h-8 rounded-lg bg-primary"></div>
+</div>
+</div>
+<!-- Habit Row 2 -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-4 min-w-[140px]">
+<div class="w-10 h-10 rounded-xl bg-tertiary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-tertiary-container">water_drop</span>
+</div>
+<span class="font-semibold text-on-surface">Hydration</span>
+</div>
+<div class="flex gap-2">
+<div class="w-8 h-8 rounded-lg bg-primary"></div>
+<div class="w-8 h-8 rounded-lg bg-primary"></div>
+<div class="w-8 h-8 rounded-lg bg-primary"></div>
+<div class="w-8 h-8 rounded-lg bg-primary"></div>
+<div class="w-8 h-8 rounded-lg bg-primary-container"></div>
+<div class="w-8 h-8 rounded-lg bg-primary"></div>
+<div class="w-8 h-8 rounded-lg bg-primary"></div>
+</div>
+</div>
+<!-- Habit Row 3 -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-4 min-w-[140px]">
+<div class="w-10 h-10 rounded-xl bg-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-secondary-container">menu_book</span>
+</div>
+<span class="font-semibold text-on-surface">Reading</span>
+</div>
+<div class="flex gap-2">
+<div class="w-8 h-8 rounded-lg bg-primary-container"></div>
+<div class="w-8 h-8 rounded-lg bg-primary"></div>
+<div class="w-8 h-8 rounded-lg bg-primary"></div>
+<div class="w-8 h-8 rounded-lg bg-primary"></div>
+<div class="w-8 h-8 rounded-lg bg-primary"></div>
+<div class="w-8 h-8 rounded-lg bg-primary-container"></div>
+<div class="w-8 h-8 rounded-lg bg-primary-container"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Recent Entry -->
+<div class="md:col-span-5 bg-surface-container-lowest rounded-[2rem] p-8 flex flex-col justify-between border border-primary/5">
+<div>
+<div class="flex justify-between items-start mb-6">
+<span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Recent Entry</span>
+<span class="text-xs text-on-surface-variant">Yesterday, 10:42 PM</span>
+</div>
+<h4 class="text-xl font-bold mb-4 text-on-background">Late night thoughts on the garden...</h4>
+<p class="text-on-surface-variant leading-relaxed line-clamp-4 font-body">
+                        The silence of the evening felt different today. I noticed how the shadows stretched across the porch as the moon rose. It's interesting how much we miss when we aren't looking for the quiet moments...
+                    </p>
+</div>
+<div class="mt-8 pt-6 border-t border-surface-container flex justify-between items-center">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full bg-primary-container border-2 border-surface-container-lowest flex items-center justify-center">
+<span class="material-symbols-outlined text-xs">mood</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-tertiary-container border-2 border-surface-container-lowest flex items-center justify-center">
+<span class="material-symbols-outlined text-xs">eco</span>
+</div>
+</div>
+<button class="text-primary font-bold text-sm flex items-center gap-1 hover:gap-2 transition-all">
+                        Read more
+                        <span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Bar (Mobile Focused) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-2xl flex justify-around items-center px-6 pb-8 pt-4 rounded-t-[2rem] shadow-[0_-4px_24px_rgba(50,100,121,0.04)]">
+<a class="flex flex-col items-center justify-center bg-[#f0f4f7] dark:bg-sky-900/30 text-[#326479] dark:text-sky-200 rounded-2xl px-5 py-2 transition-transform duration-300 ease-out active:scale-90" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">calendar_today</span>
+<span class="font-inter text-[10px] font-medium tracking-wide uppercase mt-1">Today</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#566166] dark:text-slate-500 px-5 py-2 hover:text-[#326479] dark:hover:text-sky-300 transition-transform duration-300 active:scale-90" href="#">
+<span class="material-symbols-outlined">auto_stories</span>
+<span class="font-inter text-[10px] font-medium tracking-wide uppercase mt-1">Journal</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#566166] dark:text-slate-500 px-5 py-2 hover:text-[#326479] dark:hover:text-sky-300 transition-transform duration-300 active:scale-90" href="#">
+<span class="material-symbols-outlined">local_fire_department</span>
+<span class="font-inter text-[10px] font-medium tracking-wide uppercase mt-1">Streaks</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#566166] dark:text-slate-500 px-5 py-2 hover:text-[#326479] dark:hover:text-sky-300 transition-transform duration-300 active:scale-90" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-inter text-[10px] font-medium tracking-wide uppercase mt-1">Settings</span>
+</a>
+</nav>
+<!-- FAB (Suppressed based on context of sub-pages, but shown here for landing primary action) -->
+<div class="fixed right-8 bottom-32 z-40 hidden md:block">
+<button class="w-14 h-14 bg-primary text-on-primary rounded-2xl shadow-xl shadow-primary/20 flex items-center justify-center hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-3xl">edit</span>
+</button>
+</div>
+</body></html>
