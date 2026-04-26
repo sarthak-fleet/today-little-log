@@ -1,0 +1,6 @@
+# Run eslint on staged files only — fast pre-commit check.
+# Heavy gates (tsc, full build, secret scan) live in pre-push.
+
+if [ -f package.json ] && [ -d node_modules/lint-staged ]; then
+  pnpm exec lint-staged || { echo "pre-commit: lint-staged failed" >&2; exit 1; }
+fi

@@ -2,7 +2,7 @@ import { and, asc, desc, eq } from 'drizzle-orm';
 import {
   profiles, journalEntries, tasks, habits, habitLogs,
   userStats, dailyCheckins,
-} from '../../api/_lib/schema';
+} from '../../src/db/schema';
 import { createDb, requireUserId, json, type Env } from './_helpers';
 
 type DB = ReturnType<typeof createDb>;

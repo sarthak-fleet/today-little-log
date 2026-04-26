@@ -2,7 +2,7 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { drizzle } from 'drizzle-orm/libsql';
 import { createClient } from '@libsql/client';
-import * as schema from '../../api/_lib/schema';
+import * as schema from '../../src/db/schema';
 
 export interface Env {
   BETTER_AUTH_SECRET: string;

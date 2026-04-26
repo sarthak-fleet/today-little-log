@@ -1,5 +1,5 @@
 import { and, asc, eq } from 'drizzle-orm';
-import { scoreboardItems } from '../../api/_lib/schema';
+import { scoreboardItems } from '../../src/db/schema';
 import { createDb, requireUserId, json, type Env } from './_helpers';
 
 export const onRequest: PagesFunction<Env> = async (context) => {

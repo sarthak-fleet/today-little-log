@@ -39,3 +39,7 @@ api/*.ts.bak
 # Playwright
 test-results/
 playwright-report/
+
+# fallow cache
+.fallow/
+cache.bin

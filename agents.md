@@ -1,71 +1,75 @@
 # agents.md — today-little-log
 
 ## Purpose
-Personal life PWA — daily journal, habits, Eisenhower matrix tasks, emotion logging, memento mori life grid, and XP/mana/PSI gamification.
+Personal life PWA. Daily Scoreboard (user-defined check/output items, no-zero-day streak) + AM/PM rituals + journal + habits + Eisenhower tasks + memento mori life grid.
 
 ## Stack
-- Framework: React 19 SPA (React Router v7), Vite 8
-- Language: TypeScript
-- Styling: Tailwind CSS v4 + shadcn/ui (Radix UI)
-- DB: Turso (libSQL via `@libsql/client`) + Drizzle ORM — migrations in `drizzle/`
-- Auth: better-auth (Google provider) — replaced Supabase → NextAuth → better-auth (current)
-- Testing: Playwright (e2e in `tests/`)
-- Deploy: Cloudflare Pages (`vite build → dist/`; API via `functions/` CF Pages functions)
-- Package manager: pnpm
+- React 19 SPA (React Router v7), Vite 8, TypeScript
+- Tailwind CSS v4 + shadcn/ui (Radix)
+- Turso (libSQL) + Drizzle ORM, migrations in `drizzle/migrations/`
+- better-auth (Google provider) — sessions in Turso `session` table
+- Playwright e2e (`tests/`)
+- Cloudflare Pages — `dist/` static + `functions/api/*` Pages Functions
+- pnpm
 
 ## Repo structure
 ```
 src/
-  App.tsx             # React Router routes
-  pages/              # Index, Tasks, Habits, Life, etc.
-  components/         # 40+ feature components
-  hooks/              # One hook per domain (useHabits, useTasks, useEmotions, etc.)
+  App.tsx             # React Router routes (9 routes)
+  pages/              # Auth, Index, Rituals, Focus, Memories, Review, Life,
+                      # Habits, Tasks, Eisenhower, NotFound
+  components/         # ~20 feature components + ui/
+  hooks/              # One per domain (useScoreboard, useDailyCheckins, useTasks, etc.)
   lib/
-    api.ts            # apiFetch() wrapper for all /api/* endpoints
+    api.ts            # apiFetch() wrapper for /api/*
     auth-client.ts    # Better Auth React client
-    mementoMori.ts    # Life weeks / mortality math (4,000-week grid)
-    xp.ts             # XP / gamification
-    psiScore.ts       # Personal score computation
-    protocol.ts       # AM/PM ritual definitions
-  db/schema.ts        # Drizzle schema (client-side reference copy — keep in sync with api/)
-functions/            # CF Pages serverless functions (deployed alongside dist/)
-  api/auth/
-    [[all]].ts        # Better Auth catch-all handler (GET + POST /api/auth/*)
-api/                  # Legacy Vercel-style functions (NOT deployed to CF Pages, kept for reference)
-  _lib/
-    auth.ts           # getUserId() — cookie + session lookup
-    auth-instance.ts  # Better Auth server instance config (Node handler)
-    db.ts             # Drizzle client (Turso)
-    schema.ts         # Drizzle schema (MUST STAY IN SYNC with src/db/schema.ts)
-  auth.ts             # Better Auth handler (Vercel Node style — not used in production)
-  [resource].ts       # Generic CRUD router
-  <entity>.ts         # Per-entity endpoints (habits, tasks, emotions, etc.)
-drizzle/migrations/   # SQL migration files
-drizzle.config.ts     # Turso dialect
-wrangler.toml         # CF Pages config (nodejs_compat, pages_build_output_dir=dist)
-vite.config.ts        # PWA config, port 8080
+    mementoMori.ts    # Life-weeks math + quotes
+    xp.ts             # XP rewards / score deltas
+    psiScore.ts       # AI-scored brain pressure
+  db/schema.ts        # SINGLE source of truth — used by drizzle-kit AND CF Pages functions
+functions/api/
+  _helpers.ts         # createDb, createAuth, requireUserId, json (env type)
+  [resource].ts       # Dynamic router: profiles, daily-checkins, journal-entries,
+                      # tasks, habits, habit-logs, user-stats
+  scoreboard-items.ts # Single-resource (exact-match wins over [resource])
+  scoreboard-logs.ts  # Same
+  auth/[[all]].ts     # Better Auth catch-all (GET+POST /api/auth/*)
+drizzle/migrations/   # SQL migrations (0001..0004 applied)
+drizzle.config.ts     # Turso dialect, schema = src/db/schema.ts
+wrangler.toml         # name, pages_build_output_dir=dist, nodejs_compat
+.husky/pre-push       # lint → tsc --noEmit -p tsconfig.app.json → pnpm build → secret-scan
+vite.config.ts        # PWA (autoUpdate, skipWaiting, clientsClaim), port 8080
 ```
 
 ## Key commands
 ```bash
-pnpm dev        # vite (localhost:8080) — frontend only
+pnpm dev        # vite (localhost:8080)
 pnpm build      # vite build → dist/
 pnpm preview    # vite preview
-pnpm test:e2e   # playwright test
+pnpm test:e2e   # playwright
 pnpm lint       # eslint
-pnpm deploy     # build + wrangler pages deploy dist/ (picks up functions/ automatically)
+pnpm run deploy # vite build + wrangler pages deploy dist/
 ```
 
 ## Architecture notes
-- **Auth history**: Supabase → NextAuth → better-auth (current). `functions/api/auth/[[all]].ts` is the CF Pages auth handler; `api/_lib/auth-instance.ts` is the Node-style instance (not used in prod).
-- **CF Pages auth**: `functions/api/auth/[[all]].ts` creates a better-auth instance per-request using `context.env` (CF env bindings). Uses `auth.handler(request)` — web-standard fetch API, no Node compat needed for auth itself. `@libsql/client` auto-selects its `workerd` export.
-- **OAuth redirect URI**: Google OAuth client `645696112124-0478qc7vc4odr6e80cutm7dat5rka6gc` (today-little-log GCP project) must have `https://today-little-log.pages.dev/api/auth/callback/google` added as an authorized redirect URI in Google Cloud Console → APIs & Services → Credentials.
-- **Schema duplication**: `api/_lib/schema.ts` and `src/db/schema.ts` must stay in sync — any schema change needs updating in BOTH files.
-- **API layer**: The `api/` directory contains legacy Vercel-style functions. Only `functions/` is deployed to CF Pages. The other API routes (`[resource].ts`, etc.) are NOT yet ported to CF Pages functions — they need migration if backend features are needed.
-- **`@saas-maker/ai` vendored**: stored as `file:vendor/saas-maker-ai` — local copy from the saas-maker sibling project, not from npm registry.
-- **PWA**: `vite-plugin-pwa` + Workbox. Offline caching, manifest, install prompts. Theme color `#e86a1f`, standalone display.
-- **TanStack Query**: all data fetching uses `@tanstack/react-query`. One hook per resource domain.
-- **Gamification**: XP system, mana, streak badges, PSI score, Eisenhower matrix, memento mori 4,000-week life grid.
-- Husky pre-push hook configured.
+
+- **Single schema**: `src/db/schema.ts` is the only schema file. Drizzle migrations + CF Pages functions both import from it. No duplicate.
+- **CF Pages routing**: `[resource].ts` matches single-segment `/api/<x>`. Exact-match files (`scoreboard-items.ts`, `scoreboard-logs.ts`) win when name collides. `auth/[[all]].ts` catches `/api/auth/*`.
+- **CF Pages auth**: `functions/api/auth/[[all]].ts` builds a better-auth instance per request from `context.env`. Web-standard fetch API.
+- **`requireUserId(request, env, db)`**: in `functions/api/_helpers.ts` — returns `userId` or `null`. All data routes auth-gate via this.
+- **Secrets**: stored as CF Pages encrypted secrets (`wrangler pages secret put`):
+  `BETTER_AUTH_SECRET`, `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`,
+  `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`. `BETTER_AUTH_URL` is plaintext in `wrangler.toml [vars]`.
+- **OAuth**: Google client `207924374505-...`. Authorized redirect URI must include
+  `https://today-little-log.pages.dev/api/auth/callback/google` (and localhost for dev).
+- **Deploy gotcha**: CF Pages git auto-deploy has stripped functions in the past — always deploy via `pnpm run deploy` (manual wrangler). Recommend disabling Git integration in CF dashboard.
+- **PWA**: `vite-plugin-pwa` + Workbox, `registerType: autoUpdate` + `skipWaiting` + `clientsClaim` so new bundles activate immediately on next nav.
+- **TanStack Query**: optional — most hooks use plain useState + apiFetch.
+- **Gamification**: kept = XP + StreakBadge. Removed = Mana, LifeScore, PSI badges (PSI score still scored in AmRitual).
+- **`@saas-maker/ai` vendored** at `file:vendor/saas-maker-ai`.
+- **Pre-push gates**: lint, tsc, build, secret-scan. No skip without reason.
 
 ## Active context
+- Scoreboard live, ~7 default items seeded for primary user.
+- Home is hero + Scoreboard + Today entry only. Other surfaces split to dedicated pages.
+- Aggressive prune `9631951` removed 9 pages + 20 components + 11 hooks; `25625a2` restored Review/Memories/Rituals/Focus/IdentitySetter as separate pages.
