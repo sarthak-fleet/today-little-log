@@ -152,11 +152,9 @@ export function Navbar({ isSaving = false }: NavbarProps) {
           </div>
         </div>
 
-        {/* Right: LifeScore + Streak + DOB setter + Dark mode toggle + User section */}
+        {/* Right: Streak + DOB setter + Dark mode toggle + User section */}
         <div className="flex items-center gap-2">
-          <ManaBadge />
           <StreakBadge />
-          <LifeScoreBadge />
           {isSaving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground mr-2" />}
 
           {isLoggedIn && !dayOfLife && (

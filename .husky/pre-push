@@ -5,6 +5,20 @@ if [ -f package.json ] && grep -q '"lint"' package.json; then
   pnpm run lint || { echo "lint failed — fix before pushing" >&2; exit 1; }
 fi
 
+# Typecheck — catches dangling refs (e.g. JSX using a removed component) that
+# SWC-based vite build skips and ESLint with @typescript-eslint disables.
+if [ -f tsconfig.app.json ]; then
+  pnpm exec tsc --noEmit -p tsconfig.app.json || { echo "typecheck failed — fix before pushing" >&2; exit 1; }
+elif [ -f tsconfig.json ]; then
+  pnpm exec tsc --noEmit || { echo "typecheck failed — fix before pushing" >&2; exit 1; }
+fi
+
+# Production build — catches Vite resolve errors (missing imports, bad paths)
+# and confirms the deployable artifact compiles.
+if [ -f package.json ] && grep -q '"build"' package.json; then
+  pnpm run build || { echo "build failed — fix before pushing" >&2; exit 1; }
+fi
+
 SECRETS=$(git ls-files -z 2>/dev/null \
   | xargs -0 grep -lE \
     'sk-(proj-|ant-)?[A-Za-z0-9_-]{20,}|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{36}|gho_[A-Za-z0-9]{36}|AIzaSy[A-Za-z0-9_-]{33}|xoxb-[A-Za-z0-9-]+|-----BEGIN (RSA |EC )?PRIVATE KEY-----' 2>/dev/null \
