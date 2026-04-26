@@ -1,4 +1,5 @@
 import { LifeWeeksGrid } from '@/components/LifeWeeksGrid';
+import { IdentitySetter } from '@/components/IdentitySetter';
 import { useLifeMath } from '@/hooks/useLifeMath';
 import { quoteOfDay } from '@/lib/mementoMori';
 import { Skull } from 'lucide-react';
@@ -29,6 +30,10 @@ const Life = () => {
             About <span className="font-semibold text-foreground">{life.daysLeft.toLocaleString()}</span> days left. Each square below is one week.
           </p>
         )}
+      </section>
+
+      <section className="px-4 max-w-5xl mx-auto pb-8">
+        <IdentitySetter />
       </section>
 
       <section className="px-4 max-w-5xl mx-auto pb-10">

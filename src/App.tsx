@@ -15,6 +15,10 @@ import Habits from "./pages/Habits";
 import Tasks from "./pages/Tasks";
 import Life from "./pages/Life";
 import Eisenhower from "./pages/Eisenhower";
+import Memories from "./pages/Memories";
+import Rituals from "./pages/Rituals";
+import Focus from "./pages/Focus";
+import Review from "./pages/Review";
 import NotFound from "./pages/NotFound";
 import { useTabTitleCountdown } from "./hooks/useTabTitleCountdown";
 
@@ -55,6 +59,10 @@ const App = () => (
             <Routes>
               <Route element={<LayoutWrapper />}>
                 <Route path="/" element={<Index />} />
+                <Route path="/rituals" element={<Rituals />} />
+                <Route path="/focus" element={<Focus />} />
+                <Route path="/memories" element={<Memories />} />
+                <Route path="/review" element={<Review />} />
                 <Route path="/life" element={<Life />} />
                 <Route path="/habits" element={<Habits />} />
                 <Route path="/tasks" element={<Tasks />} />

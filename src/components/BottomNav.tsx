@@ -1,11 +1,12 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Feather, Target, CheckSquare, Skull } from 'lucide-react';
+import { Feather, Sunrise, Crosshair, CheckSquare, LineChart } from 'lucide-react';
 
 const navItems = [
-  { title: 'Journal', url: '/', icon: Feather },
+  { title: 'Home', url: '/', icon: Feather },
+  { title: 'Rituals', url: '/rituals', icon: Sunrise },
+  { title: 'Focus', url: '/focus', icon: Crosshair },
   { title: 'Tasks', url: '/tasks', icon: CheckSquare },
-  { title: 'Habits', url: '/habits', icon: Target },
-  { title: 'Life', url: '/life', icon: Skull },
+  { title: 'Review', url: '/review', icon: LineChart },
 ];
 
 export function BottomNav() {
