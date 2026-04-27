@@ -1,6 +1,7 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { PostHogProvider } from "@saas-maker/posthog-client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { useEffect } from "react";
@@ -46,6 +47,7 @@ function LayoutWrapper() {
 }
 
 const App = () => (
+  <PostHogProvider>
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="theme">
       <TooltipProvider>
@@ -76,6 +78,7 @@ const App = () => (
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
+  </PostHogProvider>
 );
 
 export default App;

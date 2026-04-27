@@ -1,24 +1,8 @@
-import { defineConfig, devices } from '@playwright/test';
+import { definePlaywrightConfig } from '@saas-maker/test-config/playwright';
 
-export default defineConfig({
+export default definePlaywrightConfig({
   testDir: './tests',
-  timeout: 30_000,
-  expect: { timeout: 5_000 },
-  fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: [['list']],
-  use: {
-    baseURL: 'http://localhost:8080',
-    trace: 'off',
-    screenshot: 'off',
-    video: 'off',
-  },
-  projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-  ],
-  // Dev server is started externally (by the test runner) to avoid slow cold starts.
+  baseURL: 'http://localhost:8080',
   webServer: {
     command: 'pnpm dev',
     url: 'http://localhost:8080',
