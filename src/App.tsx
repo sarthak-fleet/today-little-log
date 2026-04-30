@@ -5,14 +5,13 @@ import { PostHogProvider } from "@saas-maker/posthog-client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { useEffect } from "react";
-import { BrowserRouter, Routes, Route, Outlet, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet, useLocation, Navigate } from "react-router-dom";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { PersistentLayout } from "./components/AppLayout";
 import { saasmaker } from "./lib/saasmaker";
 import { SaaSMakerFeedback } from "./components/saasmaker-feedback";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import Habits from "./pages/Habits";
 import Tasks from "./pages/Tasks";
 import Life from "./pages/Life";
 import Eisenhower from "./pages/Eisenhower";
@@ -66,7 +65,7 @@ const App = () => (
                 <Route path="/memories" element={<Memories />} />
                 <Route path="/review" element={<Review />} />
                 <Route path="/life" element={<Life />} />
-                <Route path="/habits" element={<Habits />} />
+                <Route path="/habits" element={<Navigate to="/rituals" replace />} />
                 <Route path="/tasks" element={<Tasks />} />
                 <Route path="/eisenhower" element={<Eisenhower />} />
               </Route>

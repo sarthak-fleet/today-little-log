@@ -1,5 +1,6 @@
 import { AmRitual } from '@/components/AmRitual';
 import { PmRitual } from '@/components/PmRitual';
+import Habits from './Habits';
 import { Sunrise } from 'lucide-react';
 
 const Rituals = () => {
@@ -14,14 +15,15 @@ const Rituals = () => {
           <span className="text-xs font-semibold uppercase tracking-[0.25em]">Rituals</span>
         </div>
         <h1 className="text-3xl md:text-4xl font-display font-extrabold text-foreground">
-          Open and close the day
+          One daily ritual log
         </h1>
         <p className="mt-2 text-muted-foreground">
-          Morning sets the three intents. Evening closes with wins / wastes / day-score.
+          Open the day, close the day, and track the repeated items that deserve history.
         </p>
       </section>
 
       <section className="px-4 max-w-3xl mx-auto pb-20 space-y-6">
+        <Habits embedded />
         {morningFirst ? (
           <>
             <AmRitual />

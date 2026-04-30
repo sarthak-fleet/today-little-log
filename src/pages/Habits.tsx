@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useReportSaving } from '@/components/SavingContext';
 import { GuestNotice } from '@/components/GuestNotice';
 import { useHabits, type Habit } from '@/hooks/useHabits';
+import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,11 +11,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2, Target, CheckCircle2, Pencil } from 'lucide-react';
+import { Plus, Trash2, Target, CheckCircle2, Pencil, History } from 'lucide-react';
 import { HabitsSkeleton } from '@/components/PageSkeleton';
-import { format } from 'date-fns';
+import { format, subDays } from 'date-fns';
 
-const Habits = () => {
+type HabitsProps = {
+  embedded?: boolean;
+};
+
+const Habits = ({ embedded = false }: HabitsProps) => {
   const { habits, logs, isLoaded, isSaving, isLoggedIn, addHabit, updateHabit, deleteHabit, logHabit, getLog, getTodayLog } = useHabits();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -40,6 +45,10 @@ const Habits = () => {
 
   const today = format(new Date(), 'yyyy-MM-dd');
   const todayLabel = format(new Date(), 'EEEE, MMM d');
+  const historyDays = Array.from({ length: 30 }, (_, index) => {
+    const date = subDays(new Date(), 29 - index);
+    return format(date, 'yyyy-MM-dd');
+  });
 
   const resetForm = () => {
     setFormData({
@@ -129,6 +138,29 @@ const Habits = () => {
   const formatValue = (habit: Habit, value: number) =>
     habit.track_type === 'time' ? formatTime(value) : value.toString();
 
+  const getDayValue = (habitId: string, date: string) =>
+    logs.find((log) => log.habit_id === habitId && log.date === date)?.value ?? 0;
+
+  const isGoalMet = (habit: Habit, value: number) =>
+    habit.target_type === 'limit' ? value <= habit.target_value && value > 0 : value >= habit.target_value;
+
+  const getHistoryStats = (habit: Habit) => {
+    const values = historyDays.map((date) => ({ date, value: getDayValue(habit.id, date) }));
+    const completedDays = values.filter(({ value }) => isGoalMet(habit, value)).length;
+    let streak = 0;
+    for (let index = values.length - 1; index >= 0; index -= 1) {
+      if (!isGoalMet(habit, values[index].value)) break;
+      streak += 1;
+    }
+
+    return {
+      values,
+      completedDays,
+      completionRate: Math.round((completedDays / historyDays.length) * 100),
+      streak,
+    };
+  };
+
   useReportSaving(isSaving);
 
   const parsedLogValue = Number.parseInt(logModal.value, 10);
@@ -138,36 +170,43 @@ const Habits = () => {
   if (!isLoaded) return <HabitsSkeleton />;
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <section className="pt-10 pb-6 px-4 max-w-4xl mx-auto">
-        <div className="flex items-center gap-3 text-primary/80 mb-3">
-          <Target className="h-5 w-5" />
-          <span className="text-xs font-semibold uppercase tracking-[0.25em]">Habits</span>
-        </div>
-        <h1 className="text-4xl md:text-5xl font-display font-extrabold leading-tight text-foreground">
-          Repetition. <span className="text-primary italic font-medium">The only shortcut.</span>
-        </h1>
-      </section>
+    <div className={cn('bg-background text-foreground', embedded ? '' : 'min-h-screen')}>
+      {!embedded && (
+        <section className="pt-10 pb-6 px-4 max-w-4xl mx-auto">
+          <div className="flex items-center gap-3 text-primary/80 mb-3">
+            <Target className="h-5 w-5" />
+            <span className="text-xs font-semibold uppercase tracking-[0.25em]">Ritual items</span>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-display font-extrabold leading-tight text-foreground">
+            Repetition. <span className="text-primary italic font-medium">The only shortcut.</span>
+          </h1>
+        </section>
+      )}
 
       {!isLoggedIn && (
         <div className="max-w-4xl mx-auto px-4 pb-4">
-          <GuestNotice message="Log in to save your habits across devices" />
+          <GuestNotice message="Log in to save your ritual items across devices" />
         </div>
       )}
 
-      <div className="max-w-4xl mx-auto px-4 pb-20">
+      <div className={cn('max-w-4xl mx-auto px-4', embedded ? 'pb-2' : 'pb-20')}>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-display font-semibold text-foreground">Your Habits</h2>
+          <div>
+            <h2 className="text-xl font-display font-semibold text-foreground">Daily ritual items</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              One checklist for the repeated things worth remembering, with history per item.
+            </p>
+          </div>
           <Dialog open={isDialogOpen} onOpenChange={(open) => open ? handleOpenDialog() : handleCloseDialog()}>
             <DialogTrigger asChild>
               <Button size="sm" className="gap-1">
                 <Plus className="h-4 w-4" />
-                Add Habit
+                Add Item
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>{editingHabit ? 'Edit Habit' : 'Create New Habit'}</DialogTitle>
+                <DialogTitle>{editingHabit ? 'Edit ritual item' : 'Create ritual item'}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 pt-4">
                 <div className="space-y-2">
@@ -243,7 +282,7 @@ const Habits = () => {
                 </div>
 
                 <Button onClick={handleSubmit} className="w-full" disabled={!formData.title.trim()}>
-                  {editingHabit ? 'Save Changes' : 'Create Habit'}
+                  {editingHabit ? 'Save changes' : 'Create item'}
                 </Button>
               </div>
             </DialogContent>
@@ -253,11 +292,11 @@ const Habits = () => {
         {habits.length === 0 ? (
           <div className="text-center py-12">
             <Target className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
-            <p className="text-sm font-medium text-muted-foreground">No habits yet</p>
-            <p className="text-xs text-muted-foreground/70 mt-1">Create your first habit to start tracking</p>
+            <p className="text-sm font-medium text-muted-foreground">No ritual items yet</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">Create the first daily item you want history for</p>
             <Button className="mt-4" onClick={() => handleOpenDialog()}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Habit
+              Add Item
             </Button>
           </div>
         ) : (
@@ -385,8 +424,10 @@ const Habits = () => {
                           setHistoryHabit(habit);
                           setHistoryOpen(true);
                         }}
+                        className="gap-2"
                       >
-                        View logs
+                        <History className="h-4 w-4" />
+                        History
                       </Button>
                     </div>
                   </CardContent>
@@ -401,7 +442,7 @@ const Habits = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {logModal.habit ? `Log ${logModal.habit.title}` : 'Log habit'}
+              {logModal.habit ? `Log ${logModal.habit.title}` : 'Log ritual item'}
             </DialogTitle>
           </DialogHeader>
           {logModal.habit && (
@@ -410,7 +451,7 @@ const Habits = () => {
                 <div>
                   <p className="font-medium text-foreground">{todayLabel}</p>
                   <p className="text-xs text-muted-foreground capitalize">
-                    {logModal.habit.frequency} habit
+                    {logModal.habit.frequency} item
                   </p>
                 </div>
                 <Badge variant={logModal.habit.target_type === 'limit' ? 'outline' : 'secondary'}>
@@ -444,6 +485,86 @@ const Habits = () => {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>{historyHabit ? `${historyHabit.title} history` : 'Item history'}</DialogTitle>
+          </DialogHeader>
+          {historyHabit && (() => {
+            const stats = getHistoryStats(historyHabit);
+            const recentLogs = logs
+              .filter((log) => log.habit_id === historyHabit.id && log.value > 0)
+              .sort((a, b) => b.date.localeCompare(a.date))
+              .slice(0, 8);
+
+            return (
+              <div className="space-y-5 pt-2">
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-lg border bg-muted/30 p-3">
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">30d rate</p>
+                    <p className="mt-1 font-display text-2xl font-semibold">{stats.completionRate}%</p>
+                  </div>
+                  <div className="rounded-lg border bg-muted/30 p-3">
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Done days</p>
+                    <p className="mt-1 font-display text-2xl font-semibold">{stats.completedDays}/30</p>
+                  </div>
+                  <div className="rounded-lg border bg-muted/30 p-3">
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Streak</p>
+                    <p className="mt-1 font-display text-2xl font-semibold">{stats.streak}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Last 30 days</span>
+                    <span>{historyHabit.target_type === 'limit' ? 'Within limit' : 'Met target'}</span>
+                  </div>
+                  <div className="grid grid-cols-10 gap-1.5">
+                    {stats.values.map(({ date, value }) => {
+                      const met = isGoalMet(historyHabit, value);
+                      return (
+                        <div
+                          key={date}
+                          title={`${format(new Date(`${date}T00:00:00`), 'MMM d')}: ${formatValue(historyHabit, value)}`}
+                          className={cn(
+                            'aspect-square rounded-md border',
+                            met
+                              ? 'border-primary/40 bg-primary/80'
+                              : value > 0
+                                ? 'border-accent/40 bg-accent/40'
+                                : 'border-border bg-muted/50'
+                          )}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Recent logs</p>
+                  {recentLogs.length === 0 ? (
+                    <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+                      No logged history yet.
+                    </p>
+                  ) : (
+                    <div className="divide-y rounded-lg border">
+                      {recentLogs.map((log) => (
+                        <div key={log.id} className="flex items-center justify-between px-3 py-2 text-sm">
+                          <span className="text-muted-foreground">
+                            {format(new Date(`${log.date}T00:00:00`), 'EEE, MMM d')}
+                          </span>
+                          <span className="font-medium">{formatValue(historyHabit, log.value)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>
