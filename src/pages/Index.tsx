@@ -4,6 +4,7 @@ import { GuestNotice } from '@/components/GuestNotice';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { useAuth } from '@/hooks/useAuth';
 import { useLifeMath } from '@/hooks/useLifeMath';
+import { useScoreboard } from '@/hooks/useScoreboard';
 import { Scoreboard } from '@/components/Scoreboard';
 import { type EntryType } from '@/hooks/useJournalEntries';
 import { JournalSkeleton } from '@/components/PageSkeleton';
@@ -11,6 +12,7 @@ import { JournalSkeleton } from '@/components/PageSkeleton';
 const Index = () => {
   const { loading } = useAuth();
   const life = useLifeMath(60_000);
+  const scoreboard = useScoreboard();
 
   const {
     getTodayEntry,
@@ -29,6 +31,14 @@ const Index = () => {
   };
 
   useReportSaving(isSaving);
+
+  const dailyItems = scoreboard.items.filter((item) => item.category === 'daily');
+  const todayHits = dailyItems.filter((item) => {
+    const log = scoreboard.todayLogs.find((row) => row.item_id === item.id);
+    if (!log) return false;
+    return item.kind === 'check' ? log.value_bool : Boolean(log.value_text && log.value_text.trim());
+  }).length;
+  const shouldLockReflection = new Date().getHours() >= 15 && dailyItems.length > 0 && todayHits === 0;
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans">
@@ -78,27 +88,29 @@ const Index = () => {
           <Scoreboard />
         </section>
 
-        <section className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
-          <div className="bg-card rounded-3xl p-8 shadow-card border-none relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl" />
-            <h2 className="text-2xl font-display font-bold mb-8 flex items-center gap-3">
-              <span className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-base">✍️</span>
-              Daily Reflection
-            </h2>
-            {loading || !isLoaded ? (
-              <JournalSkeleton />
-            ) : (
-              <TodayPrompt
-                todayEntry={getTodayEntry()}
-                weeklyEntry={getWeeklyEntry()}
-                monthlyEntry={getMonthlyEntry()}
-                isSunday={isSunday()}
-                isLastDayOfMonth={isLastDayOfMonth()}
-                onSave={handleSave}
-              />
-            )}
-          </div>
-        </section>
+        {!shouldLockReflection && (
+          <section className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
+            <div className="bg-card rounded-3xl p-8 shadow-card border-none relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl" />
+              <h2 className="text-2xl font-display font-bold mb-8 flex items-center gap-3">
+                <span className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-base">✍️</span>
+                Daily Reflection
+              </h2>
+              {loading || !isLoaded ? (
+                <JournalSkeleton />
+              ) : (
+                <TodayPrompt
+                  todayEntry={getTodayEntry()}
+                  weeklyEntry={getWeeklyEntry()}
+                  monthlyEntry={getMonthlyEntry()}
+                  isSunday={isSunday()}
+                  isLastDayOfMonth={isLastDayOfMonth()}
+                  onSave={handleSave}
+                />
+              )}
+            </div>
+          </section>
+        )}
       </div>
 
       <footer className="py-20 text-center bg-muted/20">

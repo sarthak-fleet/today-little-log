@@ -69,7 +69,90 @@ pnpm run deploy # vite build + wrangler pages deploy dist/
 - **`@saas-maker/ai` vendored** at `file:vendor/saas-maker-ai`.
 - **Pre-push gates**: lint, tsc, build, secret-scan. No skip without reason.
 
+<!-- FLEET-GUIDANCE:START -->
+
+## Fleet Guidance
+
+### Adding Tasks
+- Add durable work items in SaaS Maker Cockpit Tasks when the task affects product behavior, deployment, user feedback, or fleet maintenance.
+- Include the project slug, a concise title, acceptance criteria, priority/status, and links to relevant code, issues, traces, or dashboards.
+- If task discovery starts locally in an editor or agent session, mirror the durable next step back into SaaS Maker before handoff.
+
+### Using SaaS Maker
+- Treat SaaS Maker as the system of record for project metadata, feedback, tasks, analytics, testimonials, changelog, and fleet visibility.
+- Prefer API-first workflows through `fnd api`, the SDK, or widgets instead of one-off scripts when interacting with SaaS Maker features.
+- Keep this agent file aligned with the project record when operating rules, integrations, or deployment conventions change.
+
+### Free AI First
+- Prefer free/local AI paths for routine development and analysis: the `free-ai` gateway, local models, provider free tiers, and cached context.
+- Escalate to paid models only when complexity, correctness risk, or missing capability justifies the cost.
+- Note any paid-AI use in the task or handoff when it materially affects cost, reproducibility, or future maintenance.
+
+<!-- FLEET-GUIDANCE:END -->
+
 ## Active context
 - Scoreboard live, ~7 default items seeded for primary user.
 - Home is hero + Scoreboard + Today entry only. Other surfaces split to dedicated pages.
 - Aggressive prune `9631951` removed 9 pages + 20 components + 11 hooks; `25625a2` restored Review/Memories/Rituals/Focus/IdentitySetter as separate pages.
+
+
+<claude-mem-context>
+# Memory Context
+
+# [today-little-log] recent context, 2026-05-01 2:17pm GMT+5:30
+
+Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
+Format: ID TIME TYPE TITLE
+Fetch details: get_observations([IDs]) | Search: mem-search skill
+
+Stats: 0 obs (0t read) | 0t work
+
+### Apr 28, 2026
+S210 today-little-log — home page restructuring into separate routes, API routing fix for CF Pages, infrastructure cleanup, and GitHub Actions deploy pipeline planning (Apr 28 at 6:50 PM)
+**Investigated**: - Home page overload: 5 stacked surfaces (AM, PM, Today entry, Scoreboard, Past entries) all on `/`
+    - Components deleted in prune commit `9631951` (IdentitySetter, FocusMode, Review page, WeeklyAutoReport) — checked deps via git show
+    - FocusMode had `useQuickLogs`/`useDevLogs` dependencies (remove on restore)
+    - IdentitySetter.tsx had duplicate content (file written twice, `head -123` truncation fixed it)
+    - CF Pages API routing: `api/[resource].ts` is Vercel-style, never deployed; all dynamic routes returned HTML 200 (SPA fallback) instead of JSON
+    - Only `functions/api/scoreboard-*` and `functions/api/auth/*` existed as actual CF Pages functions
+    - All functions imported schema from `api/_lib/schema.ts` — duplicate of `src/db/schema.ts`
+    - `vercel.json` + `scripts/bundle-api.mjs` were dead Vercel relics
+    - PWA `registerType: "prompt"` requires user action; `autoUpdate` + `skipWaiting` + `clientsClaim` needed for immediate updates
+    - CF Pages git auto-deploy vs wrangler CLI output differ — git integration has stripped functions before (likely due to old `vercel.json` framework detection)
+    - Existing `saas-maker` repo has `foundry-ci.yml` reusable workflow — precedent for fleet-level GitHub Actions patterns
+
+**Learned**: - CF Pages `[resource].ts` dynamic segment matches single `/api/<x>` paths; exact-match files win over dynamic
+    - CF Pages git auto-deploy runs its own remote build — can produce different artifact than local `wrangler pages deploy` (functions stripped)
+    - `vercel.json` presence was likely triggering wrong framework detection in CF's remote build
+    - Two deploy pipelines (CF git + wrangler CLI) race on push; latest write wins — must disable one
+    - Pre-push hooks gate code quality but cannot gate CF's remote build pipeline — orthogonal concerns
+    - FocusMode was 571 lines originally (2 copies concatenated in file); rewritten clean at ~190 lines removing dead `useQuickLogs`/`useDevLogs` deps
+    - `src/db/schema.ts` should be single source of truth; `api/_lib/schema.ts` was a manual duplicate requiring sync
+    - PWA `registerType: "prompt"` blocks auto-update; `autoUpdate` + `skipWaiting` + `clientsClaim` activates new SW immediately on next navigation
+
+**Completed**: - Created `/rituals` page (AmRitual + PmRitual, auto-orders by current hour)
+    - Created `/focus` page (FocusMode component, pomodoro with tab-switch XP penalty)
+    - Created `/memories` page (PastEntries + CalendarView + search)
+    - Created `/review` page (7-day Scoreboard breakdown + recent AM/PM + weekly/monthly journal)
+    - Restored `IdentitySetter` component from pre-prune commit, added to `/life` page
+    - Restored `FocusMode` as slim rewrite (~190 lines, no dead deps)
+    - Stripped home page (`/`) to hero + Scoreboard + Today entry only
+    - Updated `App.tsx` with 4 new routes, `AppSidebar` with 4 new nav items (Rituals, Focus, Memories, Review), `BottomNav` updated for mobile
+    - Created `functions/api/[resource].ts` — CF Pages dynamic router for profiles, daily-checkins, journal-entries, tasks, habits, habit-logs, user-stats
+    - All API endpoints verified: HTTP 401 (auth-gated JSON) for all data routes, HTTP 200 for `/api/auth/get-session`
+    - Consolidated to single schema: all `functions/` now import from `src/db/schema.ts`; deleted `api/_lib/schema.ts` duplicate
+    - Deleted entire legacy `api/` directory (15 files), `vercel.json`, `scripts/bundle-api.mjs`
+    - PWA updated: `registerType: autoUpdate`, `skipWaiting: true`, `clientsClaim: true`
+    - Added `lint-staged` pre-commit hook for fast TS/TSX ESLint on staged files
+    - `agents.md` fully rewritten to reflect current architecture (single schema, CF-only, 11 routes, deploy gotcha, secrets layout)
+    - All changes built and deployed; all 10 routes return correct HTTP codes
+    - Wrote PRD for reusable GitHub Actions CF Pages deploy workflow (fleet-level reusable in `saas-maker` repo)
+    - Commits: `25625a2` (page split), `1a06cf1` (API port), `585adde` (infra cleanup)
+
+**Next Steps**: - User needs to manually disconnect CF Pages git integration in Cloudflare dashboard (Pages → today-little-log → Settings → Builds & deployments → Disconnect from Git)
+    - Implement reusable GH Actions workflow in `saas-maker/.github/workflows/cf-pages-deploy.yml`
+    - Add caller workflow in `today-little-log/.github/workflows/deploy.yml`
+    - Add `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` as GitHub repo secrets
+    - Verify GH Actions deploy succeeds before disconnecting CF git integration
+    - Roll GH Actions workflow to other fleet projects
+</claude-mem-context>

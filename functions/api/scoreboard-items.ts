@@ -1,6 +1,7 @@
 import { and, asc, eq } from 'drizzle-orm';
 import { scoreboardItems } from '../../src/db/schema';
 import { createDb, requireUserId, json, type Env } from './_helpers';
+import { defaultScoreboardItems } from '../../src/lib/scoreboardDefaults';
 
 export const onRequest: PagesFunction<Env> = async (context) => {
   const db = createDb(context.env);
@@ -10,6 +11,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const { method } = context.request;
 
   if (method === 'GET') {
+    await seedMissingDefaults(db, userId);
     const rows = await db.select().from(scoreboardItems)
       .where(eq(scoreboardItems.user_id, userId))
       .orderBy(asc(scoreboardItems.position), asc(scoreboardItems.created_at));
@@ -55,3 +57,19 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   return json({ error: 'Method not allowed' }, { status: 405 });
 };
+
+async function seedMissingDefaults(db: ReturnType<typeof createDb>, userId: string) {
+  const rows = await db.select().from(scoreboardItems)
+    .where(eq(scoreboardItems.user_id, userId));
+  const existingLabels = new Set(rows.map((row) => row.label.trim().toLowerCase()));
+  const missing = defaultScoreboardItems.filter((item) => !existingLabels.has(item.label.toLowerCase()));
+  if (missing.length === 0) return;
+
+  await db.insert(scoreboardItems).values(missing.map((item) => ({
+    user_id: userId,
+    label: item.label,
+    kind: item.kind,
+    position: item.position,
+    archived: false,
+  })));
+}
