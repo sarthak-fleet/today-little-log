@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '@/lib/api';
 import { useAuth } from './useAuth';
 
-export type EntryType = 'daily' | 'weekly' | 'monthly';
+export type EntryType = 'daily' | 'weekly' | 'monthly' | 'next_week';
 
 export interface JournalEntry {
   id: string;
@@ -93,6 +93,13 @@ export function useJournalEntries() {
     return sunday.toISOString().split('T')[0];
   };
 
+  const getNextWeekKey = () => {
+    const today = new Date();
+    const nextSunday = new Date(today);
+    nextSunday.setDate(today.getDate() - today.getDay() + 7);
+    return nextSunday.toISOString().split('T')[0];
+  };
+
   const getMonthKey = () => {
     const today = new Date();
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`;
@@ -119,6 +126,10 @@ export function useJournalEntries() {
     return entries.find(entry => entry.date === getMonthKey() && entry.entry_type === 'monthly');
   };
 
+  const getNextWeekPlanEntry = (): JournalEntry | undefined => {
+    return entries.find(entry => entry.date === getNextWeekKey() && entry.entry_type === 'next_week');
+  };
+
   const saveEntry = async (content: string, date?: string, entryType: EntryType = 'daily') => {
     setIsSaving(true);
 
@@ -128,6 +139,8 @@ export function useJournalEntries() {
         targetDate = getWeekKey();
       } else if (entryType === 'monthly') {
         targetDate = getMonthKey();
+      } else if (entryType === 'next_week') {
+        targetDate = getNextWeekKey();
       } else {
         targetDate = getTodayKey();
       }
@@ -258,11 +271,13 @@ export function useJournalEntries() {
     getTodayEntry,
     getWeeklyEntry,
     getMonthlyEntry,
+    getNextWeekPlanEntry,
     getRecentEntries,
     saveEntry,
     updateEntry,
     deleteEntry,
     getTodayKey,
+    getNextWeekKey,
     isSunday,
     isLastDayOfMonth,
   };

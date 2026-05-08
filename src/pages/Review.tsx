@@ -3,7 +3,8 @@ import { useDailyCheckins } from '@/hooks/useDailyCheckins';
 import { useScoreboard } from '@/hooks/useScoreboard';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { TodayPrompt } from '@/components/TodayPrompt';
-import { LineChart, CalendarDays, Ban, Target, Trophy, TrendingDown } from 'lucide-react';
+import { EntryEditor } from '@/components/EntryEditor';
+import { LineChart, CalendarDays, Ban, Target, Trophy, TrendingDown, ListChecks } from 'lucide-react';
 import { format, subDays, startOfWeek, eachDayOfInterval } from 'date-fns';
 
 const Review = () => {
@@ -13,6 +14,8 @@ const Review = () => {
     getTodayEntry,
     getWeeklyEntry,
     getMonthlyEntry,
+    getNextWeekPlanEntry,
+    getNextWeekKey,
     saveEntry,
     isSunday,
     isLastDayOfMonth,
@@ -35,7 +38,11 @@ const Review = () => {
       const item = items.find((row) => row.id === log.item_id);
       const kind = itemKindById.get(log.item_id);
       if (!item || item.category !== 'daily' || !kind) continue;
-      const hit = kind === 'check' ? log.value_bool : Boolean(log.value_text && log.value_text.trim());
+      const hit = kind === 'score'
+        ? Boolean(log.value_score && log.value_score > 0)
+        : kind === 'check'
+        ? log.value_bool
+        : Boolean(log.value_text && log.value_text.trim());
       if (hit) m.set(log.date, (m.get(log.date) ?? 0) + 1);
     }
     return m;
@@ -50,8 +57,10 @@ const Review = () => {
     () => getWeeklyPatterns(dailyItems, notToDos, logs, last7),
     [dailyItems, notToDos, logs, last7],
   );
+  const planningPrompts = useMemo(() => getPlanningPrompts(patterns), [patterns]);
 
   const weekStart = format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd');
+  const nextWeekStart = format(new Date(getNextWeekKey()), 'MMM d');
   const recentCheckins = checkins.filter((c) => c.date >= last7[0]);
 
   return (
@@ -140,6 +149,32 @@ const Review = () => {
           )}
         </div>
 
+        <div className="rounded-2xl bg-card border border-border p-5">
+          <div className="flex items-center gap-2 text-muted-foreground mb-3">
+            <ListChecks className="h-3.5 w-3.5" />
+            <span className="text-[11px] uppercase tracking-widest">Next-week planning</span>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3 mb-4">
+            {planningPrompts.map((prompt) => (
+              <div key={prompt.label} className="rounded-xl border border-border bg-background p-3">
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                  {prompt.label}
+                </div>
+                <div className="mt-2 text-sm font-display font-semibold text-foreground">
+                  {prompt.value}
+                </div>
+              </div>
+            ))}
+          </div>
+          <EntryEditor
+            entry={getNextWeekPlanEntry()}
+            entryType="next_week"
+            title={`Plan for week of ${nextWeekStart}`}
+            placeholder="Pick 3 outcomes, 1 constraint to remove, and the first Monday action."
+            onSave={(content, type) => saveEntry(content, undefined, type)}
+          />
+        </div>
+
         <div className="bg-card rounded-3xl p-6 md:p-8 shadow-card">
           <h2 className="text-2xl font-display font-bold mb-4">Weekly + monthly journal</h2>
           <TodayPrompt
@@ -190,9 +225,9 @@ function PatternCard({
 }
 
 function getWeeklyPatterns(
-  dailyItems: Array<{ id: string; label: string; kind: 'check' | 'output' }>,
+  dailyItems: Array<{ id: string; label: string; kind: 'check' | 'output' | 'score' }>,
   notToDos: Array<{ id: string; label: string }>,
-  logs: Array<{ item_id: string; date: string; value_bool: boolean; value_text: string | null }>,
+  logs: Array<{ item_id: string; date: string; value_bool: boolean; value_score?: number | null; value_text: string | null }>,
   days: string[],
 ) {
   const logByItemDate = new Map(logs.map((log) => [`${log.item_id}:${log.date}`, log]));
@@ -202,7 +237,9 @@ function getWeeklyPatterns(
     let best = 0;
     for (const day of days) {
       const log = logByItemDate.get(`${item.id}:${day}`);
-      const hit = item.kind === 'check'
+      const hit = item.kind === 'score'
+        ? Boolean(log?.value_score && log.value_score > 0)
+        : item.kind === 'check'
         ? Boolean(log?.value_bool)
         : Boolean(log?.value_text && log.value_text.trim());
       if (hit) {
@@ -247,6 +284,14 @@ function getWeeklyPatterns(
     breaches: `${breachCount} this week`,
     repeatedReason: repeatedReason ? `${repeatedReason[0]} (${repeatedReason[1]}x)` : 'No missed-reason pattern yet',
   };
+}
+
+function getPlanningPrompts(patterns: ReturnType<typeof getWeeklyPatterns>) {
+  return [
+    { label: 'Protect', value: patterns.bestStreak },
+    { label: 'Repair', value: patterns.mostSkipped },
+    { label: 'Reduce', value: patterns.breaches },
+  ];
 }
 
 export default Review;
