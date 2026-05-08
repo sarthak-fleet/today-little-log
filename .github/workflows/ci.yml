@@ -11,13 +11,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: latest
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22.19'
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: pnpm run --if-present lint
       - run: pnpm run --if-present build
       - run: pnpm run --if-present test

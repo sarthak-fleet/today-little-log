@@ -2,9 +2,10 @@
   "name": "today-little-log",
   "private": true,
   "version": "0.0.0",
+  "packageManager": "pnpm@11.0.8",
   "type": "module",
   "engines": {
-    "node": "20.x"
+    "node": ">=22.19.0"
   },
   "scripts": {
     "dev": "vite",
