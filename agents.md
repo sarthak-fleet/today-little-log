@@ -99,60 +99,62 @@ pnpm run deploy # vite build + wrangler pages deploy dist/
 <claude-mem-context>
 # Memory Context
 
-# [today-little-log] recent context, 2026-05-01 2:17pm GMT+5:30
+# [today-little-log] recent context, 2026-05-05 4:10pm GMT+5:30
 
 Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
 Format: ID TIME TYPE TITLE
 Fetch details: get_observations([IDs]) | Search: mem-search skill
 
-Stats: 0 obs (0t read) | 0t work
+Stats: 45 obs (15,964t read) | 363,850t work | 96% savings
 
 ### Apr 28, 2026
 S210 today-little-log — home page restructuring into separate routes, API routing fix for CF Pages, infrastructure cleanup, and GitHub Actions deploy pipeline planning (Apr 28 at 6:50 PM)
-**Investigated**: - Home page overload: 5 stacked surfaces (AM, PM, Today entry, Scoreboard, Past entries) all on `/`
-    - Components deleted in prune commit `9631951` (IdentitySetter, FocusMode, Review page, WeeklyAutoReport) — checked deps via git show
-    - FocusMode had `useQuickLogs`/`useDevLogs` dependencies (remove on restore)
-    - IdentitySetter.tsx had duplicate content (file written twice, `head -123` truncation fixed it)
-    - CF Pages API routing: `api/[resource].ts` is Vercel-style, never deployed; all dynamic routes returned HTML 200 (SPA fallback) instead of JSON
-    - Only `functions/api/scoreboard-*` and `functions/api/auth/*` existed as actual CF Pages functions
-    - All functions imported schema from `api/_lib/schema.ts` — duplicate of `src/db/schema.ts`
-    - `vercel.json` + `scripts/bundle-api.mjs` were dead Vercel relics
-    - PWA `registerType: "prompt"` requires user action; `autoUpdate` + `skipWaiting` + `clientsClaim` needed for immediate updates
-    - CF Pages git auto-deploy vs wrangler CLI output differ — git integration has stripped functions before (likely due to old `vercel.json` framework detection)
-    - Existing `saas-maker` repo has `foundry-ci.yml` reusable workflow — precedent for fleet-level GitHub Actions patterns
+### May 5, 2026
+1063 2:09a ⚖️ Personal app redesign — cut to 3 core features only
+1064 " 🔵 today-little-log codebase architecture — full structure mapped
+1065 " ⚖️ today-little-log redesign plan — 5-step implementation approach
+1066 2:10a ✅ Scoreboard schema extended — numeric monthly scoring columns added
+1067 2:11a 🟣 useScoreboard hook rewritten — month-scoped numeric scoring
+1068 " 🟣 Scoreboard API endpoints updated — month filtering, score_month/max_score/criteria fields, server-side score clamping
+1069 2:13a 🟣 Scoreboard component fully rebuilt — numeric daily scoring with month calendar view
+1070 " 🟣 Index page stripped to scoreboard-only; new Journal page created from Memories + old Index journal sections
+1071 " 🟣 Navigation pruned to 3 items — routes collapsed, dead pages redirect to home
+1072 2:14a 🔵 Review.tsx uses old useScoreboard API — dead code with stale item.category references
+1073 " ✅ ScoreboardItem backward compat fields added; StreakBadge removed from Navbar
+1074 " 🔵 TypeScript check: 1 error in dead Review.tsx; lint passes with 35 pre-existing warnings
+1075 " 🔴 Review.tsx TypeScript error fixed — score kind added to getWeeklyPatterns types
+1076 2:15a ✅ TypeScript + Vite build both pass after scoreboard redesign
+1077 " ✅ Complete changeset for 3-feature redesign — 12 files modified, 2 new files
+1078 3:49a ⚖️ Personal life tracking — points system architecture defined
+1079 4:05a ⚖️ Daily habit scoring system — point allocations finalized
+1080 4:12a 🔵 today-little-log scoreboard architecture — full stack mapped
+1081 " 🟣 today-little-log — May 2026 habit scoring matrix implemented with min/ideal/max bounds
+1082 " 🟣 Scoreboard API updated to persist and clamp min_score/ideal_score
+1083 4:13a 🟣 useScoreboard hook extended — min_score, ideal_score, trackingStartDate, config-only item filter
+1084 " 🔴 useScoreboard.ts — duplicate ternary branch syntax error in setLog after patch
+1085 " 🔴 useScoreboard.ts — three correctness fixes for min/ideal score support
+1086 4:14a 🟣 Scoreboard UI updated — ideal vs peak scoring, trackingStartDate, notCounted days
+1087 " ✅ today-little-log — TypeScript and wrangler builds pass after scoreboard scoring overhaul
+1088 " 🔵 today-little-log lint audit — 33 pre-existing warnings, 0 errors; build clean
+1089 4:15a 🔵 Scoreboard verified live in browser — all 12 items render, ideal/peak split correct, trackingStartDate working
+1090 " 🔵 playwright-cli fill fails with negative number arguments — parsed as CLI flags
+1091 " 🔵 Scoreboard interactive test — above-ideal focus score and day note both persist and render correctly
+1092 " 🔵 playwright-cli run-code does not expose `page` object — negative score testing blocked
+1093 4:16a 🔵 Negative score input confirmed working — total drops correctly; playwright-cli `-- -10` workaround succeeds
+1094 " ✅ Untitled
+1095 4:17a 🔵 today-little-log deployment architecture — Turso + wrangler Pages, migration 0009 needs manual apply before deploy
+1096 " 🔵 Turso CLI not authenticated — migration must run via drizzle-kit migrate using .env.local credentials
+1097 4:18a 🔵 Wrangler authenticated via CLOUDFLARE_API_TOKEN — deploy ready
+1098 4:19a 🔵 May 5 real-data score validated — 33/70 (47% ideal) with correct mixed positive/negative totaling
+1099 " 🔵 playwright-cli localstorage-get returns "key=value" format — breaks JSON.parse merge attempt
+1100 4:20a 🔵 Multi-day localStorage seed via direct node JSON generation — workaround for localstorage-get key=value format
+1101 " 🔵 Calendar correctly suppresses scores for future-dated logs even when data exists in localStorage
+1102 4:21a ✅ today-little-log deploy initiated — vite build succeeded, wrangler deploying with uncommitted changes warning
+1103 4:29a 🟣 Daily score calculator — input-driven instead of manual calculation
+1104 " 🔵 today-little-log scoreboard architecture — full stack mapped
+1105 4:31a 🟣 today-little-log — input-driven auto-scoring added to Scoreboard
+1106 " 🔄 Scoreboard.tsx — complete component rewrite, not incremental patch
+1107 4:32a 🔵 today-little-log build + lint status — 0 errors, 33 pre-existing warnings
 
-**Learned**: - CF Pages `[resource].ts` dynamic segment matches single `/api/<x>` paths; exact-match files win over dynamic
-    - CF Pages git auto-deploy runs its own remote build — can produce different artifact than local `wrangler pages deploy` (functions stripped)
-    - `vercel.json` presence was likely triggering wrong framework detection in CF's remote build
-    - Two deploy pipelines (CF git + wrangler CLI) race on push; latest write wins — must disable one
-    - Pre-push hooks gate code quality but cannot gate CF's remote build pipeline — orthogonal concerns
-    - FocusMode was 571 lines originally (2 copies concatenated in file); rewritten clean at ~190 lines removing dead `useQuickLogs`/`useDevLogs` deps
-    - `src/db/schema.ts` should be single source of truth; `api/_lib/schema.ts` was a manual duplicate requiring sync
-    - PWA `registerType: "prompt"` blocks auto-update; `autoUpdate` + `skipWaiting` + `clientsClaim` activates new SW immediately on next navigation
-
-**Completed**: - Created `/rituals` page (AmRitual + PmRitual, auto-orders by current hour)
-    - Created `/focus` page (FocusMode component, pomodoro with tab-switch XP penalty)
-    - Created `/memories` page (PastEntries + CalendarView + search)
-    - Created `/review` page (7-day Scoreboard breakdown + recent AM/PM + weekly/monthly journal)
-    - Restored `IdentitySetter` component from pre-prune commit, added to `/life` page
-    - Restored `FocusMode` as slim rewrite (~190 lines, no dead deps)
-    - Stripped home page (`/`) to hero + Scoreboard + Today entry only
-    - Updated `App.tsx` with 4 new routes, `AppSidebar` with 4 new nav items (Rituals, Focus, Memories, Review), `BottomNav` updated for mobile
-    - Created `functions/api/[resource].ts` — CF Pages dynamic router for profiles, daily-checkins, journal-entries, tasks, habits, habit-logs, user-stats
-    - All API endpoints verified: HTTP 401 (auth-gated JSON) for all data routes, HTTP 200 for `/api/auth/get-session`
-    - Consolidated to single schema: all `functions/` now import from `src/db/schema.ts`; deleted `api/_lib/schema.ts` duplicate
-    - Deleted entire legacy `api/` directory (15 files), `vercel.json`, `scripts/bundle-api.mjs`
-    - PWA updated: `registerType: autoUpdate`, `skipWaiting: true`, `clientsClaim: true`
-    - Added `lint-staged` pre-commit hook for fast TS/TSX ESLint on staged files
-    - `agents.md` fully rewritten to reflect current architecture (single schema, CF-only, 11 routes, deploy gotcha, secrets layout)
-    - All changes built and deployed; all 10 routes return correct HTTP codes
-    - Wrote PRD for reusable GitHub Actions CF Pages deploy workflow (fleet-level reusable in `saas-maker` repo)
-    - Commits: `25625a2` (page split), `1a06cf1` (API port), `585adde` (infra cleanup)
-
-**Next Steps**: - User needs to manually disconnect CF Pages git integration in Cloudflare dashboard (Pages → today-little-log → Settings → Builds & deployments → Disconnect from Git)
-    - Implement reusable GH Actions workflow in `saas-maker/.github/workflows/cf-pages-deploy.yml`
-    - Add caller workflow in `today-little-log/.github/workflows/deploy.yml`
-    - Add `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` as GitHub repo secrets
-    - Verify GH Actions deploy succeeds before disconnecting CF git integration
-    - Roll GH Actions workflow to other fleet projects
+Access 364k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>
