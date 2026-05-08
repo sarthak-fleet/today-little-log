@@ -7,9 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { LogOut, LogIn, Loader2, Cake, Moon, Sun } from 'lucide-react';
-import { differenceInDays, parseISO, isValid, format, getDaysInMonth, endOfMonth, endOfYear, differenceInCalendarDays } from 'date-fns';
+import { differenceInDays, parseISO, isValid, format, getDaysInMonth, endOfYear, differenceInCalendarDays } from 'date-fns';
 import { useLifeMath, AVERAGE_LIFESPAN_DAYS } from '@/hooks/useLifeMath';
-import { StreakBadge } from './StreakBadge';
 
 type TimeView = 'month' | 'year' | 'life';
 
@@ -64,7 +63,7 @@ export function Navbar({ isSaving = false }: NavbarProps) {
   const getTimeDisplay = () => {
     if (timeView === 'month') {
       return {
-        label: format(today, 'MMM\'yy'),
+        label: `${format(today, 'MMM')} '${format(today, 'yy')}`,
         value: `${stats.daysLeftMonth}d left`,
         percent: stats.monthPercent,
       };
@@ -152,9 +151,8 @@ export function Navbar({ isSaving = false }: NavbarProps) {
           </div>
         </div>
 
-        {/* Right: Streak + DOB setter + Dark mode toggle + User section */}
+        {/* Right: DOB setter + Dark mode toggle + User section */}
         <div className="flex items-center gap-2">
-          <StreakBadge />
           {isSaving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground mr-2" />}
 
           {isLoggedIn && !dayOfLife && (

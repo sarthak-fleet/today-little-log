@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Feather, CheckSquare, Skull, Sunrise, BookOpen, LineChart, Crosshair } from 'lucide-react';
+import { BookOpen, Brain, LineChart, Skull, Trophy } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -16,12 +16,10 @@ import {
 import { format } from 'date-fns';
 
 const navItems = [
-  { title: 'Home', url: '/', icon: Feather, shortcut: 'H' },
-  { title: 'Rituals', url: '/rituals', icon: Sunrise, shortcut: 'R' },
-  { title: 'Focus', url: '/focus', icon: Crosshair, shortcut: 'F' },
-  { title: 'Tasks', url: '/tasks', icon: CheckSquare, shortcut: 'T' },
-  { title: 'Memories', url: '/memories', icon: BookOpen, shortcut: 'M' },
-  { title: 'Review', url: '/review', icon: LineChart, shortcut: 'V' },
+  { title: 'Score', url: '/', icon: Trophy, shortcut: 'S' },
+  { title: 'Journal', url: '/journal', icon: BookOpen, shortcut: 'J' },
+  { title: 'Patterns', url: '/patterns', icon: Brain, shortcut: 'P' },
+  { title: 'Review', url: '/review', icon: LineChart, shortcut: 'R' },
   { title: 'Life', url: '/life', icon: Skull, shortcut: 'L' },
 ];
 
@@ -46,7 +44,7 @@ export function AppSidebar() {
           className="flex items-center gap-3 text-sidebar-foreground hover:text-sidebar-foreground/80 transition-colors group/logo"
         >
           <div className="sidebar-logo-icon relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary/90 to-accent/80 text-primary-foreground flex-shrink-0 shadow-sm">
-            <Feather className="h-4 w-4 relative z-10" />
+            <Trophy className="h-4 w-4 relative z-10" />
             <div className="absolute inset-0 rounded-xl bg-white/10" />
             <div className="absolute inset-0 rounded-xl opacity-0 group-hover/logo:opacity-100 transition-opacity duration-300 bg-gradient-to-br from-white/20 to-transparent" />
           </div>
@@ -58,7 +56,7 @@ export function AppSidebar() {
               transition: 'opacity 0.3s ease, transform 0.3s ease',
             }}
           >
-            <span className="font-display text-[13px] font-semibold whitespace-nowrap tracking-tight">Today Little Log</span>
+            <span className="font-display text-[13px] font-semibold whitespace-nowrap tracking-tight">Today Score</span>
             <span className="text-[11px] text-sidebar-foreground/50 whitespace-nowrap font-medium">{format(today, 'EEEE, MMM d')}</span>
           </div>
         </button>

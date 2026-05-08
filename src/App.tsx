@@ -1,36 +1,21 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { PostHogProvider } from "@saas-maker/posthog-client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
-import { useEffect } from "react";
-import { BrowserRouter, Routes, Route, Outlet, useLocation, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { PersistentLayout } from "./components/AppLayout";
-import { saasmaker } from "./lib/saasmaker";
-import { SaaSMakerFeedback } from "./components/saasmaker-feedback";
 import Index from "./pages/Index";
+import Journal from "./pages/Journal";
 import Auth from "./pages/Auth";
-import Tasks from "./pages/Tasks";
 import Life from "./pages/Life";
-import Eisenhower from "./pages/Eisenhower";
-import Memories from "./pages/Memories";
-import Rituals from "./pages/Rituals";
-import Focus from "./pages/Focus";
 import Review from "./pages/Review";
+import Patterns from "./pages/Patterns";
 import NotFound from "./pages/NotFound";
 import { useTabTitleCountdown } from "./hooks/useTabTitleCountdown";
 
 const queryClient = new QueryClient();
-
-function PageViewTracker() {
-  const location = useLocation();
-  useEffect(() => {
-    saasmaker.analytics.track({ name: 'page_view', url: location.pathname }).catch(() => {});
-  }, [location.pathname]);
-  return null;
-}
 
 function TabTitleCountdown() {
   useTabTitleCountdown();
@@ -46,28 +31,27 @@ function LayoutWrapper() {
 }
 
 const App = () => (
-  <PostHogProvider>
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="theme">
       <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <PageViewTracker />
           <TabTitleCountdown />
-          <SaaSMakerFeedback />
           <ErrorBoundary>
             <Routes>
               <Route element={<LayoutWrapper />}>
                 <Route path="/" element={<Index />} />
-                <Route path="/rituals" element={<Rituals />} />
-                <Route path="/focus" element={<Focus />} />
-                <Route path="/memories" element={<Memories />} />
-                <Route path="/review" element={<Review />} />
+                <Route path="/journal" element={<Journal />} />
+                <Route path="/patterns" element={<Patterns />} />
                 <Route path="/life" element={<Life />} />
-                <Route path="/habits" element={<Navigate to="/rituals" replace />} />
-                <Route path="/tasks" element={<Tasks />} />
-                <Route path="/eisenhower" element={<Eisenhower />} />
+                <Route path="/rituals" element={<Navigate to="/" replace />} />
+                <Route path="/focus" element={<Navigate to="/" replace />} />
+                <Route path="/memories" element={<Navigate to="/journal" replace />} />
+                <Route path="/review" element={<Review />} />
+                <Route path="/habits" element={<Navigate to="/" replace />} />
+                <Route path="/tasks" element={<Navigate to="/" replace />} />
+                <Route path="/eisenhower" element={<Navigate to="/" replace />} />
               </Route>
               <Route path="/auth" element={<Auth />} />
               <Route path="*" element={<NotFound />} />
@@ -77,7 +61,6 @@ const App = () => (
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
-  </PostHogProvider>
 );
 
 export default App;

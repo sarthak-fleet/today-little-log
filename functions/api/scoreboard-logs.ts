@@ -1,5 +1,5 @@
 import { and, desc, eq, gte } from 'drizzle-orm';
-import { scoreboardItems, scoreboardLogs } from '../../src/db/schema';
+import { scoreboardItems, scoreboardLogs, scoreboardMonthLocks } from '../../src/db/schema';
 import { createDb, requireUserId, json, type Env } from './_helpers';
 
 export const onRequest: PagesFunction<Env> = async (context) => {
@@ -32,18 +32,33 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const [item] = await db.select().from(scoreboardItems)
       .where(and(eq(scoreboardItems.id, item_id), eq(scoreboardItems.user_id, userId))).limit(1);
     if (!item) return json({ error: 'Item not found' }, { status: 404 });
+    if (await isMonthLocked(db, userId, item.score_month)) {
+      return json({ error: 'Month is locked' }, { status: 423 });
+    }
 
     const [existing] = await db.select().from(scoreboardLogs)
       .where(and(eq(scoreboardLogs.item_id, item_id), eq(scoreboardLogs.date, date))).limit(1);
 
+    const rawScore = body.value_score;
+    const valueScore = rawScore === null || rawScore === undefined
+      ? null
+      : Math.max(item.min_score, Math.min(item.max_score, Math.round(Number(rawScore) || 0)));
+
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (body.value_bool !== undefined) updates.value_bool = Boolean(body.value_bool);
-    if (body.value_text !== undefined) updates.value_text = body.value_text;
+    if (rawScore !== undefined) {
+      updates.value_score = valueScore;
+      updates.value_bool = Boolean(valueScore && valueScore > 0);
+    }
+    if (body.value_text !== undefined) updates.value_text = typeof body.value_text === 'string' ? body.value_text : null;
 
     if (!existing) {
       const [inserted] = await db.insert(scoreboardLogs).values({
-        user_id: userId, item_id, date,
-        value_bool: Boolean(body.value_bool ?? false),
+        user_id: userId,
+        item_id,
+        date,
+        value_bool: Boolean(valueScore && valueScore > 0),
+        value_score: valueScore,
         value_text: typeof body.value_text === 'string' ? body.value_text : null,
       }).returning();
       return json(inserted, { status: 201 });
@@ -56,3 +71,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   return json({ error: 'Method not allowed' }, { status: 405 });
 };
+
+async function isMonthLocked(db: ReturnType<typeof createDb>, userId: string, month: string) {
+  const [lock] = await db.select().from(scoreboardMonthLocks)
+    .where(and(eq(scoreboardMonthLocks.user_id, userId), eq(scoreboardMonthLocks.score_month, month)))
+    .limit(1);
+  return Boolean(lock);
+}

@@ -320,8 +320,14 @@ export const scoreboardItems = sqliteTable('scoreboard_items', {
   id: id(),
   user_id: userId(),
   label: text('label').notNull(),
-  // 'check' = boolean toggle; 'output' = short text/URL line.
-  kind: text('kind').notNull().default('check'),
+  // 'score' = numeric daily score against max_score. Legacy rows may still hold check/output.
+  kind: text('kind').notNull().default('score'),
+  score_month: text('score_month').notNull().default(''),
+  source_key: text('source_key'),
+  min_score: integer('min_score').notNull().default(0),
+  max_score: integer('max_score').notNull().default(1),
+  ideal_score: integer('ideal_score').notNull().default(1),
+  criteria: text('criteria'),
   position: integer('position').notNull().default(0),
   archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
   created_at: createdAt(),
@@ -334,7 +340,26 @@ export const scoreboardLogs = sqliteTable('scoreboard_logs', {
   item_id: text('item_id').notNull().references(() => scoreboardItems.id, { onDelete: 'cascade' }),
   date: text('date').notNull(),
   value_bool: integer('value_bool', { mode: 'boolean' }).notNull().default(false),
+  value_score: integer('value_score'),
   value_text: text('value_text'),
   created_at: createdAt(),
   updated_at: updatedAt(),
 }, (t) => [uniqueIndex('scoreboard_logs_item_date_idx').on(t.item_id, t.date)]);
+
+export const scoreboardDayNotes = sqliteTable('scoreboard_day_notes', {
+  id: id(),
+  user_id: userId(),
+  score_month: text('score_month').notNull(),
+  date: text('date').notNull(),
+  low_score_reason: text('low_score_reason'),
+  created_at: createdAt(),
+  updated_at: updatedAt(),
+}, (t) => [uniqueIndex('scoreboard_day_notes_user_date_idx').on(t.user_id, t.date)]);
+
+export const scoreboardMonthLocks = sqliteTable('scoreboard_month_locks', {
+  id: id(),
+  user_id: userId(),
+  score_month: text('score_month').notNull(),
+  locked_at: text('locked_at').notNull().$defaultFn(() => new Date().toISOString()),
+  created_at: createdAt(),
+}, (t) => [uniqueIndex('scoreboard_month_locks_user_month_idx').on(t.user_id, t.score_month)]);
