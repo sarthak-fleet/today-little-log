@@ -1,5 +1,9 @@
 # agents.md — today-little-log
 
+## Shared Fleet Standard
+
+Also read and follow the shared fleet-level agent standard at `../AGENTS.md`. Treat this repository as owned product code: protect production stability, keep changes scoped, verify work, and record durable follow-up tasks when something remains incomplete or blocked.
+
 ## Purpose
 Personal life PWA. Daily Scoreboard (user-defined check/output items, no-zero-day streak) + AM/PM rituals + journal + habits + Eisenhower tasks + memento mori life grid.
 
