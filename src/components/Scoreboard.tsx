@@ -144,7 +144,11 @@ function calculatedScore(item: ScoreboardItem, inputs: ScoreInputs): number {
   }
 }
 
-export function Scoreboard() {
+interface ScoreboardProps {
+  readOnly?: boolean;
+}
+
+export function Scoreboard({ readOnly = false }: ScoreboardProps) {
   const currentMonth = format(new Date(), 'yyyy-MM');
   const {
     items,
@@ -232,43 +236,47 @@ export function Scoreboard() {
                 <Lock className="h-3.5 w-3.5" />
                 Month locked
               </div>
-            ) : (
+            ) : !readOnly ? (
               <Button variant="outline" className="w-full" onClick={submitLockMonth}>
                 <Lock className="mr-2 h-4 w-4" />
                 Lock month
               </Button>
-            )}
+            ) : null}
           </div>
         </div>
       </section>
 
-      <section className="rounded-2xl border border-border bg-card p-4 md:p-6 shadow-soft">
-        <div className="mb-3 flex flex-col gap-1">
-          <h2 className="font-display text-lg font-bold text-foreground">Reason for low score</h2>
-          <p className="text-sm text-muted-foreground">
-            End the day with the real reason. This is attached to today's total score, not any single task.
-          </p>
-        </div>
-        <Textarea
-          disabled={isLocked}
-          value={dayNoteFor()?.low_score_reason ?? ''}
-          onChange={(event) => setLowScoreReason(event.target.value)}
-          placeholder="Why was today's score low?"
-          className="min-h-24 bg-background"
-        />
-      </section>
+      {!readOnly && (
+        <section className="rounded-2xl border border-border bg-card p-4 md:p-6 shadow-soft">
+          <div className="mb-3 flex flex-col gap-1">
+            <h2 className="font-display text-lg font-bold text-foreground">Reason for low score</h2>
+            <p className="text-sm text-muted-foreground">
+              End the day with the real reason. This is attached to today's total score, not any single task.
+            </p>
+          </div>
+          <Textarea
+            disabled={isLocked}
+            value={dayNoteFor()?.low_score_reason ?? ''}
+            onChange={(event) => setLowScoreReason(event.target.value)}
+            placeholder="Why was today's score low?"
+            className="min-h-24 bg-background"
+          />
+        </section>
+      )}
 
       <section className="rounded-2xl border border-border bg-card p-4 md:p-6 shadow-soft">
         <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="font-display text-xl font-bold text-foreground">
-              {format(new Date(), 'MMMM yyyy')} scoring matrix
+              {readOnly ? "Today's scores" : `${format(new Date(), 'MMMM yyyy')} scoring matrix`}
             </h2>
-            <p className="text-sm text-muted-foreground">
-              {isLocked
-                ? 'This month is locked. You can review it, but not change daily scores or reasons.'
-                : 'Fill the score every day. The monthly matrix is fixed for this month.'}
-            </p>
+            {!readOnly && (
+              <p className="text-sm text-muted-foreground">
+                {isLocked
+                  ? 'This month is locked. You can review it, but not change daily scores or reasons.'
+                  : 'Fill the score every day. The monthly matrix is fixed for this month.'}
+              </p>
+            )}
           </div>
           <div className="text-xs font-mono text-muted-foreground">{currentMonth}</div>
         </div>
@@ -300,6 +308,7 @@ export function Scoreboard() {
                 score={logFor(item.id)?.value_score}
                 note={logFor(item.id)?.value_text ?? ''}
                 isLocked={isLocked}
+                readOnly={readOnly}
                 onChange={(patch) => setLog(item.id, patch)}
               />
             ))}
@@ -307,7 +316,8 @@ export function Scoreboard() {
         )}
       </section>
 
-      <section className="rounded-2xl border border-border bg-card p-4 md:p-6 shadow-soft">
+      {!readOnly && (
+        <section className="rounded-2xl border border-border bg-card p-4 md:p-6 shadow-soft">
         <div className="mb-4 flex items-center gap-2">
           <CalendarDays className="h-4 w-4 text-primary" />
           <h2 className="font-display text-xl font-bold text-foreground">Month view</h2>
@@ -369,7 +379,8 @@ export function Scoreboard() {
             );
           })}
         </div>
-      </section>
+        </section>
+      )}
     </div>
   );
 }
@@ -379,12 +390,14 @@ function ScoreRow({
   score,
   note,
   isLocked,
+  readOnly,
   onChange,
 }: {
   item: ScoreboardItem;
   score: number | null | undefined;
   note: string;
   isLocked: boolean;
+  readOnly: boolean;
   onChange: (patch: { value_score?: number | null; value_text?: string | null }) => void;
 }) {
   const entryNote = parseEntryNote(note, item.source_key);
@@ -420,7 +433,7 @@ function ScoreRow({
               {item.ideal_score === item.max_score ? `/${item.max_score}` : `/${item.ideal_score} ideal`}
             </span>
           </div>
-          {item.criteria && (
+          {!readOnly && item.criteria && (
             <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{item.criteria}</p>
           )}
         </div>
@@ -430,6 +443,10 @@ function ScoreRow({
           {autoInputs ? (
             <div className="mt-1 font-display text-xl font-bold tabular-nums text-foreground">
               {scoreValue ?? 0}
+            </div>
+          ) : readOnly ? (
+            <div className="mt-1 font-display text-xl font-bold tabular-nums text-foreground">
+              {score ?? 0}
             </div>
           ) : (
             <Input
@@ -447,7 +464,7 @@ function ScoreRow({
         </div>
       </div>
 
-      {autoInputs && (
+      {autoInputs && !readOnly && (
         <ScoreInputsForm
           item={item}
           inputs={inputs}
@@ -456,19 +473,27 @@ function ScoreRow({
         />
       )}
 
-      {autoInputs && !entryNote && score !== null && score !== undefined && (
+      {autoInputs && !readOnly && !entryNote && score !== null && score !== undefined && (
         <div className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2 text-xs text-amber-800 dark:text-amber-200">
           This row has an older manual score. Enter raw inputs to replace it with an automatic score.
         </div>
       )}
 
-      <Input
-        disabled={isLocked}
-        value={proofNote}
-        onChange={(event) => updateNote(event.target.value)}
-        placeholder="Optional note / proof"
-        className="mt-3 bg-card text-sm"
-      />
+      {readOnly ? (
+        proofNote && (
+          <p className="mt-3 rounded-lg bg-card px-3 py-2 text-sm text-muted-foreground">
+            {proofNote}
+          </p>
+        )
+      ) : (
+        <Input
+          disabled={isLocked}
+          value={proofNote}
+          onChange={(event) => updateNote(event.target.value)}
+          placeholder="Optional note / proof"
+          className="mt-3 bg-card text-sm"
+        />
+      )}
     </div>
   );
 }

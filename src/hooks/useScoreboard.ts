@@ -142,7 +142,7 @@ export function useScoreboard(month: string = format(new Date(), 'yyyy-MM')) {
   const monthConfig = useMemo(() => getMonthlyScoreboardConfig(month), [month]);
   const trackingStartDate = monthConfig?.trackingStartDate ?? monthStart;
   const configuredKeys = useMemo(() => new Set(monthConfig?.items.map((item) => item.key) ?? []), [monthConfig]);
-  const usingGuestStorage = !user || storageMode === 'guest' || Boolean(monthConfig);
+  const usingGuestStorage = !user || storageMode === 'guest';
 
   const loadGuestState = useCallback(() => {
     const nextItems = syncConfiguredItemsForGuest(
@@ -166,7 +166,7 @@ export function useScoreboard(month: string = format(new Date(), 'yyyy-MM')) {
 
   useEffect(() => {
     if (loading) return;
-    if (user && !monthConfig) {
+    if (user) {
       Promise.all([
         apiFetch<ScoreboardItem[]>(`/api/scoreboard-items?month=${encodeURIComponent(month)}`).catch(() => []),
         apiFetch<ScoreboardLog[]>(`/api/scoreboard-logs?since=${monthStart}`).catch(() => []),
