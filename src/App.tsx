@@ -13,6 +13,8 @@ import Life from "./pages/Life";
 import Review from "./pages/Review";
 import Patterns from "./pages/Patterns";
 import NotFound from "./pages/NotFound";
+import About from "./pages/About";
+import Privacy from "./pages/Privacy";
 import { useTabTitleCountdown } from "./hooks/useTabTitleCountdown";
 
 const queryClient = new QueryClient();
@@ -52,6 +54,8 @@ const App = () => (
                 <Route path="/habits" element={<Navigate to="/" replace />} />
                 <Route path="/tasks" element={<Navigate to="/" replace />} />
                 <Route path="/eisenhower" element={<Navigate to="/" replace />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/privacy" element={<Privacy />} />
               </Route>
               <Route path="/auth" element={<Auth />} />
               <Route path="*" element={<NotFound />} />
