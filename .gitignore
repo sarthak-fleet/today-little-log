@@ -36,6 +36,9 @@ api/*.ts.bak
 .claude/settings.local.json
 .saasmaker.json
 
+# TypeScript build references
+*.tsbuildinfo
+
 # Playwright
 test-results/
 playwright-report/
