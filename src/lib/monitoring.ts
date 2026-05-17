@@ -1,12 +1,15 @@
 import { initPostHog, track } from '@saas-maker/posthog-client';
 
+const POSTHOG_KEY = 'phc_qgiAarw4Co4pw9fz3Fxj4UJaHmqzFetqs4JrXhGc35Nd';
+const POSTHOG_HOST = 'https://us.i.posthog.com';
+
 let installed = false;
 
 export function installBrowserMonitoring(): void {
   if (installed || typeof window === 'undefined') return;
   installed = true;
 
-  initPostHog();
+  initPostHog({ apiKey: POSTHOG_KEY, host: POSTHOG_HOST });
 
   window.addEventListener('error', (event) => {
     track('foundry_page_crash', {
