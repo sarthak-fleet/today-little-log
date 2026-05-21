@@ -17,12 +17,13 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:hidden pb-[env(safe-area-inset-bottom)]">
-      <div className="flex items-center h-14 gap-1 px-2">
+      <div className="flex items-stretch h-16 gap-1 px-2">
         {navItems.map((item) => (
           <button
             key={item.title}
             onClick={() => navigate(item.url)}
-            className={`flex flex-col items-center justify-center min-w-[56px] h-full gap-0.5 transition-colors ${
+            aria-label={item.title}
+            className={`flex flex-1 flex-col items-center justify-center min-w-[56px] min-h-[44px] gap-0.5 transition-colors ${
               isActive(item.url)
                 ? 'text-primary'
                 : 'text-muted-foreground hover:text-foreground'

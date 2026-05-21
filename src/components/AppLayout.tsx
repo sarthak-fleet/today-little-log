@@ -3,6 +3,7 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
 import { BottomNav } from './BottomNav';
 import { Navbar } from './Navbar';
+import { OfflineBanner } from './OfflineBanner';
 import { SavingProvider, useSaving } from './SavingContext';
 
 interface AppLayoutProps {
@@ -29,6 +30,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         <div className="hidden md:block w-12 flex-shrink-0" />
         <SidebarInset className="flex-1 flex flex-col min-w-0">
           <Navbar isSaving={isSaving} />
+          <OfflineBanner />
           <main className="flex-1 overflow-auto pb-20 md:pb-6">
             {children}
           </main>

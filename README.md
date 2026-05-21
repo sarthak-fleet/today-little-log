@@ -3,7 +3,16 @@
 ![AI Generated](https://ai-percentage-pin.vercel.app/api/ai-percentage?value=100)
 ![AI PRs Welcome](https://ai-percentage-pin.vercel.app/api/ai-prs?welcome=yes)
 
-A calm, focused daily journal, habit tracker, task manager, and schedule planner. Built with React, Vite, TypeScript, Better Auth, Turso, Drizzle, and a small set of Vercel serverless API routes.
+A calm, focused daily journal, habit tracker, task manager, and schedule planner. Built with React, Vite, TypeScript, Better Auth, Turso, Drizzle, and a Cloudflare Pages Functions backend.
+
+## Deployment & External Services
+
+| Concern | Service |
+|---------|---------|
+| Hosting | Cloudflare Pages (`today-little-log`) + Pages Functions backend (`functions/api/`) |
+| Database | Turso (libSQL) |
+| Auth | better-auth + Google OAuth |
+| CI/CD | GitHub Actions — auto-deploy on push to `main` |
 
 ## Stack
 
@@ -11,7 +20,7 @@ A calm, focused daily journal, habit tracker, task manager, and schedule planner
 - Tailwind CSS + shadcn/ui
 - Better Auth with Google sign-in
 - Turso/libSQL + Drizzle ORM
-- Vercel serverless functions under `api/`
+- Cloudflare Pages Functions under `functions/api/`
 - PWA via `vite-plugin-pwa`
 
 ## Development
@@ -40,4 +49,6 @@ npm run build
 
 ## Deploy
 
-Deployed on Vercel. Push to `main` to trigger a production deploy.
+Deployed on Cloudflare Pages (project `today-little-log`). Push to `main` triggers a
+production deploy via GitHub Actions (`wrangler pages deploy dist/`). The Pages
+Functions backend lives in `functions/api/`.

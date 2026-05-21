@@ -99,10 +99,10 @@ export function Navbar({ isSaving = false }: NavbarProps) {
   const crunch = life.isEndOfDayCrunch;
 
   return (
-    <header className="py-4 px-6 bg-background/80 backdrop-blur-md sticky top-0 z-50 border-b border-border/50">
-      <div className="max-w-6xl mx-auto flex items-center justify-between">
+    <header className="py-3 px-4 md:py-4 md:px-6 bg-background/80 backdrop-blur-md sticky top-0 z-50 border-b border-border/50">
+      <div className="max-w-6xl mx-auto flex items-center justify-between gap-2">
         {/* Left: Date + Time counter */}
-        <div className="flex items-center gap-5">
+        <div className="flex min-w-0 items-center gap-3 md:gap-5">
           <div className="flex flex-col">
             <span className="text-sm font-medium text-foreground">
               {format(today, 'EEEE')}
@@ -152,7 +152,7 @@ export function Navbar({ isSaving = false }: NavbarProps) {
         </div>
 
         {/* Right: DOB setter + Dark mode toggle + User section */}
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1 md:gap-2">
           {isSaving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground mr-2" />}
 
           {isLoggedIn && !dayOfLife && (
@@ -161,7 +161,8 @@ export function Navbar({ isSaving = false }: NavbarProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-muted-foreground hover:text-foreground gap-1 h-8"
+                  className="text-muted-foreground hover:text-foreground gap-1 h-11 md:h-8"
+                  aria-label="Set birthday"
                 >
                   <Cake className="h-4 w-4" />
                   <span className="hidden sm:inline">Set birthday</span>
@@ -188,8 +189,9 @@ export function Navbar({ isSaving = false }: NavbarProps) {
             variant="ghost"
             size="icon"
             onClick={toggleDarkMode}
-            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            className="h-11 w-11 md:h-8 md:w-8 text-muted-foreground hover:text-foreground"
             title={isDark ? 'Light mode' : 'Dark mode'}
+            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
@@ -206,8 +208,9 @@ export function Navbar({ isSaving = false }: NavbarProps) {
                 variant="ghost"
                 size="icon"
                 onClick={signOut}
-                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                className="h-11 w-11 md:h-8 md:w-8 text-muted-foreground hover:text-foreground"
                 title="Sign out"
+                aria-label="Sign out"
               >
                 <LogOut className="h-4 w-4" />
               </Button>
@@ -217,7 +220,8 @@ export function Navbar({ isSaving = false }: NavbarProps) {
               variant="default"
               size="sm"
               onClick={() => navigate('/auth')}
-              className="gap-1 h-8"
+              className="gap-1 h-11 px-3 md:h-8"
+              aria-label="Sign in"
             >
               <LogIn className="h-3 w-3" />
               <span className="hidden sm:inline">Sign in</span>

@@ -322,7 +322,7 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
           <CalendarDays className="h-4 w-4 text-primary" />
           <h2 className="font-display text-xl font-bold text-foreground">Month view</h2>
         </div>
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-7 gap-1 sm:gap-2">
           {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
             <div key={`${day}-${index}`} className="text-center text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
               {day}
@@ -342,7 +342,7 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
               <div
                 key={date}
                 title={reason ? `${date}: ${reason}` : date}
-                className={`min-h-20 rounded-lg border p-2 transition-colors ${
+                className={`min-h-16 rounded-lg border p-1.5 sm:min-h-20 sm:p-2 transition-colors ${
                   isToday(day)
                     ? 'border-primary bg-primary/10'
                     : future || notCounted
@@ -359,13 +359,13 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
                   {!future && !notCounted && idealToday > 0 && <span className="text-[10px] text-muted-foreground">{percent}%</span>}
                 </div>
                 {!future && notCounted && (
-                  <div className="mt-4 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  <div className="mt-2 text-[9px] font-semibold uppercase tracking-widest text-muted-foreground sm:mt-4 sm:text-[10px]">
                     Not counted
                   </div>
                 )}
                 {!future && !notCounted && (
                   <>
-                    <div className="mt-4 text-sm font-display font-bold tabular-nums">
+                    <div className="mt-2 text-xs font-display font-bold tabular-nums sm:mt-4 sm:text-sm">
                       {total}<span className="text-muted-foreground">/{idealToday}</span>
                     </div>
                     {reason && (

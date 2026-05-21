@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '@/lib/api';
+import { trackCoreAction } from '@/lib/analytics';
 import { useAuth } from './useAuth';
 
 export type EntryType = 'daily' | 'weekly' | 'monthly' | 'next_week';
@@ -132,6 +133,9 @@ export function useJournalEntries() {
 
   const saveEntry = async (content: string, date?: string, entryType: EntryType = 'daily') => {
     setIsSaving(true);
+
+    // Analytics — core action: a journal entry was saved. Best-effort.
+    trackCoreAction('journal_saved');
 
     let targetDate = date;
     if (!targetDate) {

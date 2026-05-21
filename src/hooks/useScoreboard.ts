@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '@/lib/api';
+import { trackActivatedOnce, trackCoreAction } from '@/lib/analytics';
 import { useAuth } from './useAuth';
 import { endOfMonth, format, startOfMonth } from 'date-fns';
 import { getMonthlyScoreboardConfig, type MonthlyScoreboardEntryConfig, type MonthlyScoreboardItemConfig } from '@/config/monthlyScoreboards';
@@ -325,6 +326,13 @@ export function useScoreboard(month: string = format(new Date(), 'yyyy-MM')) {
       value_score: score,
       value_text: patch.value_text,
     };
+
+    // Analytics — core action: a score was logged. `activated` fires once,
+    // on the user's first logged score. Both are best-effort, never blocking.
+    if (score !== undefined && score !== null) {
+      trackActivatedOnce();
+      trackCoreAction('scoreboard_logged');
+    }
 
     if (!usingGuestStorage) {
       const saved = await apiFetch<ScoreboardLog>('/api/scoreboard-logs', {

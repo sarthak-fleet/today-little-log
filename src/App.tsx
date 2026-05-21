@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { AnalyticsTracker } from "./components/AnalyticsTracker";
 import { PersistentLayout } from "./components/AppLayout";
 import Index from "./pages/Index";
 import Journal from "./pages/Journal";
@@ -40,6 +41,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <TabTitleCountdown />
+          <AnalyticsTracker />
           <ErrorBoundary>
             <Routes>
               <Route element={<LayoutWrapper />}>
