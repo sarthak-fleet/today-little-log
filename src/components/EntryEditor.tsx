@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Check, Pencil, X } from 'lucide-react';
+import { Check, Loader2, Pencil, X } from 'lucide-react';
 import { type EntryType, type JournalEntry } from '@/hooks/useJournalEntries';
 
 interface EntryEditorProps {
@@ -10,9 +10,10 @@ interface EntryEditorProps {
   title: string;
   placeholder: string;
   onSave: (content: string, entryType: EntryType) => void;
+  isSaving?: boolean;
 }
 
-export function EntryEditor({ entry, entryType, title, placeholder, onSave }: EntryEditorProps) {
+export function EntryEditor({ entry, entryType, title, placeholder, onSave, isSaving = false }: EntryEditorProps) {
   const [content, setContent] = useState(entry?.content || '');
   const [isEditing, setIsEditing] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
@@ -22,7 +23,7 @@ export function EntryEditor({ entry, entryType, title, placeholder, onSave }: En
       setContent(entry.content);
       setIsEditing(false);
     }
-  }, [entry?.content]);
+  }, [entry?.content, entry?.id]);
 
   const handleSave = () => {
     if (content.trim()) {
@@ -64,15 +65,17 @@ export function EntryEditor({ entry, entryType, title, placeholder, onSave }: En
             autoFocus
           />
           <div className="mt-4 flex justify-end gap-2">
-            {entry?.content && (
-              <Button variant="ghost" onClick={handleCancel} className="gap-2">
-                <X className="h-4 w-4" />
-                Cancel
-              </Button>
-            )}
-            <Button onClick={handleSave} disabled={!content.trim()} className="gap-2">
-              <Check className="h-4 w-4" />
-              Save
+            <Button variant="ghost" onClick={handleCancel} disabled={isSaving} className="gap-2">
+              <X className="h-4 w-4" />
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={!content.trim() || isSaving} className="gap-2">
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Check className="h-4 w-4" />
+              )}
+              {isSaving ? 'Saving…' : 'Save'}
             </Button>
           </div>
         </>

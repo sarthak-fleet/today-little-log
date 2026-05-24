@@ -1,33 +1,11 @@
 import { useState } from 'react';
 import { type JournalEntry, type EntryType } from '@/hooks/useJournalEntries';
-import { BookOpen, Pencil, Trash2, Check, X, Calendar, CalendarDays, Heart, DollarSign, Users, Briefcase, Sparkles, FolderKanban } from 'lucide-react';
+import { BookOpen, Pencil, Trash2, Check, X, Calendar, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-
-const CATEGORY_META: Record<string, { label: string; icon: React.ComponentType<{ className?: string }> }> = {
-  general: { label: 'General', icon: BookOpen },
-  health: { label: 'Health', icon: Heart },
-  finance: { label: 'Finance', icon: DollarSign },
-  relationships: { label: 'Relationships', icon: Users },
-  career: { label: 'Career', icon: Briefcase },
-  knowledge: { label: 'Knowledge', icon: BookOpen },
-  novelty: { label: 'Novelty', icon: Sparkles },
-  projects: { label: 'Projects', icon: FolderKanban },
-};
-
-const parseEntryContent = (content: string): Record<string, string> => {
-  try {
-    const parsed = JSON.parse(content);
-    if (typeof parsed === 'object' && parsed !== null) {
-      return parsed;
-    }
-  } catch {
-    // Legacy plain text
-  }
-  return { general: content };
-};
+import { CATEGORY_META, getFilledCategories } from '@/lib/journalContent';
 
 interface PastEntriesProps {
   entries: JournalEntry[];
@@ -35,9 +13,10 @@ interface PastEntriesProps {
   onDelete: (id: string) => void;
   hasMore?: boolean;
   onLoadMore?: () => void;
+  searchQuery?: string;
 }
 
-export function PastEntries({ entries, onUpdate, onDelete, hasMore, onLoadMore }: PastEntriesProps) {
+export function PastEntries({ entries, onUpdate, onDelete, hasMore, onLoadMore, searchQuery = '' }: PastEntriesProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
 
@@ -126,8 +105,17 @@ export function PastEntries({ entries, onUpdate, onDelete, hasMore, onLoadMore }
     return (
       <div className="text-center py-12">
         <BookOpen className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
-        <p className="text-sm font-medium text-muted-foreground">No entries yet</p>
-        <p className="text-xs text-muted-foreground/70 mt-1">Start writing to see your history here</p>
+        {searchQuery ? (
+          <>
+            <p className="text-sm font-medium text-muted-foreground">No matching entries</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">Try a different search term</p>
+          </>
+        ) : (
+          <>
+            <p className="text-sm font-medium text-muted-foreground">No past entries yet</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">After today&apos;s entry is saved, older days show up here</p>
+          </>
+        )}
       </div>
     );
   }
@@ -158,18 +146,24 @@ export function PastEntries({ entries, onUpdate, onDelete, hasMore, onLoadMore }
                   </div>
                   {getEntryBadge(entry.entry_type)}
                 </div>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity">
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                    aria-label="Edit entry"
                     onClick={() => startEditing(entry)}
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                        aria-label="Delete entry"
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </AlertDialogTrigger>
@@ -200,7 +194,7 @@ export function PastEntries({ entries, onUpdate, onDelete, hasMore, onLoadMore }
                       <X className="h-4 w-4 mr-1" />
                       Cancel
                     </Button>
-                    <Button size="sm" onClick={() => saveEdit(entry.id)}>
+                    <Button size="sm" onClick={() => saveEdit(entry.id)} disabled={!editContent.trim()}>
                       <Check className="h-4 w-4 mr-1" />
                       Save
                     </Button>
@@ -208,24 +202,19 @@ export function PastEntries({ entries, onUpdate, onDelete, hasMore, onLoadMore }
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {(() => {
-                    const cats = parseEntryContent(entry.content);
-                    const filled = Object.entries(cats).filter(([, v]) => typeof v === 'string' && v.trim().length > 0);
-                    return filled.map(([key, value]) => {
-                      const meta = CATEGORY_META[key];
-                      const Icon = meta?.icon || BookOpen;
-                      const label = meta?.label || key;
-                      return (
-                        <div key={key} className="flex gap-2 text-sm">
-                          <div className="flex items-center gap-1.5 text-muted-foreground min-w-[110px] flex-shrink-0">
-                            <Icon className="h-3.5 w-3.5" />
-                            <span className="font-medium text-xs uppercase tracking-wide">{label}</span>
-                          </div>
-                          <p className="text-journal-ink leading-relaxed">{value}</p>
+                  {getFilledCategories(entry.content).map(({ key, label, value }) => {
+                    const meta = CATEGORY_META[key];
+                    const Icon = meta?.icon || BookOpen;
+                    return (
+                      <div key={key} className="flex gap-2 text-sm">
+                        <div className="flex items-center gap-1.5 text-muted-foreground min-w-[110px] flex-shrink-0">
+                          <Icon className="h-3.5 w-3.5" />
+                          <span className="font-medium text-xs uppercase tracking-wide">{label}</span>
                         </div>
-                      );
-                    });
-                  })()}
+                        <p className="text-journal-ink leading-relaxed whitespace-pre-wrap">{value}</p>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

@@ -26,6 +26,7 @@ import { useScoreboard, type ScoreboardItem, type ScoreboardLog } from '@/hooks/
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { TodayPrompt } from '@/components/TodayPrompt';
 import { EntryEditor } from '@/components/EntryEditor';
+import { formatEntryPreview } from '@/lib/journalContent';
 
 const Review = () => {
   const { rows: checkins } = useDailyCheckins();
@@ -40,6 +41,8 @@ const Review = () => {
     saveEntry,
     isSunday,
     isLastDayOfMonth,
+    isLoaded: journalLoaded,
+    isSaving: journalSaving,
   } = useJournalEntries();
 
   const today = useMemo(() => new Date(), []);
@@ -212,9 +215,14 @@ const Review = () => {
 
             {weekEntries.length > 0 && (
               <div className="rounded-2xl bg-card border border-border p-4 md:p-5">
-                <div className="flex items-center gap-2 text-muted-foreground mb-3">
-                  <BookOpen className="h-3.5 w-3.5" />
-                  <span className="text-[11px] uppercase tracking-widest">Daily entries this week</span>
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <BookOpen className="h-3.5 w-3.5" />
+                    <span className="text-[11px] uppercase tracking-widest">Daily entries this week</span>
+                  </div>
+                  <Link to="/journal" className="text-xs font-medium text-primary hover:underline">
+                    Open journal
+                  </Link>
                 </div>
                 <ul className="space-y-3">
                   {weekEntries.map((entry) => (
@@ -226,7 +234,7 @@ const Review = () => {
                         {format(parseISO(entry.date), 'EEEE, MMM d')}
                       </div>
                       <p className="whitespace-pre-wrap text-foreground line-clamp-6">
-                        {entry.content}
+                        {formatEntryPreview(entry.content) || entry.content}
                       </p>
                     </li>
                   ))}
@@ -298,19 +306,36 @@ const Review = () => {
             title={`Plan for week of ${nextWeekStart}`}
             placeholder="Pick 3 outcomes, 1 constraint to remove, and the first Monday action."
             onSave={(content, type) => saveEntry(content, undefined, type)}
+            isSaving={journalSaving}
           />
         </div>
 
         <div className="bg-card rounded-3xl p-5 md:p-8 shadow-card">
           <h2 className="text-2xl font-display font-bold mb-4">Weekly + monthly journal</h2>
-          <TodayPrompt
-            todayEntry={getTodayEntry()}
-            weeklyEntry={getWeeklyEntry()}
-            monthlyEntry={getMonthlyEntry()}
-            isSunday={isSunday()}
-            isLastDayOfMonth={isLastDayOfMonth()}
-            onSave={(content, type) => saveEntry(content, undefined, type)}
-          />
+          {!journalLoaded ? (
+            <div className="space-y-3 animate-pulse">
+              <div className="h-5 w-40 bg-muted/40 rounded" />
+              <div className="h-32 w-full bg-muted/40 rounded-xl" />
+            </div>
+          ) : (
+            <>
+              <TodayPrompt
+                todayEntry={getTodayEntry()}
+                weeklyEntry={getWeeklyEntry()}
+                monthlyEntry={getMonthlyEntry()}
+                isSunday={isSunday()}
+                isLastDayOfMonth={isLastDayOfMonth()}
+                onSave={(content, type) => saveEntry(content, undefined, type)}
+                hideDaily
+                isSaving={journalSaving}
+              />
+              {!isSunday() && !isLastDayOfMonth() && (
+                <p className="text-sm text-muted-foreground mt-4">
+                  Weekly reflection unlocks on Sunday. Monthly summary unlocks on the last day of the month.
+                </p>
+              )}
+            </>
+          )}
         </div>
       </section>
     </div>

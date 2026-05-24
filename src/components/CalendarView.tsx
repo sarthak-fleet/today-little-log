@@ -1,33 +1,13 @@
 import { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { type JournalEntry, type EntryType } from '@/hooks/useJournalEntries';
-import { format } from 'date-fns';
-import { X, Pencil, Trash2, Check, CalendarDays, Calendar as CalendarIcon, Heart, DollarSign, Users, Briefcase, BookOpen, Sparkles, FolderKanban } from 'lucide-react';
+import { format, isSameDay } from 'date-fns';
+import { X, Pencil, Trash2, Check, CalendarDays, Calendar as CalendarIcon, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-
-const CATEGORY_META: Record<string, { label: string; icon: React.ComponentType<{ className?: string }> }> = {
-  general: { label: 'General', icon: BookOpen },
-  health: { label: 'Health', icon: Heart },
-  finance: { label: 'Finance', icon: DollarSign },
-  relationships: { label: 'Relationships', icon: Users },
-  career: { label: 'Career', icon: Briefcase },
-  knowledge: { label: 'Knowledge', icon: BookOpen },
-  novelty: { label: 'Novelty', icon: Sparkles },
-  projects: { label: 'Projects', icon: FolderKanban },
-};
-
-const parseEntryContent = (content: string): Record<string, string> => {
-  try {
-    const parsed = JSON.parse(content);
-    if (typeof parsed === 'object' && parsed !== null) return parsed;
-  } catch {
-    // fall through to plain-text fallback below
-  }
-  return { general: content };
-};
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { CATEGORY_META, getFilledCategories } from '@/lib/journalContent';
 
 interface CalendarViewProps {
   entries: JournalEntry[];
@@ -36,7 +16,8 @@ interface CalendarViewProps {
 }
 
 export function CalendarView({ entries, onUpdate, onDelete }: CalendarViewProps) {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const today = new Date();
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(today);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
 
@@ -48,6 +29,7 @@ export function CalendarView({ entries, onUpdate, onDelete }: CalendarViewProps)
   };
 
   const selectedEntries = selectedDate ? getEntriesForDate(selectedDate) : [];
+  const isTodaySelected = selectedDate ? isSameDay(selectedDate, today) : false;
 
   const startEditing = (entry: JournalEntry) => {
     setEditingId(entry.id);
@@ -79,24 +61,35 @@ export function CalendarView({ entries, onUpdate, onDelete }: CalendarViewProps)
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-display font-medium text-foreground">
-        Calendar View
-      </h2>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-xl font-display font-medium text-foreground">
+          Calendar View
+        </h2>
+        {selectedDate && !isTodaySelected && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="self-start"
+            onClick={() => setSelectedDate(today)}
+          >
+            Jump to today
+          </Button>
+        )}
+      </div>
 
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* Calendar */}
         <div className="journal-paper rounded-xl shadow-card p-4">
           <Calendar
             mode="single"
             selected={selectedDate}
             onSelect={(date) => {
-              // Toggle off if clicking the same date
               setSelectedDate(prev => prev && date && format(prev, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd') ? undefined : date);
+              cancelEditing();
             }}
             className="pointer-events-auto"
             modifiers={{
               hasEntry: (date) => entryDates.includes(format(date, 'yyyy-MM-dd')),
-              today: (date) => format(date, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd'),
+              today: (date) => format(date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd'),
             }}
             modifiersStyles={{
               hasEntry: {
@@ -112,12 +105,14 @@ export function CalendarView({ entries, onUpdate, onDelete }: CalendarViewProps)
           />
         </div>
 
-        {/* Selected Date Entries */}
         <div className="flex-1 min-w-0">
           {selectedDate ? (
             <div className="space-y-4">
               <h3 className="font-display font-medium text-foreground">
                 {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+                {isTodaySelected && (
+                  <span className="ml-2 text-xs font-sans uppercase tracking-widest text-primary">Today</span>
+                )}
               </h3>
 
               {selectedEntries.length > 0 ? (
@@ -131,23 +126,38 @@ export function CalendarView({ entries, onUpdate, onDelete }: CalendarViewProps)
                         <div className="flex items-center gap-2">
                           {getEntryBadge(entry.entry_type)}
                         </div>
-                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity">
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7"
+                            className="h-9 w-9"
+                            aria-label="Edit entry"
                             onClick={() => startEditing(entry)}
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 hover:text-destructive"
-                            onClick={() => onDelete(entry.id)}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-9 w-9 hover:text-destructive"
+                                aria-label="Delete entry"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete entry?</AlertDialogTitle>
+                                <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => onDelete(entry.id)}>Delete</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </div>
 
@@ -164,7 +174,7 @@ export function CalendarView({ entries, onUpdate, onDelete }: CalendarViewProps)
                               <X className="h-4 w-4 mr-1" />
                               Cancel
                             </Button>
-                            <Button size="sm" onClick={() => saveEdit(entry.id)}>
+                            <Button size="sm" onClick={() => saveEdit(entry.id)} disabled={!editContent.trim()}>
                               <Check className="h-4 w-4 mr-1" />
                               Save
                             </Button>
@@ -172,33 +182,35 @@ export function CalendarView({ entries, onUpdate, onDelete }: CalendarViewProps)
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          {(() => {
-                            const cats = parseEntryContent(entry.content);
-                            const filled = Object.entries(cats).filter(([, v]) => typeof v === 'string' && v.trim().length > 0);
-                            return filled.map(([key, value]) => {
-                              const meta = CATEGORY_META[key];
-                              const Icon = meta?.icon || BookOpen;
-                              const label = meta?.label || key;
-                              return (
-                                <div key={key} className="flex gap-2 text-sm">
-                                  <div className="flex items-center gap-1.5 text-muted-foreground min-w-[110px] flex-shrink-0">
-                                    <Icon className="h-3.5 w-3.5" />
-                                    <span className="font-medium text-xs uppercase tracking-wide">{label}</span>
-                                  </div>
-                                  <p className="text-journal-ink leading-relaxed whitespace-pre-wrap">{value}</p>
+                          {getFilledCategories(entry.content).map(({ key, label, value }) => {
+                            const meta = CATEGORY_META[key];
+                            const Icon = meta?.icon || BookOpen;
+                            return (
+                              <div key={key} className="flex gap-2 text-sm">
+                                <div className="flex items-center gap-1.5 text-muted-foreground min-w-[110px] flex-shrink-0">
+                                  <Icon className="h-3.5 w-3.5" />
+                                  <span className="font-medium text-xs uppercase tracking-wide">{label}</span>
                                 </div>
-                              );
-                            });
-                          })()}
+                                <p className="text-journal-ink leading-relaxed whitespace-pre-wrap">{value}</p>
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-muted-foreground text-sm">
-                  No entries for this date
-                </p>
+                <div className="rounded-xl border border-dashed border-border bg-muted/20 p-5 text-sm text-muted-foreground">
+                  {isTodaySelected ? (
+                    <>
+                      <p className="font-medium text-foreground">No entry for today yet.</p>
+                      <p className="mt-1">Use the daily prompt above to log your first categories.</p>
+                    </>
+                  ) : (
+                    <p>No entries for this date.</p>
+                  )}
+                </div>
               )}
             </div>
           ) : (

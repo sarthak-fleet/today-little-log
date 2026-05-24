@@ -18,7 +18,7 @@ const Index = () => {
       )}
 
       <main className="mx-auto max-w-5xl px-4 py-6 md:py-8">
-        <Scoreboard readOnly />
+        <Scoreboard />
       </main>
     </div>
   );

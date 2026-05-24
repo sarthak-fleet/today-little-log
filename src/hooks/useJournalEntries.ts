@@ -20,6 +20,7 @@ export function useJournalEntries() {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const { user } = useAuth();
 
   const [hasMore, setHasMore] = useState(true);
@@ -30,6 +31,7 @@ export function useJournalEntries() {
       const currentOffset = loadMore ? entries.length : 0;
 
       try {
+        if (!loadMore) setLoadError(null);
         const result = await apiFetch<{ data: JournalEntry[], hasMore: boolean }>(
           '/api/journal-entries?offset=' + currentOffset + '&limit=' + PAGE_SIZE
         );
@@ -69,12 +71,22 @@ export function useJournalEntries() {
         }
       } catch (error) {
         console.error('Failed to fetch entries:', error);
+        if (!loadMore) {
+          setLoadError('Could not load journal entries. Check your connection and try again.');
+        }
       }
     } else {
       // Guest mode - use localStorage
-      const savedEntries = localStorage.getItem(STORAGE_KEY);
-      setEntries(savedEntries ? JSON.parse(savedEntries) : []);
-      setHasMore(false);
+      try {
+        const savedEntries = localStorage.getItem(STORAGE_KEY);
+        setEntries(savedEntries ? JSON.parse(savedEntries) : []);
+        setHasMore(false);
+        setLoadError(null);
+      } catch {
+        setEntries([]);
+        setHasMore(false);
+        setLoadError('Could not read saved journal entries from this device.');
+      }
     }
     setIsLoaded(true);
   }, [user, entries.length]);
@@ -265,10 +277,17 @@ export function useJournalEntries() {
     }
   };
 
+  const retryLoad = () => {
+    setIsLoaded(false);
+    fetchEntries(false);
+  };
+
   return {
     entries,
     isLoaded,
     isSaving,
+    loadError,
+    retryLoad,
     isLoggedIn: !!user,
     hasMore,
     loadMore,

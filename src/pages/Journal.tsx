@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useReportSaving } from '@/components/SavingContext';
 import { type EntryType, useJournalEntries } from '@/hooks/useJournalEntries';
-import { BookOpen, CalendarDays, List, Search, X } from 'lucide-react';
+import { AlertCircle, BookOpen, CalendarDays, List, RefreshCw, Search, X } from 'lucide-react';
 
 const Journal = () => {
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
@@ -23,6 +23,8 @@ const Journal = () => {
     deleteEntry,
     isLoaded,
     isSaving,
+    loadError,
+    retryLoad,
     isSunday,
     isLastDayOfMonth,
     hasMore,
@@ -51,6 +53,24 @@ const Journal = () => {
           Journal
         </div>
 
+        {loadError && (
+          <div className="mb-5 rounded-2xl border border-destructive/30 bg-destructive/5 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">Couldn&apos;t load journal</p>
+                  <p className="text-sm text-muted-foreground">{loadError}</p>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" onClick={retryLoad} className="self-start gap-2">
+                <RefreshCw className="h-4 w-4" />
+                Retry
+              </Button>
+            </div>
+          </div>
+        )}
+
         <div className="rounded-2xl border border-border bg-card p-4 md:p-6 shadow-soft">
           {isLoaded ? (
             <TodayPrompt
@@ -60,6 +80,7 @@ const Journal = () => {
               isSunday={isSunday()}
               isLastDayOfMonth={isLastDayOfMonth()}
               onSave={handleSave}
+              isSaving={isSaving}
             />
           ) : (
             <JournalSkeleton />
@@ -100,6 +121,7 @@ const Journal = () => {
                 size="icon"
                 className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2"
                 onClick={() => setSearchQuery('')}
+                aria-label="Clear search"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -121,7 +143,14 @@ const Journal = () => {
               onDelete={deleteEntry}
               hasMore={hasMore && !searchQuery}
               onLoadMore={loadMore}
+              searchQuery={searchQuery}
             />
+          ) : searchQuery && filteredAllEntries.length === 0 ? (
+            <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-soft">
+              <Search className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
+              <p className="text-sm font-medium text-muted-foreground">No matching entries</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">Try a different search term</p>
+            </div>
           ) : (
             <div className="rounded-2xl border border-border bg-card p-4 shadow-soft md:p-6">
               <CalendarView
