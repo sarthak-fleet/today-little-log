@@ -20,6 +20,26 @@ export const CATEGORY_META: Record<string, { label: string; icon: LucideIcon }> 
   projects: { label: 'Projects', icon: FolderKanban },
 };
 
+export const MOOD_META: Record<string, { emoji: string; label: string }> = {
+  great: { emoji: '🌟', label: 'Great' },
+  good: { emoji: '😊', label: 'Good' },
+  okay: { emoji: '😐', label: 'Okay' },
+  low: { emoji: '😔', label: 'Low' },
+  drained: { emoji: '😴', label: 'Drained' },
+};
+
+export function getMoodFromContent(content: string): string | null {
+  try {
+    const parsed = JSON.parse(content);
+    if (typeof parsed === 'object' && parsed !== null && typeof parsed.mood === 'string') {
+      return parsed.mood;
+    }
+  } catch {
+    // plain-text or legacy entry
+  }
+  return null;
+}
+
 export function parseEntryContent(content: string): Record<string, string> {
   try {
     const parsed = JSON.parse(content);
@@ -35,7 +55,7 @@ export function parseEntryContent(content: string): Record<string, string> {
 export function getFilledCategories(content: string): Array<{ key: string; label: string; value: string }> {
   const cats = parseEntryContent(content);
   return Object.entries(cats)
-    .filter(([, value]) => typeof value === 'string' && value.trim().length > 0)
+    .filter(([key, value]) => key !== 'mood' && typeof value === 'string' && value.trim().length > 0)
     .map(([key, value]) => ({
       key,
       label: CATEGORY_META[key]?.label ?? key,

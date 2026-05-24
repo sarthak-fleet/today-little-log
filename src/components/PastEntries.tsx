@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { CATEGORY_META, getFilledCategories } from '@/lib/journalContent';
+import { CATEGORY_META, MOOD_META, getFilledCategories, getMoodFromContent } from '@/lib/journalContent';
 
 interface PastEntriesProps {
   entries: JournalEntry[];
@@ -135,7 +135,7 @@ export function PastEntries({ entries, onUpdate, onDelete, hasMore, onLoadMore, 
           >
             <div className="journal-paper rounded-lg shadow-soft p-5 transition-all duration-300 hover:shadow-card hover:-translate-y-0.5">
               <div className="flex items-start justify-between mb-3">
-                <div className="flex items-start gap-2">
+                <div className="flex items-start gap-2 flex-wrap">
                   <div>
                     <p className="font-display font-medium text-foreground">
                       {formatDate(entry.date, entry.entry_type)}
@@ -145,6 +145,15 @@ export function PastEntries({ entries, onUpdate, onDelete, hasMore, onLoadMore, 
                     </p>
                   </div>
                   {getEntryBadge(entry.entry_type)}
+                  {entry.entry_type === 'daily' && (() => {
+                    const mood = getMoodFromContent(entry.content);
+                    if (!mood || !MOOD_META[mood]) return null;
+                    return (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/30 px-2 py-0.5 text-xs text-muted-foreground">
+                        {MOOD_META[mood].emoji} {MOOD_META[mood].label}
+                      </span>
+                    );
+                  })()}
                 </div>
                 <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity">
                   <Button

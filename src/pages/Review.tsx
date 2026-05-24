@@ -26,7 +26,7 @@ import { useScoreboard, type ScoreboardItem, type ScoreboardLog } from '@/hooks/
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { TodayPrompt } from '@/components/TodayPrompt';
 import { EntryEditor } from '@/components/EntryEditor';
-import { formatEntryPreview } from '@/lib/journalContent';
+import { formatEntryPreview, getMoodFromContent, MOOD_META } from '@/lib/journalContent';
 
 const Review = () => {
   const { rows: checkins } = useDailyCheckins();
@@ -115,6 +115,10 @@ const Review = () => {
     [dailyItems, notToDos, logs, thisWeekDays],
   );
   const planningPrompts = useMemo(() => getPlanningPrompts(patterns), [patterns]);
+  const reflectionQuestion = useMemo(
+    () => getReflectionQuestion(thisWeekAvg, daysLogged, patterns),
+    [thisWeekAvg, daysLogged, patterns],
+  );
 
   const nextWeekStart = format(new Date(getNextWeekKey()), 'MMM d');
   const weekCheckins = checkins.filter((c) => c.date >= thisWeekDays[0] && c.date <= thisWeekDays[thisWeekDays.length - 1]);
@@ -225,20 +229,40 @@ const Review = () => {
                   </Link>
                 </div>
                 <ul className="space-y-3">
-                  {weekEntries.map((entry) => (
-                    <li
-                      key={entry.id}
-                      className="rounded-xl border border-border bg-background p-3 text-sm"
-                    >
-                      <div className="text-[11px] font-mono text-muted-foreground mb-1">
-                        {format(parseISO(entry.date), 'EEEE, MMM d')}
-                      </div>
-                      <p className="whitespace-pre-wrap text-foreground line-clamp-6">
-                        {formatEntryPreview(entry.content) || entry.content}
-                      </p>
-                    </li>
-                  ))}
+                  {weekEntries.map((entry) => {
+                    const mood = getMoodFromContent(entry.content);
+                    const moodMeta = mood ? MOOD_META[mood] : null;
+                    return (
+                      <li
+                        key={entry.id}
+                        className="rounded-xl border border-border bg-background p-3 text-sm"
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[11px] font-mono text-muted-foreground">
+                            {format(parseISO(entry.date), 'EEEE, MMM d')}
+                          </span>
+                          {moodMeta && (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/30 px-2 py-0.5 text-[11px] text-muted-foreground">
+                              {moodMeta.emoji} {moodMeta.label}
+                            </span>
+                          )}
+                        </div>
+                        <p className="whitespace-pre-wrap text-foreground line-clamp-6">
+                          {formatEntryPreview(entry.content) || entry.content}
+                        </p>
+                      </li>
+                    );
+                  })}
                 </ul>
+                {reflectionQuestion && (
+                  <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-3">
+                    <p className="text-[10px] uppercase tracking-widest text-primary/70 mb-1">Reflection</p>
+                    <p className="text-sm text-foreground">{reflectionQuestion}</p>
+                    <Link to="/journal" className="mt-2 inline-block text-xs font-medium text-primary hover:underline">
+                      Write in journal →
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
 
@@ -593,6 +617,29 @@ function getPlanningPrompts(patterns: ReturnType<typeof getWeeklyPatterns>) {
     { label: 'Repair', value: patterns.mostSkipped },
     { label: 'Reduce', value: patterns.breaches },
   ];
+}
+
+function getReflectionQuestion(
+  avg: number,
+  daysLogged: number,
+  patterns: ReturnType<typeof getWeeklyPatterns>,
+): string | null {
+  if (daysLogged === 0) return null;
+  const anchorItem = patterns.bestStreak !== 'No streak yet' ? patterns.bestStreak.split(':')[0] : null;
+  const skippedItem = patterns.mostSkipped !== 'No misses yet' ? patterns.mostSkipped.split(':')[0] : null;
+  if (avg >= 70 && anchorItem) {
+    return `${anchorItem} was your anchor this week. What made it stick — and can you design next week to protect it?`;
+  }
+  if (avg >= 70) {
+    return 'Strong week. What specifically drove your best days — and can you lock that pattern in?';
+  }
+  if (avg >= 40 && skippedItem) {
+    return `${skippedItem} kept slipping. What's the real blocker — motivation, time, or environment?`;
+  }
+  if (avg >= 40) {
+    return 'Mixed week. Where did the gap open between your intentions and your actions?';
+  }
+  return 'Tough stretch. What was the biggest external drag, and what one thing stays fully under your control?';
 }
 
 export default Review;
