@@ -57,6 +57,7 @@ Required env vars:
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
 - `VITE_BETTER_AUTH_URL`
+- `VITE_SAASMAKER_API_KEY`
 
 Google OAuth callback URLs should include:
 
@@ -83,6 +84,7 @@ drizzle/migrations/      Turso/libSQL migrations
 pnpm dev        # Vite dev server
 pnpm build      # production build into dist/
 pnpm build:dev  # development-mode build
+pnpm typecheck  # TypeScript check (tsc --noEmit)
 pnpm preview    # preview built app
 pnpm lint       # ESLint
 pnpm deploy     # build and wrangler pages deploy dist/
@@ -112,6 +114,7 @@ pnpm deploy
 For behavior changes, run:
 
 ```sh
+pnpm typecheck
 pnpm lint
 pnpm build
 ```
