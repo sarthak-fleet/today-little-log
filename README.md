@@ -121,3 +121,26 @@ pnpm build
 
 For routing, auth, or API changes, add the smallest relevant browser or e2e check
 before deploying.
+
+<!-- ACTIVE-AI-TASK-LOG:START -->
+## Active AI Task Log
+
+This section is maintained by the SaaS Maker Active-AI product/design loop so future agents do not reopen duplicate UI tasks.
+
+- Business lane: P1 Explore
+- Rule: do not create another broad "improve the UI" task unless the acceptance criteria differ materially from the tasks listed here.
+- Source of truth for task status: SaaS Maker task board. README entries are durable context only.
+
+| Task ID | Title | Status |
+|---------|-------|--------|
+| 31c58939-ae7f-4de3-bbed-8dcb4f6bc64c | make first entry action impossible to miss | done |
+| 40724c96-bb3e-4a26-bed4-472be0e54c0a | add streak recovery copy | done |
+| baacd5cf-6499-4694-ba71-27097e57edd8 | add weekly reflection preview | done |
+| a46b5b64-8b99-4385-8e1e-4e85746aff30 | add private-by-default trust note | done |
+
+Changes for a46b5b64: added "Private by default — only you can read what you write here." below the Save Entry button in `TodayPrompt.tsx` editing state. Shown only while composing a new/edited entry. No auth, schema, or API changes.
+
+Changes for 40724c96: added streak recovery banner in `Scoreboard.tsx` — appears when ≥1 past tracked day has no log entries and today is also empty. Gentle copy ("Streaks break. The only day that matters right now is today."), "Write today ↓" button scrolls to the scoring matrix. Uses `useRef` + `scrollIntoView`. No auth/schema/deploy changes.
+
+Changes for baacd5cf: added `WeeklyReflection.tsx` — a static sample card rendered on the guest landing page below `HomeHero`. Summarizes seven illustrative day entries with totals, a 7-day strip, best/hardest day callouts, and a one-line pattern. Demonstrates the payoff from daily micro-logging without touching schema, auth, or API.
+<!-- ACTIVE-AI-TASK-LOG:END -->

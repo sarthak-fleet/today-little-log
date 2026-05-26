@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { useScoreboard, type ScoreboardItem } from '@/hooks/useScoreboard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -154,6 +154,8 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
     items,
     logs,
     dayNotes,
+    todayLogs,
+    today,
     logFor,
     dayNoteFor,
     setLog,
@@ -164,6 +166,8 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
     isLoaded,
     trackingStartDate,
   } = useScoreboard(currentMonth);
+
+  const scoringMatrixRef = useRef<HTMLElement>(null);
 
   const days = useMemo(() => {
     const now = new Date();
@@ -197,6 +201,17 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
     const date = format(day, 'yyyy-MM-dd');
     return date >= trackingStartDate && !isAfter(day, new Date());
   });
+
+  const missedDays = useMemo(() => {
+    if (!isLoaded || items.length === 0) return 0;
+    return elapsedDays.filter((day) => {
+      const date = format(day, 'yyyy-MM-dd');
+      return date < today && !totalsByDate.has(date);
+    }).length;
+  }, [isLoaded, items, elapsedDays, today, totalsByDate]);
+
+  const showRecoveryBanner = !readOnly && isLoaded && missedDays > 0 && todayLogs.length === 0;
+
   const monthMaxSoFar = idealToday * elapsedDays.length;
   const monthTotalSoFar = elapsedDays.reduce((sum, day) => sum + (totalsByDate.get(format(day, 'yyyy-MM-dd')) ?? 0), 0);
   const monthPercent = monthMaxSoFar > 0 ? Math.round((monthTotalSoFar / monthMaxSoFar) * 100) : 0;
@@ -246,6 +261,25 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
         </div>
       </section>
 
+      {showRecoveryBanner && (
+        <section className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 md:p-5">
+          <p className="text-sm font-semibold text-foreground">
+            {missedDays === 1 ? 'One day went unlogged — no big deal.' : `${missedDays} days went unlogged — that's okay.`}
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Streaks break. The only day that matters right now is today.
+          </p>
+          <Button
+            variant="default"
+            size="sm"
+            className="mt-3"
+            onClick={() => scoringMatrixRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+          >
+            Write today ↓
+          </Button>
+        </section>
+      )}
+
       {!readOnly && (
         <section className="rounded-2xl border border-border bg-card p-4 md:p-6 shadow-soft">
           <div className="mb-3 flex flex-col gap-1">
@@ -264,7 +298,7 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
         </section>
       )}
 
-      <section className="rounded-2xl border border-border bg-card p-4 md:p-6 shadow-soft">
+      <section ref={scoringMatrixRef} className="rounded-2xl border border-border bg-card p-4 md:p-6 shadow-soft">
         <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="font-display text-xl font-bold text-foreground">

@@ -257,6 +257,9 @@ export function TodayPrompt({
                       </Button>
                     </div>
                   </div>
+                  <p className="mt-3 text-xs text-muted-foreground/70 text-center">
+                    Private by default — only you can read what you write here.
+                  </p>
                 </>
               ) : (
                 <>
