@@ -13,6 +13,7 @@
     "build:dev": "vite build --mode development",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
+    "test": "playwright test",
     "preview": "vite preview",
     "prepare": "husky",
     "deploy": "pnpm build && wrangler pages deploy dist/ --project-name=today-little-log"
@@ -38,7 +39,6 @@
     "@saas-maker/ai": "0.1.0",
     "@saas-maker/changelog-widget": "0.2.1",
     "@saas-maker/feedback": "0.2.1",
-    "@saas-maker/posthog-client": "^0.1.0",
     "@saas-maker/sdk": "^0.3.1",
     "@saas-maker/testimonials": "0.2.1",
     "@tanstack/react-query": "^5.100.1",
@@ -58,7 +58,8 @@
     "tailwind-merge": "^3.5.0",
     "vite-plugin-pwa": "^1.2.0",
     "workbox-window": "^7.4.0",
-    "zod": "^4.3.6"
+    "zod": "^4.3.6",
+    "posthog-js": "^1.372.1"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.2",

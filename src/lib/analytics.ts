@@ -6,15 +6,15 @@
  * cross-fleet funnel (signup -> activated -> core_action) and a D1/D7 retention
  * insight, with no custom dashboard.
  *
- * Every event carries `project: "today-little-log"`. This wrapper is
+ * Every event carries `project_id: "today-little-log"`. This wrapper is
  * intentionally thin so it can later be promoted into
- * `@saas-maker/posthog-client`.
+ * `posthog-js`.
  *
  * today-little-log is a Vite SPA — there is no server runtime, so this module
  * is browser-only. PostHog is already initialized by `src/lib/monitoring.ts`
  * (`installBrowserMonitoring`); this module just emits through the same client.
  */
-import { track } from '@saas-maker/posthog-client';
+import posthog from "posthog-js";
 
 const PROJECT = 'today-little-log' as const;
 
@@ -27,24 +27,28 @@ export type CoreAction =
 
 interface AnalyticsEventMap {
   /** First session after an account is created. */
-  signup: { project: typeof PROJECT };
+  signup: { project_id: typeof PROJECT };
   /** The user reaches first real value — their first logged score. */
-  activated: { project: typeof PROJECT };
+  activated: { project_id: typeof PROJECT };
   /** The thing the product exists to do. */
-  core_action: { project: typeof PROJECT; action: CoreAction };
+  core_action: { project_id: typeof PROJECT; action: CoreAction };
   /** A return session by a user with prior activity. */
-  returned: { project: typeof PROJECT };
+  returned: { project_id: typeof PROJECT };
+}
+
+export function trackEvent(event: string, properties: Record<string, unknown> = {}): void {
+  try {
+    posthog.capture(event, { project_id: PROJECT, ...properties });
+  } catch {
+    // Analytics must NEVER break a user flow. Swallow and move on.
+  }
 }
 
 function emit<K extends keyof AnalyticsEventMap>(
   event: K,
-  props: Omit<AnalyticsEventMap[K], 'project'>,
+  props: Omit<AnalyticsEventMap[K], 'project_id'>,
 ): void {
-  try {
-    track(event, { project: PROJECT, ...props });
-  } catch {
-    // Analytics must NEVER break a user flow. Swallow and move on.
-  }
+  trackEvent(event, props);
 }
 
 /** Fire once, on the first session after an account is created. */

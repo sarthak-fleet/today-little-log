@@ -1,4 +1,4 @@
-import { initPostHog, track } from '@saas-maker/posthog-client';
+import posthog from "posthog-js";
 
 const POSTHOG_KEY = 'phc_qgiAarw4Co4pw9fz3Fxj4UJaHmqzFetqs4JrXhGc35Nd';
 const POSTHOG_HOST = 'https://us.i.posthog.com';
@@ -9,11 +9,11 @@ export function installBrowserMonitoring(): void {
   if (installed || typeof window === 'undefined') return;
   installed = true;
 
-  initPostHog({ apiKey: POSTHOG_KEY, host: POSTHOG_HOST });
+  posthog.init(POSTHOG_KEY, { api_host: POSTHOG_HOST, person_profiles: "always", capture_pageview: false, autocapture: false });
 
   window.addEventListener('error', (event) => {
-    track('foundry_page_crash', {
-      project_slug: 'today-little-log',
+    posthog.capture('foundry_page_crash', {
+      project_id: 'today-little-log',
       source: 'window_error',
       message: event.message,
       filename: event.filename,
@@ -26,8 +26,8 @@ export function installBrowserMonitoring(): void {
 
   window.addEventListener('unhandledrejection', (event) => {
     const reason = event.reason;
-    track('foundry_page_crash', {
-      project_slug: 'today-little-log',
+    posthog.capture('foundry_page_crash', {
+      project_id: 'today-little-log',
       source: 'unhandled_rejection',
       message: reason instanceof Error ? reason.message : String(reason),
       stack: reason instanceof Error ? reason.stack : undefined,
@@ -37,8 +37,8 @@ export function installBrowserMonitoring(): void {
 }
 
 export function reportPageCrash(error: Error, info?: Record<string, unknown>): void {
-  track('foundry_page_crash', {
-    project_slug: 'today-little-log',
+  posthog.capture('foundry_page_crash', {
+    project_id: 'today-little-log',
     source: 'manual',
     message: error.message,
     stack: error.stack,
