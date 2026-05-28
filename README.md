@@ -1,8 +1,5 @@
 # Today Little Log
 
-![AI Generated](https://ai-percentage-pin.vercel.app/api/ai-percentage?value=100)
-![AI PRs Welcome](https://ai-percentage-pin.vercel.app/api/ai-prs?welcome=yes)
-
 A personal life PWA for daily scoring, journaling, rituals, habits, tasks, and
 reflection. The app is intentionally quiet: it helps capture the day, maintain a
 no-zero-day scoreboard, and keep personal routines visible without becoming a

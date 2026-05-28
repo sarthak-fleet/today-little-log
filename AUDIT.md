@@ -11,7 +11,7 @@
 - **Google OAuth credentials (`GOCSPX-...`) need immediate rotation** per project strategy
 
 ## Deployment
-Deployed via **Vercel** (`.vercel/` directory present). Verify that Vercel env vars are rotated alongside local credentials.
+Deployed on Cloudflare Pages via Wrangler. Historical Vercel references are stale and should not guide current deploy work.
 
 ## Code Security
 - No CORS misconfigurations found
@@ -25,4 +25,4 @@ Deployed via **Vercel** (`.vercel/` directory present). Verify that Vercel env v
 - [ ] Rotate Better Auth secret (exposed in git history)
 - [ ] Run `git filter-branch` or BFG to purge `.env` from git history
 - [x] Add `.env.local` explicitly to `.gitignore`
-- [ ] Verify Vercel env vars are updated after rotation
+- [ ] Verify Cloudflare Pages env vars are updated after rotation
