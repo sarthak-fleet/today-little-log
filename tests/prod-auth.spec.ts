@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.use({ baseURL: 'https://today-little-log.vercel.app' });
+test.use({ baseURL: 'https://today-little-log.pages.dev' });
 
 test('prod /auth — button present, click fires auth flow', async ({ page }) => {
   const authHits: Array<{ status: number; url: string }> = [];

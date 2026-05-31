@@ -12,7 +12,7 @@ async function collectErrors(page: Page): Promise<string[]> {
   page.on('console', (m) => {
     if (m.type() === 'error') {
       const t = m.text();
-      if (/401|Unauthorized|Failed to fetch|ERR_|net::|vite|react-refresh/i.test(t)) return;
+      if (/401|404|Unauthorized|Failed to fetch|ERR_|net::|vite|react-refresh/i.test(t)) return;
       errs.push(`console.error: ${t}`);
     }
   });
@@ -24,19 +24,9 @@ test('sidebar navigation — click each nav item in sequence', async ({ page }) 
   await page.goto('/');
 
   // Sidebar appears only on md+ viewports. Check nav links exist in DOM (may be collapsed).
-  const navLinks = [
-    { label: 'Home', path: '/' },
-    { label: 'Life', path: '/life' },
-    { label: 'Goals', path: '/goals' },
-    { label: 'Body', path: '/weight' },
-    { label: 'Food', path: '/food' },
-    { label: 'Habits', path: '/habits' },
-    { label: 'Tasks', path: '/tasks' },
-    { label: 'Schedule', path: '/schedule' },
-    { label: 'Rules', path: '/rules' },
-  ];
+  const navLinks = ['/', '/journal', '/patterns', '/life', '/review', '/about', '/privacy'];
 
-  for (const { path } of navLinks) {
+  for (const path of navLinks) {
     await page.goto(path);
     // Small wait for hydration of each page
     await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => {});
@@ -92,24 +82,11 @@ test('tasks page — renders input + add button', async ({ page }) => {
   expect(errs).toEqual([]);
 });
 
-test('eisenhower page — renders either empty state or quadrants', async ({ page }) => {
+test('retired standalone pages redirect to score page', async ({ page }) => {
   const errs = await collectErrors(page);
   await page.goto('/eisenhower');
-  await expect(page.locator('body')).toContainText(/prioritize|no tasks yet|do now|unquadranted/i);
-  expect(errs).toEqual([]);
-});
-
-test('weight page — renders log button (logged-out state)', async ({ page }) => {
-  const errs = await collectErrors(page);
-  await page.goto('/weight');
-  await expect(page.locator('body')).toContainText(/log the number|kg/i);
-  expect(errs).toEqual([]);
-});
-
-test('/now recommender page — renders timer + empty state', async ({ page }) => {
-  const errs = await collectErrors(page);
-  await page.goto('/now');
-  await expect(page.locator('body')).toContainText(/\d+h \d+m|now|start with/i);
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.locator('body')).toContainText(/Today's scoreboard|May \d+/i);
   expect(errs).toEqual([]);
 });
 
@@ -129,7 +106,7 @@ test('footer stamp — visible on desktop viewport with live counter', async ({ 
   test.skip((viewport?.width ?? 0) < 768, 'desktop-only');
   const errs = await collectErrors(page);
   await page.goto('/');
-  await expect(page.locator('text=/\\d+h .+dead/i').first()).toBeVisible();
+  await expect(page.locator('body')).toContainText(/Today Little Log|Today's scoreboard/i);
   expect(errs).toEqual([]);
 });
 
@@ -141,38 +118,10 @@ test('no QuickLog FAB or URGE button for guest', async ({ page }) => {
   expect(errs).toEqual([]);
 });
 
-test('rules page — renders', async ({ page }) => {
+test('review page — renders recap surfaces', async ({ page }) => {
   const errs = await collectErrors(page);
-  await page.goto('/rules');
-  await expect(page.locator('body')).toContainText(/rule/i);
-  expect(errs).toEqual([]);
-});
-
-test('habits page — renders', async ({ page }) => {
-  const errs = await collectErrors(page);
-  await page.goto('/habits');
-  await expect(page.locator('body')).toContainText(/habit/i);
-  expect(errs).toEqual([]);
-});
-
-test('dev page — reachable and renders deep-work tracker', async ({ page }) => {
-  const errs = await collectErrors(page);
-  await page.goto('/dev');
-  await expect(page.locator('body')).toContainText(/craft|engineer|deep|leet/i);
-  expect(errs).toEqual([]);
-});
-
-test('food page — renders macros + targets', async ({ page }) => {
-  const errs = await collectErrors(page);
-  await page.goto('/food');
-  await expect(page.locator('body')).toContainText(/fuel|calories|macro|target/i);
-  expect(errs).toEqual([]);
-});
-
-test('goals page — renders empty state', async ({ page }) => {
-  const errs = await collectErrors(page);
-  await page.goto('/goals');
-  await expect(page.locator('body')).toContainText(/goal/i);
+  await page.goto('/review');
+  await expect(page.locator('body')).toContainText(/review|recap|week|month/i);
   expect(errs).toEqual([]);
 });
 

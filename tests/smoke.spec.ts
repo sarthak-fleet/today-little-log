@@ -10,18 +10,13 @@ import { test, expect, Page } from '@playwright/test';
 // mount nothing when `user` is null) are still expected to produce a
 // non-crashing page.
 const PUBLIC_ROUTES = [
-  { path: '/', mustContain: /New Beginning|day \d|days to become|How many days/i },
-  { path: '/life', mustContain: /Your Life|How many weeks|You are on/i },
-  { path: '/weight', mustContain: /Body|Log the number|kg/i },
-  { path: '/food', mustContain: /Fuel|Calories/i },
-  { path: '/dev', mustContain: /Craft|Better engineer/i },
-  { path: '/goals', mustContain: /Goals|Every action is a vote/i },
-  { path: '/eisenhower', mustContain: /Prioritize|Not every task/i },
-  { path: '/now', mustContain: /\d+h \d+m|Start with this|Now/i },
-  { path: '/habits', mustContain: /Habit|habit/i },
-  { path: '/tasks', mustContain: /Task|task/i },
-  { path: '/schedule', mustContain: /Schedule|schedule/i },
-  { path: '/rules', mustContain: /Rule|rule/i },
+  { path: '/', mustContain: /Today Little Log|Today's scoreboard/i },
+  { path: '/journal', mustContain: /Journal|today|entry/i },
+  { path: '/patterns', mustContain: /Patterns|score|trend/i },
+  { path: '/life', mustContain: /Set your date of birth|How many weeks|Life/i },
+  { path: '/review', mustContain: /Review|recap|week|month/i },
+  { path: '/about', mustContain: /Today Little Log|privacy|scoreboard/i },
+  { path: '/privacy', mustContain: /privacy|data|account/i },
 ];
 
 async function goAndCollectErrors(page: Page, path: string): Promise<string[]> {
@@ -62,7 +57,7 @@ test.describe('home content', () => {
   test('footer stamp is present on md+ viewports', async ({ page, viewport }) => {
     test.skip((viewport?.width ?? 0) < 768, 'desktop-only');
     await page.goto('/');
-    await expect(page.locator('text=/\\d+h .+dead/i').first()).toBeVisible();
+    await expect(page.locator('body')).toContainText(/Today Little Log|Today's scoreboard/i);
   });
 });
 
@@ -84,8 +79,9 @@ test.describe('quick-log FAB', () => {
 });
 
 test.describe('eisenhower empty state', () => {
-  test('shows empty state with link to tasks', async ({ page }) => {
+  test('retired route redirects to score page', async ({ page }) => {
     await page.goto('/eisenhower');
-    await expect(page.locator('body')).toContainText(/No tasks yet|Unquadranted|Do now/i);
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.locator('body')).toContainText(/Today Little Log|Today's scoreboard/i);
   });
 });
