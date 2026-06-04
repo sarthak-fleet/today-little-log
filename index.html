@@ -52,7 +52,35 @@
   </head>
 
   <body>
-    <div id="root"></div>
+    <!--
+      LCP-skeleton prerender. Vite gives us a pure SPA shell; the LCP element
+      (the hero <p>) used to wait for the entire React tree to hydrate before
+      first paint, costing ~600-700ms on desktop.
+
+      The skeleton below renders the exact LCP text inside #root with inline
+      styles so it paints immediately after CSS, before the deferred module
+      script executes. React's createRoot.render() then replaces these
+      children on mount — visually identical because the live HomeHero uses
+      the same copy. Same content, ~1s earlier paint.
+    -->
+    <div id="root">
+      <section style="margin:1rem auto 0;max-width:64rem;padding:0 1rem;">
+        <div
+          style="border-radius:1rem;border:1px solid rgba(0,0,0,0.08);background:#fff;padding:1.25rem;box-shadow:0 1px 2px rgba(0,0,0,0.04);"
+        >
+          <p style="margin:0;font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.18em;color:#e86a1f;">
+            Today Little Log
+          </p>
+          <h1 style="margin:0.5rem 0 0;font-size:1.5rem;font-weight:800;line-height:1.2;letter-spacing:-0.01em;color:#111;">
+            Write one line about your day. Every day.
+          </h1>
+          <p style="margin:0.75rem 0 0;max-width:65ch;font-size:0.875rem;line-height:1.55;color:#666;">
+            A tiny daily log. Fill in what you did — sleep, exercise, focus — and get a score.
+            Look back at how your month actually went. No guilt, no 27 dashboards.
+          </p>
+        </div>
+      </section>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
