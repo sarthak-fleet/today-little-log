@@ -215,6 +215,17 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
   const monthMaxSoFar = idealToday * elapsedDays.length;
   const monthTotalSoFar = elapsedDays.reduce((sum, day) => sum + (totalsByDate.get(format(day, 'yyyy-MM-dd')) ?? 0), 0);
   const monthPercent = monthMaxSoFar > 0 ? Math.round((monthTotalSoFar / monthMaxSoFar) * 100) : 0;
+  const currentItemIds = new Set(items.map((item) => item.id));
+  const loggedTodayCount = todayLogs.filter((log) => (
+    currentItemIds.has(log.item_id)
+    && (
+      (log.value_score !== null && log.value_score !== undefined)
+      || Boolean(log.value_text?.trim())
+    )
+  )).length;
+  const remainingToday = Math.max(0, items.length - loggedTodayCount);
+  const todayProgress = Math.max(0, Math.min(100, todayPercent));
+  const monthProgress = Math.max(0, Math.min(100, monthPercent));
 
   const submitLockMonth = async () => {
     const confirmed = window.confirm(
@@ -225,44 +236,83 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
   };
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-2xl border border-border bg-card p-4 md:p-6 shadow-soft">
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-              <Trophy className="h-4 w-4 text-primary" />
-              Today's scoreboard
+    <div className="space-y-4 md:space-y-5">
+      <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="rounded-lg border border-border bg-card p-4 shadow-soft md:p-5">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div>
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                <Trophy className="h-4 w-4 text-primary" />
+                Today's scoreboard
+              </div>
+              <h1 className="mt-2 text-4xl font-display font-extrabold tracking-tight text-foreground md:text-5xl">
+                {todayTotal}<span className="text-muted-foreground">/{idealToday}</span>
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {format(new Date(), 'EEEE, MMMM d')} · {todayPercent}% of ideal · peak {peakToday}
+              </p>
             </div>
-            <h1 className="mt-2 text-3xl md:text-5xl font-display font-extrabold tracking-tight text-foreground">
-              {todayTotal}<span className="text-muted-foreground">/{idealToday}</span>
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {format(new Date(), 'EEEE, MMMM d')} · {todayPercent}% of ideal · peak {peakToday}
-            </p>
+
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:min-w-[22rem]">
+              <Stat label="Logged" value={`${loggedTodayCount}/${items.length}`} />
+              <Stat label="Left" value={`${remainingToday}`} />
+              <Stat label="Month" value={`${monthTotalSoFar}/${monthMaxSoFar}`} />
+              <Stat label="Pace" value={`${monthPercent}%`} />
+            </div>
           </div>
 
-          <div className="space-y-3 md:min-w-72">
-            <div className="grid grid-cols-2 gap-3 text-right">
-              <Stat label="Month so far" value={`${monthTotalSoFar}/${monthMaxSoFar}`} />
-              <Stat label="Month pace" value={`${monthPercent}%`} />
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <ProgressTile label="Today" value={`${todayPercent}%`} progress={todayProgress} />
+            <ProgressTile label="Month to date" value={`${monthPercent}%`} progress={monthProgress} />
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-border bg-card p-4 shadow-soft md:p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                Daily closeout
+              </p>
+              <h2 className="mt-2 font-display text-lg font-bold text-foreground">
+                {isLocked ? 'Month locked' : 'Score note'}
+              </h2>
             </div>
             {isLocked ? (
-              <div className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs font-semibold uppercase tracking-widest text-emerald-700 dark:text-emerald-300">
+              <div className="inline-flex items-center gap-2 rounded-md border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-widest text-emerald-700 dark:text-emerald-300">
                 <Lock className="h-3.5 w-3.5" />
-                Month locked
+                Locked
               </div>
             ) : !readOnly ? (
-              <Button variant="outline" className="w-full" onClick={submitLockMonth}>
-                <Lock className="mr-2 h-4 w-4" />
+              <Button variant="outline" size="sm" onClick={submitLockMonth}>
+                <Lock className="h-4 w-4" />
                 Lock month
               </Button>
             ) : null}
           </div>
+
+          {readOnly ? (
+            <p className="mt-4 text-sm text-muted-foreground">
+              Scores are shown without editing controls.
+            </p>
+          ) : (
+            <>
+              <p className="mt-3 text-sm text-muted-foreground">
+                Attach the real reason to today's total, not an individual row.
+              </p>
+              <Textarea
+                disabled={isLocked}
+                value={dayNoteFor()?.low_score_reason ?? ''}
+                onChange={(event) => setLowScoreReason(event.target.value)}
+                placeholder="Why was today's score low?"
+                className="mt-3 min-h-24 bg-background"
+              />
+            </>
+          )}
         </div>
       </section>
 
       {showRecoveryBanner && (
-        <section className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 md:p-5">
+        <section className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 md:p-5">
           <p className="text-sm font-semibold text-foreground">
             {missedDays === 1 ? 'One day went unlogged — no big deal.' : `${missedDays} days went unlogged — that's okay.`}
           </p>
@@ -280,27 +330,13 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
         </section>
       )}
 
-      {!readOnly && (
-        <section className="rounded-2xl border border-border bg-card p-4 md:p-6 shadow-soft">
-          <div className="mb-3 flex flex-col gap-1">
-            <h2 className="font-display text-lg font-bold text-foreground">Reason for low score</h2>
-            <p className="text-sm text-muted-foreground">
-              End the day with the real reason. This is attached to today's total score, not any single task.
-            </p>
-          </div>
-          <Textarea
-            disabled={isLocked}
-            value={dayNoteFor()?.low_score_reason ?? ''}
-            onChange={(event) => setLowScoreReason(event.target.value)}
-            placeholder="Why was today's score low?"
-            className="min-h-24 bg-background"
-          />
-        </section>
-      )}
-
-      <section ref={scoringMatrixRef} className="rounded-2xl border border-border bg-card p-4 md:p-6 shadow-soft">
-        <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+      <section ref={scoringMatrixRef} className="rounded-lg border border-border bg-card p-4 shadow-soft md:p-5">
+        <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div>
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+              <Trophy className="h-4 w-4 text-primary" />
+              Daily matrix
+            </div>
             <h2 className="font-display text-xl font-bold text-foreground">
               {readOnly ? "Today's scores" : `${format(new Date(), 'MMMM yyyy')} scoring matrix`}
             </h2>
@@ -308,7 +344,7 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
               <p className="text-sm text-muted-foreground">
                 {isLocked
                   ? 'This month is locked. You can review it, but not change daily scores or reasons.'
-                  : 'Fill the score every day. The monthly matrix is fixed for this month.'}
+                  : 'Fill raw inputs every day. Criteria stay available inside each row.'}
               </p>
             )}
           </div>
@@ -322,19 +358,19 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
         )}
 
         {!isLoaded ? (
-          <div className="mt-5 space-y-3">
-            {[1, 2, 3].map((item) => (
-              <div key={item} className="h-28 animate-pulse rounded-xl bg-muted/50" />
+          <div className="mt-4 grid gap-3 xl:grid-cols-2">
+            {[1, 2, 3, 4].map((item) => (
+              <div key={item} className="h-32 animate-pulse rounded-lg bg-muted/50" />
             ))}
           </div>
         ) : items.length === 0 ? (
-          <div className="mt-5 rounded-xl border border-dashed border-border bg-muted/30 p-6 text-sm text-muted-foreground">
+          <div className="mt-4 rounded-lg border border-dashed border-border bg-muted/30 p-6 text-sm text-muted-foreground">
             {isConfigured
               ? 'No scoring tasks are configured for this month yet.'
               : 'No scoring matrix exists for this month.'}
           </div>
         ) : (
-          <div className="mt-5 space-y-3">
+          <div className="mt-4 grid gap-3 xl:grid-cols-2">
             {items.map((item) => (
               <ScoreRow
                 key={item.id}
@@ -351,7 +387,7 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
       </section>
 
       {!readOnly && (
-        <section className="rounded-2xl border border-border bg-card p-4 md:p-6 shadow-soft">
+        <section className="rounded-lg border border-border bg-card p-4 shadow-soft md:p-5">
         <div className="mb-4 flex items-center gap-2">
           <CalendarDays className="h-4 w-4 text-primary" />
           <h2 className="font-display text-xl font-bold text-foreground">Month view</h2>
@@ -419,6 +455,20 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
   );
 }
 
+function ProgressTile({ label, value, progress }: { label: string; value: string; progress: number }) {
+  return (
+    <div className="rounded-lg border border-border bg-background p-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</div>
+        <div className="font-display text-sm font-bold text-foreground">{value}</div>
+      </div>
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+        <div className="h-full rounded-full bg-primary" style={{ width: `${progress}%` }} />
+      </div>
+    </div>
+  );
+}
+
 function ScoreRow({
   item,
   score,
@@ -458,8 +508,8 @@ function ScoreRow({
   };
 
   return (
-    <div className="rounded-xl border border-border bg-background p-3">
-      <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_7rem] md:items-start">
+    <div data-scoreboard-item className="rounded-lg border border-border bg-background p-3">
+      <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_5.75rem] md:items-start">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="font-display text-base font-semibold text-foreground">{item.label}</h3>
@@ -468,7 +518,12 @@ function ScoreRow({
             </span>
           </div>
           {!readOnly && item.criteria && (
-            <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{item.criteria}</p>
+            <details className="mt-2 group">
+              <summary className="cursor-pointer text-xs font-semibold uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground">
+                Scoring rule
+              </summary>
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{item.criteria}</p>
+            </details>
           )}
         </div>
 
@@ -491,7 +546,7 @@ function ScoreRow({
               value={score ?? ''}
               onChange={(event) => onChange({ value_score: scoreFor(item, event.target.value) })}
               placeholder="0"
-              className="bg-background text-lg font-bold tabular-nums"
+              className="h-9 bg-background text-lg font-bold tabular-nums"
               aria-label={`${item.label} score`}
             />
           )}
@@ -508,14 +563,14 @@ function ScoreRow({
       )}
 
       {autoInputs && !readOnly && !entryNote && score !== null && score !== undefined && (
-        <div className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2 text-xs text-amber-800 dark:text-amber-200">
+        <div className="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2 text-xs text-amber-800 dark:text-amber-200">
           This row has an older manual score. Enter raw inputs to replace it with an automatic score.
         </div>
       )}
 
       {readOnly ? (
         proofNote && (
-          <p className="mt-3 rounded-lg bg-card px-3 py-2 text-sm text-muted-foreground">
+          <p className="mt-2 rounded-lg bg-card px-3 py-2 text-sm text-muted-foreground">
             {proofNote}
           </p>
         )
@@ -525,7 +580,7 @@ function ScoreRow({
           value={proofNote}
           onChange={(event) => updateNote(event.target.value)}
           placeholder="Optional note / proof"
-          className="mt-3 bg-card text-sm"
+          className="mt-2 h-9 bg-card text-sm"
         />
       )}
     </div>
@@ -546,7 +601,7 @@ function ScoreInputsForm({
   switch (item.source_key) {
     case 'sleep':
       return (
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <div className="mt-2 grid gap-2 sm:grid-cols-2">
           <Field label="Sleep hours">
             <Input disabled={isLocked} type="number" min="0" step="0.5" value={String(inputs.hours ?? '')} onChange={(event) => onChange({ hours: event.target.value })} placeholder="7" />
           </Field>
@@ -557,7 +612,7 @@ function ScoreInputsForm({
       );
     case 'steps':
       return (
-        <div className="mt-3">
+        <div className="mt-2">
           <Field label="Steps">
             <Input disabled={isLocked} type="number" min="0" step="100" value={String(inputs.steps ?? '')} onChange={(event) => onChange({ steps: event.target.value })} placeholder="10000" />
           </Field>
@@ -565,7 +620,7 @@ function ScoreInputsForm({
       );
     case 'focus-hours':
       return (
-        <div className="mt-3">
+        <div className="mt-2">
           <Field label="Focus hours">
             <Input disabled={isLocked} type="number" min="0" step="0.25" value={String(inputs.hours ?? '')} onChange={(event) => onChange({ hours: event.target.value })} placeholder="6" />
           </Field>
@@ -588,7 +643,7 @@ function ScoreInputsForm({
       return <CheckGrid options={[['done', 'Journal + daily ticking done']]} inputs={inputs} isLocked={isLocked} onChange={onChange} />;
     case 'diet':
       return (
-        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           <Field label="Protein grams">
             <Input disabled={isLocked} type="number" min="0" value={String(inputs.protein ?? '')} onChange={(event) => onChange({ protein: event.target.value })} placeholder="100" />
           </Field>
@@ -603,7 +658,7 @@ function ScoreInputsForm({
               disabled={isLocked}
               value={String(inputs.junk ?? 'none')}
               onChange={(event) => onChange({ junk: event.target.value })}
-              className="h-10 w-full rounded-md border border-input bg-card px-3 text-sm text-foreground"
+              className="h-9 w-full rounded-md border border-input bg-card px-3 text-sm text-foreground"
             >
               <option value="none">None</option>
               <option value="minor">Minor (-1)</option>
@@ -633,7 +688,7 @@ function ScoreInputsForm({
       );
     case 'sitting-entertainment':
       return (
-        <div className="mt-3">
+        <div className="mt-2">
           <Field label="Sitting entertainment hours">
             <Input disabled={isLocked} type="number" min="0" step="0.25" value={String(inputs.hours ?? '')} onChange={(event) => onChange({ hours: event.target.value })} placeholder="1" />
           </Field>
@@ -641,7 +696,7 @@ function ScoreInputsForm({
       );
     case 'social-media':
       return (
-        <div className="mt-3">
+        <div className="mt-2">
           <Field label="Social media minutes">
             <Input disabled={isLocked} type="number" min="0" step="5" value={String(inputs.minutes ?? '')} onChange={(event) => onChange({ minutes: event.target.value })} placeholder="30" />
           </Field>
@@ -654,7 +709,7 @@ function ScoreInputsForm({
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="block text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+    <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
       {label}
       <div className="mt-1">{children}</div>
     </label>
@@ -673,9 +728,9 @@ function CheckGrid({
   onChange: (patch: ScoreInputs) => void;
 }) {
   return (
-    <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
       {options.map(([key, label]) => (
-        <label key={key} className="flex min-h-10 items-center gap-2 rounded-lg border border-border bg-card px-3 text-sm text-foreground">
+        <label key={key} className="flex min-h-9 items-center gap-2 rounded-lg border border-border bg-card px-3 text-sm text-foreground">
           <input
             disabled={isLocked}
             type="checkbox"
@@ -692,7 +747,7 @@ function CheckGrid({
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-border bg-background p-3">
+    <div className="rounded-lg border border-border bg-background p-3">
       <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
       <div className="mt-1 font-display text-lg font-bold text-foreground">{value}</div>
     </div>
