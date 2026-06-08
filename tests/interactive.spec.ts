@@ -74,11 +74,11 @@ test('month/year/life time cycle — navbar counter click cycles label', async (
   expect(errs).toEqual([]);
 });
 
-test('tasks page — renders input + add button', async ({ page }) => {
+test('retired tasks page redirects to score page', async ({ page }) => {
   const errs = await collectErrors(page);
   await page.goto('/tasks');
-  // Guest mode allows adding tasks to localStorage.
-  await expect(page.locator('body')).toContainText(/task/i);
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.locator('body')).toContainText(/Today's scoreboard|Daily matrix/i);
   expect(errs).toEqual([]);
 });
 
