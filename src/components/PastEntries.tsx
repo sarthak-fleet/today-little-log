@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { format } from 'date-fns';
 import { type JournalEntry, type EntryType } from '@/hooks/useJournalEntries';
 import { BookOpen, Pencil, Trash2, Check, X, Calendar, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -36,7 +37,9 @@ export function PastEntries({ entries, onUpdate, onDelete, hasMore, onLoadMore, 
       return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     }
 
-    if (dateStr === yesterday.toISOString().split('T')[0]) {
+    // Compare against the local calendar date — toISOString() is UTC and
+    // mislabels entries near midnight in non-UTC timezones.
+    if (dateStr === format(yesterday, 'yyyy-MM-dd')) {
       return 'Yesterday';
     }
 

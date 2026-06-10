@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { format } from 'date-fns';
 import { apiFetch } from '@/lib/api';
 import { trackCoreAction } from '@/lib/analytics';
 import { useAuth } from './useAuth';
@@ -95,22 +96,25 @@ export function useJournalEntries() {
     fetchEntries(false);
   }, [user]);
 
+  // Local-date keys ('yyyy-MM-dd'), matching useScoreboard/useDailyCheckins.
+  // toISOString() here would shift to the UTC day near midnight, splitting
+  // "today" / "this week" entries onto the wrong date.
   const getTodayKey = () => {
-    return new Date().toISOString().split('T')[0];
+    return format(new Date(), 'yyyy-MM-dd');
   };
 
   const getWeekKey = () => {
     const today = new Date();
     const sunday = new Date(today);
     sunday.setDate(today.getDate() - today.getDay());
-    return sunday.toISOString().split('T')[0];
+    return format(sunday, 'yyyy-MM-dd');
   };
 
   const getNextWeekKey = () => {
     const today = new Date();
     const nextSunday = new Date(today);
     nextSunday.setDate(today.getDate() - today.getDay() + 7);
-    return nextSunday.toISOString().split('T')[0];
+    return format(nextSunday, 'yyyy-MM-dd');
   };
 
   const getMonthKey = () => {
