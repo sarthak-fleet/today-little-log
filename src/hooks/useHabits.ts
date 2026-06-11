@@ -68,9 +68,9 @@ export function useHabits() {
         }));
         setHabits(mappedHabits);
 
-        // Check for local storage migration
+        // Check for local storage migration.
         const savedHabits = localStorage.getItem(HABITS_STORAGE_KEY);
-        if (savedHabits && mappedHabits.length === 0) {
+        if (savedHabits) {
           const localHabits = JSON.parse(savedHabits) as Habit[];
           for (const habit of localHabits) {
             await apiFetch('/api/habits', {
@@ -169,9 +169,11 @@ export function useHabits() {
       }
     } else {
       const newHabit: Habit = { ...habit, id: crypto.randomUUID() };
-      const newHabits = [...habits, newHabit];
-      setHabits(newHabits);
-      localStorage.setItem(HABITS_STORAGE_KEY, JSON.stringify(newHabits));
+      setHabits((prev) => {
+        const next = [...prev, newHabit];
+        localStorage.setItem(HABITS_STORAGE_KEY, JSON.stringify(next));
+        return next;
+      });
     }
 
     setIsSaving(false);
@@ -192,9 +194,11 @@ export function useHabits() {
         console.error('Failed to update habit:', error);
       }
     } else {
-      const newHabits = habits.map(h => h.id === id ? { ...h, ...updates } : h);
-      setHabits(newHabits);
-      localStorage.setItem(HABITS_STORAGE_KEY, JSON.stringify(newHabits));
+      setHabits((prev) => {
+        const next = prev.map((habit) => (habit.id === id ? { ...habit, ...updates } : habit));
+        localStorage.setItem(HABITS_STORAGE_KEY, JSON.stringify(next));
+        return next;
+      });
     }
 
     setIsSaving(false);
@@ -216,12 +220,16 @@ export function useHabits() {
         console.error('Failed to delete habit:', error);
       }
     } else {
-      const newHabits = habits.filter(h => h.id !== id);
-      const newLogs = logs.filter(l => l.habit_id !== id);
-      setHabits(newHabits);
-      setLogs(newLogs);
-      localStorage.setItem(HABITS_STORAGE_KEY, JSON.stringify(newHabits));
-      localStorage.setItem(HABIT_LOGS_STORAGE_KEY, JSON.stringify(newLogs));
+      setHabits((prev) => {
+        const next = prev.filter((habit) => habit.id !== id);
+        localStorage.setItem(HABITS_STORAGE_KEY, JSON.stringify(next));
+        return next;
+      });
+      setLogs((prev) => {
+        const next = prev.filter((log) => log.habit_id !== id);
+        localStorage.setItem(HABIT_LOGS_STORAGE_KEY, JSON.stringify(next));
+        return next;
+      });
     }
 
     setIsSaving(false);
@@ -253,18 +261,14 @@ export function useHabits() {
         console.error('Failed to log habit:', error);
       }
     } else {
-      const existingIndex = logs.findIndex(l => l.habit_id === habitId && l.date === date);
-      let newLogs: HabitLog[];
-
-      if (existingIndex >= 0) {
-        newLogs = [...logs];
-        newLogs[existingIndex] = { ...newLogs[existingIndex], value };
-      } else {
-        newLogs = [...logs, { id: crypto.randomUUID(), habit_id: habitId, date, value }];
-      }
-
-      setLogs(newLogs);
-      localStorage.setItem(HABIT_LOGS_STORAGE_KEY, JSON.stringify(newLogs));
+      setLogs((prev) => {
+        const existingIndex = prev.findIndex((log) => log.habit_id === habitId && log.date === date);
+        const next = existingIndex >= 0
+          ? prev.map((log, index) => (index === existingIndex ? { ...log, value } : log))
+          : [...prev, { id: crypto.randomUUID(), habit_id: habitId, date, value }];
+        localStorage.setItem(HABIT_LOGS_STORAGE_KEY, JSON.stringify(next));
+        return next;
+      });
     }
 
     setIsSaving(false);

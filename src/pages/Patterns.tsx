@@ -3,6 +3,7 @@ import { AlertTriangle, Brain, CalendarClock, CheckCircle2, ListChecks, Target, 
 import { differenceInCalendarDays, eachDayOfInterval, format, parseISO } from 'date-fns';
 import { useScoreboard, type ScoreboardItem, type ScoreboardLog, type ScoreboardDayNote } from '@/hooks/useScoreboard';
 import { useTasks, type TaskItem } from '@/hooks/useTasks';
+import { categoryFromPosition } from '@/lib/scoreboardDefaults';
 
 type InsightTone = 'neutral' | 'good' | 'warning';
 
@@ -177,16 +178,17 @@ function buildPatterns(
     end: parseISO(today),
   }).map((date) => format(date, 'yyyy-MM-dd'));
   const logByItemDate = new Map(logs.map((log) => [`${log.item_id}:${log.date}`, log]));
+  const dailyItems = items.filter((item) => categoryFromPosition(item.position) === 'daily');
   const scoreDays = days.map((date) => {
-    const score = scoreForDay(items, logByItemDate, date);
+    const score = scoreForDay(dailyItems, logByItemDate, date);
     return { date, score };
   });
-  const activeDays = scoreDays.filter((day) => day.score > 0).length;
+  const activeDays = scoreDays.filter((day) => dailyItems.some((item) => logByItemDate.has(`${item.id}:${day.date}`))).length;
   const averageDayScore = scoreDays.length
     ? Math.round(scoreDays.reduce((sum, day) => sum + day.score, 0) / scoreDays.length)
     : 0;
   const best = scoreDays.reduce((winner, day) => (day.score > winner.score ? day : winner), scoreDays[0] ?? { date: today, score: 0 });
-  const itemStats = itemCompletionStats(items, logs, days);
+  const itemStats = itemCompletionStats(dailyItems, logs, days);
   const reliable = itemStats.length
     ? itemStats.reduce((winner, item) => (item.rate > winner.rate ? item : winner), itemStats[0])
     : null;
@@ -208,7 +210,7 @@ function buildPatterns(
     averageDayScore,
     todoCount: todoTasks.length,
     doneCount: doneTasks.length,
-    bestDay: best.score > 0 ? `${format(parseISO(best.date), 'MMM d')}: ${best.score}%` : 'No scored day yet',
+    bestDay: activeDays > 0 ? `${format(parseISO(best.date), 'MMM d')}: ${best.score}%` : 'No scored day yet',
     mainDrag: repeatedReason ? `${repeatedReason[0]} (${repeatedReason[1]}x)` : missed ? `${missed.label}: ${missed.missed} misses` : 'No drag detected yet',
     reliableRitual: reliable ? `${reliable.label}: ${reliable.rate}% hit rate` : 'No ritual data yet',
     nextTask: nextTask ? `${nextTask.title}${nextTask.quadrant ? ` (${nextTask.quadrant.toUpperCase()})` : ''}` : 'No open tasks',
@@ -230,7 +232,7 @@ function buildPatterns(
 }
 
 function scoreForDay(items: ScoreboardItem[], logByItemDate: Map<string, ScoreboardLog>, date: string) {
-  const trackable = items.filter((item) => item.category === 'daily');
+  const trackable = items;
   if (trackable.length === 0) return 0;
 
   const score = trackable.reduce((sum, item) => {
@@ -238,7 +240,7 @@ function scoreForDay(items: ScoreboardItem[], logByItemDate: Map<string, Scorebo
     if (!log) return sum;
     if (item.kind === 'score') {
       const max = Math.max(1, item.max_score ?? item.ideal_score ?? 1);
-      return sum + Math.min(1, Math.max(0, (log.value_score ?? 0) / max));
+      return sum + Math.max(-1, Math.min(1, (log.value_score ?? 0) / max));
     }
     if (item.kind === 'check') return sum + (log.value_bool ? 1 : 0);
     return sum + (log.value_text?.trim() ? 1 : 0);
@@ -250,12 +252,11 @@ function scoreForDay(items: ScoreboardItem[], logByItemDate: Map<string, Scorebo
 function itemCompletionStats(items: ScoreboardItem[], logs: ScoreboardLog[], days: string[]) {
   const logByItemDate = new Map(logs.map((log) => [`${log.item_id}:${log.date}`, log]));
   return items
-    .filter((item) => item.category === 'daily')
     .map((item) => {
       const hits = days.filter((day) => {
         const log = logByItemDate.get(`${item.id}:${day}`);
         if (!log) return false;
-        if (item.kind === 'score') return Boolean(log.value_score && log.value_score > 0);
+        if (item.kind === 'score') return log.value_score !== null;
         if (item.kind === 'check') return Boolean(log.value_bool);
         return Boolean(log.value_text?.trim());
       }).length;
