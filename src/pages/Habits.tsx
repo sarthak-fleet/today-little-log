@@ -141,8 +141,11 @@ const Habits = ({ embedded = false }: HabitsProps) => {
   const getDayValue = (habitId: string, date: string) =>
     logs.find((log) => log.habit_id === habitId && log.date === date)?.value ?? 0;
 
+  const getDayLog = (habitId: string, date: string) =>
+    logs.find((log) => log.habit_id === habitId && log.date === date);
+
   const isGoalMet = (habit: Habit, value: number) =>
-    habit.target_type === 'limit' ? value <= habit.target_value && value > 0 : value >= habit.target_value;
+    habit.target_type === 'limit' ? value <= habit.target_value : value >= habit.target_value;
 
   const getHistoryStats = (habit: Habit) => {
     const values = historyDays.map((date) => ({ date, value: getDayValue(habit.id, date) }));
@@ -496,7 +499,7 @@ const Habits = ({ embedded = false }: HabitsProps) => {
           {historyHabit && (() => {
             const stats = getHistoryStats(historyHabit);
             const recentLogs = logs
-              .filter((log) => log.habit_id === historyHabit.id && log.value > 0)
+              .filter((log) => log.habit_id === historyHabit.id)
               .sort((a, b) => b.date.localeCompare(a.date))
               .slice(0, 8);
 
@@ -525,6 +528,7 @@ const Habits = ({ embedded = false }: HabitsProps) => {
                   <div className="grid grid-cols-10 gap-1.5">
                     {stats.values.map(({ date, value }) => {
                       const met = isGoalMet(historyHabit, value);
+                      const dayLog = getDayLog(historyHabit.id, date);
                       return (
                         <div
                           key={date}
@@ -533,7 +537,7 @@ const Habits = ({ embedded = false }: HabitsProps) => {
                             'aspect-square rounded-md border',
                             met
                               ? 'border-primary/40 bg-primary/80'
-                              : value > 0
+                              : dayLog
                                 ? 'border-accent/40 bg-accent/40'
                                 : 'border-border bg-muted/50'
                           )}
