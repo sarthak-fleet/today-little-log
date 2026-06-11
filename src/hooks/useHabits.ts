@@ -95,6 +95,7 @@ export function useHabits() {
               frequency: h.frequency as 'daily' | 'weekly',
               target_value: h.target_value,
             })));
+            localStorage.removeItem(HABITS_STORAGE_KEY);
           }
         }
       } catch (error) {
@@ -111,6 +112,31 @@ export function useHabits() {
           value: l.value,
         }));
         setLogs(dedupeLogs(mappedLogs));
+
+        const savedLogs = localStorage.getItem(HABIT_LOGS_STORAGE_KEY);
+        if (savedLogs) {
+          const localLogs = dedupeLogs(JSON.parse(savedLogs) as HabitLog[]);
+          for (const log of localLogs) {
+            await apiFetch('/api/habit-logs', {
+              method: 'POST',
+              body: JSON.stringify({
+                habit_id: log.habit_id,
+                date: log.date,
+                value: log.value,
+              }),
+            });
+          }
+          const reloadedLogs = await apiFetch<HabitLogRow[]>('/api/habit-logs');
+          if (reloadedLogs) {
+            setLogs(dedupeLogs(reloadedLogs.map(l => ({
+              id: l.id,
+              habit_id: l.habit_id,
+              date: l.date,
+              value: l.value,
+            }))));
+            localStorage.removeItem(HABIT_LOGS_STORAGE_KEY);
+          }
+        }
       } catch (error) {
         console.error('Failed to load habit logs:', error);
       }
