@@ -120,34 +120,21 @@ test('score matrix surfaces editability + the "habits + rituals + everything" fr
   expect(errs).toEqual([]);
 });
 
-test('publish-for-the-month locks matrix configuration', async ({ page }) => {
+test('publish CTA is shown but disabled in guest mode', async ({ page }) => {
   const errs = await collectErrors(page);
-  // Clean any prior publish state for the current month.
-  await page.addInitScript(() => {
-    Object.keys(localStorage).forEach((k) => {
-      if (k.startsWith('tll:scoreboard-published:')) localStorage.removeItem(k);
-    });
-  });
   await page.goto('/');
 
-  // Add a row so publish is available.
+  // Add a row so the publish banner appears.
   await page.getByRole('button', { name: /Add row/i }).click();
   await page.getByLabel(/Title/i).fill('Meditation');
   await page.getByRole('button', { name: /^Add row$/ }).click();
   await expect(page.getByText('Meditation')).toBeVisible();
 
-  // Publish CTA visible. Accept the confirm dialog.
-  page.on('dialog', (d) => d.accept());
-  await page.getByRole('button', { name: /Publish for the month/i }).click();
-
-  // After publish: Add row button gone, status banner visible.
-  await expect(page.getByText(/Matrix is published/i)).toBeVisible();
-  await expect(page.getByRole('button', { name: /Add row/i })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: /Unlock setup/i })).toBeVisible();
-
-  // Edit/Remove icons per row are also gone.
-  await expect(page.getByRole('button', { name: /^Edit Meditation$/ })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: /^Remove Meditation$/ })).toHaveCount(0);
+  // Banner copy points the guest at signing in.
+  await expect(page.getByText(/Publishing is enabled when you sign in/i)).toBeVisible();
+  const publishBtn = page.getByRole('button', { name: /Publish for the month/i });
+  await expect(publishBtn).toBeVisible();
+  await expect(publishBtn).toBeDisabled();
 
   expect(errs).toEqual([]);
 });

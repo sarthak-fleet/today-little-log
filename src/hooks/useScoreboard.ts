@@ -49,18 +49,10 @@ const LOCKS_KEY = 'tll:guest-scoreboard-locks';
 const DAY_NOTES_KEY = 'tll:guest-scoreboard-day-notes';
 // "Publish" = the user is done configuring the matrix for the month.
 // After publish, addItem/updateItem/removeItem are blocked but logging
-// continues until the month-end lock. Persisted in localStorage only
-// for now (single device); server-side persistence is a follow-up.
-const PUBLISHED_KEY_PREFIX = 'tll:scoreboard-published:';
-function readPublished(month: string): boolean {
-  try { return localStorage.getItem(`${PUBLISHED_KEY_PREFIX}${month}`) === '1'; } catch { return false; }
-}
-function writePublished(month: string, published: boolean) {
-  try {
-    if (published) localStorage.setItem(`${PUBLISHED_KEY_PREFIX}${month}`, '1');
-    else localStorage.removeItem(`${PUBLISHED_KEY_PREFIX}${month}`);
-  } catch { /* ignore */ }
-}
+// continues until the month-end lock. Logged-in: persisted as
+// `published_at` on scoreboard_month_locks via /api/scoreboard-locks.
+// Guest: not available — the CTA is shown disabled with a "sign in"
+// hint instead.
 
 function readGuest<T>(key: string): T[] {
   try {
@@ -151,16 +143,7 @@ export function useScoreboard(month: string = format(new Date(), 'yyyy-MM')) {
   const [lockedMonths, setLockedMonths] = useState<string[]>([]);
   const [storageMode, setStorageMode] = useState<'api' | 'guest'>('guest');
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isPublished, setIsPublished] = useState<boolean>(() => readPublished(month));
-  useEffect(() => { setIsPublished(readPublished(month)); }, [month]);
-  const publishConfig = useCallback(() => {
-    writePublished(month, true);
-    setIsPublished(true);
-  }, [month]);
-  const unpublishConfig = useCallback(() => {
-    writePublished(month, false);
-    setIsPublished(false);
-  }, [month]);
+  const [isPublished, setIsPublished] = useState<boolean>(false);
 
   const today = format(new Date(), 'yyyy-MM-dd');
   const { start: monthStart, end: monthEnd } = useMemo(() => monthBounds(month), [month]);
@@ -196,7 +179,7 @@ export function useScoreboard(month: string = format(new Date(), 'yyyy-MM')) {
         apiFetch<ScoreboardItem[]>(`/api/scoreboard-items?month=${encodeURIComponent(month)}`).catch(() => []),
         apiFetch<ScoreboardLog[]>(`/api/scoreboard-logs?since=${monthStart}`).catch(() => []),
         apiFetch<ScoreboardDayNote[]>(`/api/scoreboard-day-notes?month=${encodeURIComponent(month)}`).catch(() => []),
-        apiFetch<{ locked: boolean }>(`/api/scoreboard-locks?month=${encodeURIComponent(month)}`).catch(() => ({ locked: false })),
+        apiFetch<{ locked: boolean; published?: boolean }>(`/api/scoreboard-locks?month=${encodeURIComponent(month)}`).catch(() => ({ locked: false, published: false })),
       ]).then(async ([nextItems, nextLogs, nextDayNotes, lock]) => {
         const syncedItems = await syncConfiguredItemsForUser(
           (nextItems ?? []).map(normalizeItem),
@@ -212,13 +195,16 @@ export function useScoreboard(month: string = format(new Date(), 'yyyy-MM')) {
           const rest = prev.filter((row) => row !== month);
           return lock.locked ? [...rest, month] : rest;
         });
+        setIsPublished(Boolean(lock.published));
       }).catch(() => {
         loadGuestState();
+        setIsPublished(false);
       }).finally(() => setIsLoaded(true));
       return;
     }
 
     loadGuestState();
+    setIsPublished(false);
     setIsLoaded(true);
   }, [user, loading, month, monthStart, monthEnd, monthConfig, loadGuestState]);
 
@@ -427,7 +413,7 @@ export function useScoreboard(month: string = format(new Date(), 'yyyy-MM')) {
     if (!usingGuestStorage) {
       await apiFetch('/api/scoreboard-locks', {
         method: 'POST',
-        body: JSON.stringify({ score_month: month }),
+        body: JSON.stringify({ score_month: month, kind: 'finalize' }),
       });
       setLockedMonths((prev) => (prev.includes(month) ? prev : [...prev, month]));
       return;
@@ -439,6 +425,32 @@ export function useScoreboard(month: string = format(new Date(), 'yyyy-MM')) {
       return next;
     });
   }, [isLocked, month, usingGuestStorage]);
+
+  const publishConfig = useCallback(async () => {
+    if (!user || isLocked || isPublished) return;
+    try {
+      await apiFetch('/api/scoreboard-locks', {
+        method: 'POST',
+        body: JSON.stringify({ score_month: month, kind: 'publish' }),
+      });
+      setIsPublished(true);
+    } catch (error) {
+      console.error('Failed to publish scoreboard matrix:', error);
+    }
+  }, [user, isLocked, isPublished, month]);
+
+  const unpublishConfig = useCallback(async () => {
+    if (!user || isLocked || !isPublished) return;
+    try {
+      await fetch(`/api/scoreboard-locks?month=${encodeURIComponent(month)}&kind=publish`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      setIsPublished(false);
+    } catch (error) {
+      console.error('Failed to unpublish scoreboard matrix:', error);
+    }
+  }, [user, isLocked, isPublished, month]);
 
   return {
     isLoaded,
@@ -453,6 +465,7 @@ export function useScoreboard(month: string = format(new Date(), 'yyyy-MM')) {
     trackingStartDate,
     isLocked,
     isPublished,
+    isLoggedIn: Boolean(user),
     isConfigured: Boolean(monthConfig),
     logFor,
     dayNoteFor,

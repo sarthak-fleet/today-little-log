@@ -172,6 +172,7 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
     updateItem,
     removeItem,
     isPublished,
+    isLoggedIn,
     publishConfig,
     unpublishConfig,
   } = useScoreboard(currentMonth);
@@ -245,7 +246,7 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
     await lockMonth();
   };
 
-  const submitPublish = () => {
+  const submitPublish = async () => {
     if (items.length === 0) {
       window.alert('Add at least one row before publishing.');
       return;
@@ -254,13 +255,13 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
       `Publish your ${format(new Date(), 'MMMM yyyy')} matrix? Once published you can log scores but the row list, max scores, and rules are frozen until next month.`,
     );
     if (!confirmed) return;
-    publishConfig();
+    await publishConfig();
   };
 
-  const submitUnpublish = () => {
+  const submitUnpublish = async () => {
     const confirmed = window.confirm('Unlock the matrix for editing again? You can republish anytime.');
     if (!confirmed) return;
-    unpublishConfig();
+    await unpublishConfig();
   };
 
   return (
@@ -398,9 +399,18 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
           <div className="mb-4 flex flex-col gap-3 rounded-xl border border-primary/40 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-sm">
               <p className="font-semibold text-foreground">Ready to log for the month?</p>
-              <p className="text-muted-foreground">Publishing freezes the row list, max scores, and rules until {format(endOfMonth(new Date()), 'MMM d')}.</p>
+              <p className="text-muted-foreground">
+                {isLoggedIn
+                  ? `Publishing freezes the row list, max scores, and rules until ${format(endOfMonth(new Date()), 'MMM d')}.`
+                  : 'Publishing is enabled when you sign in — that way the freeze syncs across your devices.'}
+              </p>
             </div>
-            <Button size="sm" onClick={submitPublish}>
+            <Button
+              size="sm"
+              onClick={submitPublish}
+              disabled={!isLoggedIn}
+              title={isLoggedIn ? undefined : 'Sign in to publish'}
+            >
               Publish for the month
             </Button>
           </div>
