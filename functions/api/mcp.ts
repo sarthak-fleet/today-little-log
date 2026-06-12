@@ -297,21 +297,33 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     return new Response('Method not allowed', { status: 405, headers: { allow: 'GET, POST' } });
   }
 
-  const db = createDb(env);
-  const userId = await requireUserId(request, env, db);
-  if (!userId) {
-    return new Response(JSON.stringify(err(null, -32000, 'Unauthorized')), {
-      status: 401,
-      headers: { 'content-type': 'application/json' },
-    });
-  }
-
   let body: JsonRpcRequest | JsonRpcRequest[];
   try {
     body = await request.json();
   } catch {
     return new Response(JSON.stringify(err(null, -32700, 'Parse error')), {
       status: 400,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
+
+  let db: ReturnType<typeof createDb>;
+  let userId: string | null;
+  try {
+    db = createDb(env);
+    userId = await requireUserId(request, env, db);
+  } catch (e) {
+    // Misconfigured deployment (missing TURSO_* / BETTER_AUTH_*) —
+    // return a structured JSON-RPC error instead of a 500 stack trace.
+    const message = e instanceof Error ? e.message : 'auth init failed';
+    return new Response(JSON.stringify(err(null, -32001, `Server misconfigured: ${message}`)), {
+      status: 503,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
+  if (!userId) {
+    return new Response(JSON.stringify(err(null, -32000, 'Unauthorized')), {
+      status: 401,
       headers: { 'content-type': 'application/json' },
     });
   }

@@ -42,6 +42,25 @@ cross-user access, no mutation tools.
 All tools return `{ content: [...text...], structuredContent: <typed
 JSON> }` per the MCP `tools/call` spec.
 
+## Local verification
+
+```sh
+pnpm build
+npx wrangler pages dev dist/ --port 8788 --compatibility-flag=nodejs_compat
+
+# In another shell:
+curl -s http://localhost:8788/api/mcp | jq           # discovery, 200
+curl -s -X POST http://localhost:8788/api/mcp \
+  -H 'content-type: application/json' -d '{bad' \    # → 400 -32700 Parse error
+  | jq
+```
+
+Tool calls also require `.dev.vars` with real `TURSO_DATABASE_URL`,
+`TURSO_AUTH_TOKEN`, and `BETTER_AUTH_SECRET` — otherwise wrangler dev
+returns a `-32001 Server misconfigured` JSON-RPC error (503). In
+production these are encrypted Cloudflare Pages secrets and the
+authenticated tool path works end-to-end.
+
 ## Quickstart
 
 ```sh
