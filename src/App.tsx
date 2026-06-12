@@ -9,6 +9,9 @@ import { AnalyticsTracker } from "./components/AnalyticsTracker";
 import { PersistentLayout } from "./components/AppLayout";
 import Index from "./pages/Index";
 import Journal from "./pages/Journal";
+import Habits from "./pages/Habits";
+import Rituals from "./pages/Rituals";
+import Focus from "./pages/Focus";
 import Auth from "./pages/Auth";
 import Life from "./pages/Life";
 import Review from "./pages/Review";
@@ -47,13 +50,13 @@ const App = () => (
               <Route element={<LayoutWrapper />}>
                 <Route path="/" element={<Index />} />
                 <Route path="/journal" element={<Journal />} />
+                <Route path="/habits" element={<Habits />} />
+                <Route path="/rituals" element={<Rituals />} />
+                <Route path="/focus" element={<Focus />} />
                 <Route path="/patterns" element={<Patterns />} />
                 <Route path="/life" element={<Life />} />
-                <Route path="/rituals" element={<Navigate to="/" replace />} />
-                <Route path="/focus" element={<Navigate to="/" replace />} />
                 <Route path="/memories" element={<Navigate to="/journal" replace />} />
                 <Route path="/review" element={<Review />} />
-                <Route path="/habits" element={<Navigate to="/" replace />} />
                 <Route path="/tasks" element={<Navigate to="/" replace />} />
                 <Route path="/eisenhower" element={<Navigate to="/" replace />} />
                 <Route path="/about" element={<About />} />

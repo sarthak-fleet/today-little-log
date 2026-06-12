@@ -1,11 +1,11 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { BookOpen, Brain, LineChart, Skull, Trophy } from 'lucide-react';
+import { BookOpen, Skull, Sunrise, Target, Trophy } from 'lucide-react';
 
 const navItems = [
   { title: 'Score', url: '/', icon: Trophy },
   { title: 'Journal', url: '/journal', icon: BookOpen },
-  { title: 'Patterns', url: '/patterns', icon: Brain },
-  { title: 'Review', url: '/review', icon: LineChart },
+  { title: 'Habits', url: '/habits', icon: Target },
+  { title: 'Rituals', url: '/rituals', icon: Sunrise },
   { title: 'Life', url: '/life', icon: Skull },
 ];
 
