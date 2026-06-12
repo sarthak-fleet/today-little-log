@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { CalendarView } from '@/components/CalendarView';
+import { FocusMode } from '@/components/FocusMode';
 import { JournalSkeleton } from '@/components/PageSkeleton';
 import { PastEntries } from '@/components/PastEntries';
 import { TodayPrompt } from '@/components/TodayPrompt';
@@ -7,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useReportSaving } from '@/components/SavingContext';
 import { type EntryType, useJournalEntries } from '@/hooks/useJournalEntries';
+import Habits from '@/pages/Habits';
 import { AlertCircle, BookOpen, CalendarDays, List, RefreshCw, Search, X } from 'lucide-react';
 
 const Journal = () => {
@@ -71,20 +73,26 @@ const Journal = () => {
           </div>
         )}
 
-        <div className="rounded-2xl border border-border bg-card p-4 md:p-6 shadow-soft">
-          {isLoaded ? (
-            <TodayPrompt
-              todayEntry={getTodayEntry()}
-              weeklyEntry={getWeeklyEntry()}
-              monthlyEntry={getMonthlyEntry()}
-              isSunday={isSunday()}
-              isLastDayOfMonth={isLastDayOfMonth()}
-              onSave={handleSave}
-              isSaving={isSaving}
-            />
-          ) : (
-            <JournalSkeleton />
-          )}
+        <div className="space-y-5">
+          <FocusMode />
+
+          <div className="rounded-2xl border border-border bg-card p-4 md:p-6 shadow-soft">
+            {isLoaded ? (
+              <TodayPrompt
+                todayEntry={getTodayEntry()}
+                weeklyEntry={getWeeklyEntry()}
+                monthlyEntry={getMonthlyEntry()}
+                isSunday={isSunday()}
+                isLastDayOfMonth={isLastDayOfMonth()}
+                onSave={handleSave}
+                isSaving={isSaving}
+              />
+            ) : (
+              <JournalSkeleton />
+            )}
+          </div>
+
+          <Habits embedded />
         </div>
 
         <div className="mt-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

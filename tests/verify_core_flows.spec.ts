@@ -85,14 +85,24 @@ test.describe('timer — focus block', () => {
   });
 });
 
-test('bottom nav surfaces Habits and Timer', async ({ page }) => {
+test('bottom nav has the simplified set: Score, Journal, Life', async ({ page }) => {
   const errs = await collectErrors(page);
   await page.setViewportSize({ width: 375, height: 800 });
   await page.goto('/');
-  await expect(page.locator('nav').getByLabel('Habits')).toBeVisible();
-  await expect(page.locator('nav').getByLabel('Timer')).toBeVisible();
-  await page.locator('nav').getByLabel('Habits').click();
-  await expect(page).toHaveURL(/\/habits$/);
+  const nav = page.locator('nav').last();
+  await expect(nav.getByLabel('Score')).toBeVisible();
+  await expect(nav.getByLabel('Journal')).toBeVisible();
+  await expect(nav.getByLabel('Life')).toBeVisible();
+  await nav.getByLabel('Journal').click();
+  await expect(page).toHaveURL(/\/journal$/);
+  expect(errs).toEqual([]);
+});
+
+test('/journal embeds Timer and Habits', async ({ page }) => {
+  const errs = await collectErrors(page);
+  await page.goto('/journal');
+  await expect(page.getByRole('button', { name: /Start a block/i })).toBeVisible();
+  await expect(page.getByText(/Daily ritual items/i)).toBeVisible();
   expect(errs).toEqual([]);
 });
 
