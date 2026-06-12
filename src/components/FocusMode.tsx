@@ -1,18 +1,23 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useUserStats } from '@/hooks/useUserStats';
 import { useAuth } from '@/hooks/useAuth';
+import { useHabits } from '@/hooks/useHabits';
 import { Target, X, Flame, Check } from 'lucide-react';
 
 const SESSION_KEY = 'tll:focus-session';
 const PRESETS = [25, 45, 90];
+const HABIT_NONE = '__none__';
 
 interface Session {
   startedAt: string;
   durationMin: number;
   taskTitle: string;
   interruptions: number;
+  habitId?: string | null;
 }
 
 function readSession(): Session | null {
@@ -31,11 +36,13 @@ function writeSession(s: Session | null) {
 export function FocusMode() {
   const { user } = useAuth();
   const { award } = useUserStats();
+  const { habits, logHabit, getTodayLog } = useHabits();
 
   const [session, setSession] = useState<Session | null>(() => readSession());
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickedMin, setPickedMin] = useState(45);
   const [pickedTask, setPickedTask] = useState('');
+  const [pickedHabitId, setPickedHabitId] = useState<string>(HABIT_NONE);
   const [elapsed, setElapsed] = useState(0);
   const [completed, setCompleted] = useState(false);
   const tickRef = useRef<number | null>(null);
@@ -72,16 +79,22 @@ export function FocusMode() {
 
   const finish = useCallback(async () => {
     if (!session) return;
+    const elapsedMin = Math.max(1, Math.round(elapsed / 60));
+    // Log the time into the linked habit, additive to today's value.
+    if (session.habitId) {
+      const today = format(new Date(), 'yyyy-MM-dd');
+      const current = getTodayLog(session.habitId, today);
+      await logHabit(session.habitId, current + elapsedMin, today);
+    }
     if (user) {
-      const min = session.durationMin;
-      const xp = Math.max(5, min - session.interruptions * 5);
+      const xp = Math.max(5, elapsedMin - session.interruptions * 5);
       await award(xp, 2);
     }
     update(null);
     setElapsed(0);
     setCompleted(true);
     setTimeout(() => setCompleted(false), 4000);
-  }, [session, user, award, update]);
+  }, [session, elapsed, user, award, update, logHabit, getTodayLog]);
 
   // Auto-finish at duration.
   useEffect(() => {
@@ -94,6 +107,8 @@ export function FocusMode() {
   const mm = Math.floor(remaining / 60);
   const ss = remaining % 60;
   const progress = totalSec > 0 ? Math.min(1, elapsed / totalSec) : 0;
+  const sessionHabit = session?.habitId ? habits.find((h) => h.id === session.habitId) : null;
+  const timeHabits = habits.filter((h) => h.track_type === 'time');
 
   if (session) {
     return (
@@ -101,7 +116,7 @@ export function FocusMode() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-primary">
             <Target className="h-4 w-4" />
-            <span className="text-xs font-semibold uppercase tracking-[0.25em]">Focus block</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.25em]">Timer</span>
           </div>
           <div className="flex items-center gap-1">
             <Button size="sm" variant="secondary" onClick={finish} aria-label="Stop">
@@ -113,6 +128,11 @@ export function FocusMode() {
           </div>
         </div>
         <div className="font-display font-semibold text-foreground">{session.taskTitle || '—'}</div>
+        {sessionHabit && (
+          <p className="text-[11px] text-muted-foreground">
+            Will log to <span className="font-semibold text-foreground">{sessionHabit.title}</span> on stop.
+          </p>
+        )}
         <div className="flex items-baseline gap-3">
           <span className="font-display font-extrabold tabular-nums text-4xl text-foreground">
             {String(mm).padStart(2, '0')}:{String(ss).padStart(2, '0')}
@@ -137,7 +157,7 @@ export function FocusMode() {
     <div className="rounded-2xl bg-card border border-border p-5 space-y-4 shadow-soft">
       <div className="flex items-center gap-2 text-primary">
         <Target className="h-4 w-4" />
-        <span className="text-xs font-semibold uppercase tracking-[0.25em]">Focus block</span>
+        <span className="text-xs font-semibold uppercase tracking-[0.25em]">Timer</span>
         {completed && (
           <span className="text-[10px] font-semibold uppercase tracking-widest text-emerald-600 inline-flex items-center gap-1 ml-auto">
             <Check className="h-3 w-3" /> Logged
@@ -170,6 +190,27 @@ export function FocusMode() {
             placeholder="What's the one thing for this block?"
             className="bg-background"
           />
+          {timeHabits.length > 0 && (
+            <div className="space-y-1">
+              <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Log time to habit (optional)
+              </label>
+              <Select value={pickedHabitId} onValueChange={setPickedHabitId}>
+                <SelectTrigger className="bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={HABIT_NONE}>Don't log to a habit</SelectItem>
+                  {timeHabits.map((h) => (
+                    <SelectItem key={h.id} value={h.id}>{h.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[10px] text-muted-foreground">
+                Time-tracked habits only. The elapsed minutes will be added to today's count.
+              </p>
+            </div>
+          )}
           <div className="flex gap-2 justify-end">
             <Button size="sm" variant="ghost" onClick={() => setPickerOpen(false)}>Cancel</Button>
             <Button
@@ -181,6 +222,7 @@ export function FocusMode() {
                   durationMin: pickedMin,
                   taskTitle: pickedTask.trim(),
                   interruptions: 0,
+                  habitId: pickedHabitId === HABIT_NONE ? null : pickedHabitId,
                 });
                 setPickerOpen(false);
               }}

@@ -57,7 +57,7 @@ test.describe('scoreboard — guest interaction', () => {
   });
 });
 
-test.describe('time start/stop — focus block', () => {
+test.describe('timer — focus block', () => {
   test('starts, persists across reload, can stop manually', async ({ page }) => {
     const errs = await collectErrors(page);
     await page.goto('/focus');
@@ -85,13 +85,18 @@ test.describe('time start/stop — focus block', () => {
   });
 });
 
-test('bottom nav surfaces Habits and Rituals', async ({ page }) => {
+test('bottom nav surfaces Habits and Timer', async ({ page }) => {
   const errs = await collectErrors(page);
   await page.setViewportSize({ width: 375, height: 800 });
   await page.goto('/');
   await expect(page.locator('nav').getByLabel('Habits')).toBeVisible();
-  await expect(page.locator('nav').getByLabel('Rituals')).toBeVisible();
+  await expect(page.locator('nav').getByLabel('Timer')).toBeVisible();
   await page.locator('nav').getByLabel('Habits').click();
   await expect(page).toHaveURL(/\/habits$/);
   expect(errs).toEqual([]);
+});
+
+test('/rituals redirects to /habits', async ({ page }) => {
+  await page.goto('/rituals');
+  await expect(page).toHaveURL(/\/habits$/);
 });

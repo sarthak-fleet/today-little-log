@@ -10,7 +10,6 @@ import { PersistentLayout } from "./components/AppLayout";
 import Index from "./pages/Index";
 import Journal from "./pages/Journal";
 import Habits from "./pages/Habits";
-import Rituals from "./pages/Rituals";
 import Focus from "./pages/Focus";
 import Auth from "./pages/Auth";
 import Life from "./pages/Life";
@@ -51,7 +50,7 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/journal" element={<Journal />} />
                 <Route path="/habits" element={<Habits />} />
-                <Route path="/rituals" element={<Rituals />} />
+                <Route path="/rituals" element={<Navigate to="/habits" replace />} />
                 <Route path="/focus" element={<Focus />} />
                 <Route path="/patterns" element={<Patterns />} />
                 <Route path="/life" element={<Life />} />
