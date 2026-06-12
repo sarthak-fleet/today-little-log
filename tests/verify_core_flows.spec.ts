@@ -6,7 +6,7 @@ async function collectErrors(page: Page): Promise<string[]> {
   page.on('console', (m) => {
     if (m.type() === 'error') {
       const t = m.text();
-      if (/401|404|Unauthorized|Failed to fetch|ERR_|net::|vite|react-refresh/i.test(t)) return;
+      if (/401|404|Unauthorized|Failed to fetch|Failed to preconnect|posthog|ERR_|net::|vite|react-refresh/i.test(t)) return;
       errs.push(`console.error: ${t}`);
     }
   });

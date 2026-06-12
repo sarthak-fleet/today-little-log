@@ -19,6 +19,8 @@ export function PmRitual() {
       setWastes(todayRow.pm_wastes ?? '');
       setScore(todayRow.pm_score ?? null);
     }
+    // Same as AmRitual: only resync when the row identity changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [todayRow?.id]);
 
   const done = !!(todayRow?.pm_wins || todayRow?.pm_wastes || todayRow?.pm_score);

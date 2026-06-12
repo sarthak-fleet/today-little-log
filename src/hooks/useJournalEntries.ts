@@ -94,6 +94,9 @@ export function useJournalEntries() {
 
   useEffect(() => {
     fetchEntries(false);
+    // fetchEntries closes over `user` already; adding it would loop on
+    // each render because the callback identity changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   // Local-date keys ('yyyy-MM-dd'), matching useScoreboard/useDailyCheckins.

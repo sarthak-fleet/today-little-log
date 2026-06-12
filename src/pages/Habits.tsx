@@ -358,14 +358,14 @@ const Habits = ({ embedded = false }: HabitsProps) => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                          className="h-11 w-11 sm:h-9 sm:w-9 text-muted-foreground hover:text-foreground"
                           onClick={() => handleOpenDialog(habit)}
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive">
+                            <Button variant="ghost" size="icon" className="h-11 w-11 sm:h-9 sm:w-9 text-muted-foreground hover:text-destructive">
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           </AlertDialogTrigger>

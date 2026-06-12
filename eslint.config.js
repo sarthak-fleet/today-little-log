@@ -26,10 +26,28 @@ export default tseslint.config(
     rules: {
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
-      "react-hooks/set-state-in-effect": "warn",
+      // React 19's `set-state-in-effect` rule fires on legitimate
+      // "load on mount" and "sync prop into local state" patterns used
+      // throughout this codebase. Moving every load to Suspense and
+      // every controlled-to-local sync to `key`-resets is a larger
+      // refactor than this project wants. Off by policy; revisit when
+      // the suspense rewrite happens.
+      "react-hooks/set-state-in-effect": "off",
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "no-console": ["warn", { allow: ["warn", "error", "info"] }],
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+    },
+  },
+  {
+    files: ["src/components/ui/**", "src/components/SavingContext.tsx"],
+    rules: {
+      "react-refresh/only-export-components": "off",
+    },
+  },
+  {
+    files: ["tests/**", "*.spec.ts", "vite.config.ts", "drizzle.config.ts"],
+    rules: {
+      "no-console": "off",
     },
   }
 );

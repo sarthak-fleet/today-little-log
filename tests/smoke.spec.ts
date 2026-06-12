@@ -26,7 +26,7 @@ async function goAndCollectErrors(page: Page, path: string): Promise<string[]> {
     if (msg.type() === 'error') {
       const text = msg.text();
       // Ignore expected 401 / network-related noise from guest-mode API calls.
-      if (/401|Unauthorized|Failed to fetch|ERR_|net::/i.test(text)) return;
+      if (/401|Unauthorized|Failed to fetch|Failed to preconnect|posthog|ERR_|net::/i.test(text)) return;
       // Ignore vite HMR/devtools noise
       if (/vite|react-refresh|hot reload/i.test(text)) return;
       errors.push(`console.error: ${text}`);

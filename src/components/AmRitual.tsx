@@ -89,6 +89,9 @@ export function AmRitual() {
       setRegret(todayRow.am_regret ?? '');
       setSleep(todayRow.sleep_hours != null ? String(todayRow.sleep_hours) : '');
     }
+    // Resync local state only when the row identity changes — content
+    // edits (regret, intents) are user-driven and should not clobber.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [todayRow?.id]);
 
   const filledCount = intents.filter((i) => i.trim().length > 0).length;
