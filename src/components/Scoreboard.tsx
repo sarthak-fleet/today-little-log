@@ -171,6 +171,9 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
     addItem,
     updateItem,
     removeItem,
+    isPublished,
+    publishConfig,
+    unpublishConfig,
   } = useScoreboard(currentMonth);
 
   const scoringMatrixRef = useRef<HTMLElement>(null);
@@ -240,6 +243,24 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
     );
     if (!confirmed) return;
     await lockMonth();
+  };
+
+  const submitPublish = () => {
+    if (items.length === 0) {
+      window.alert('Add at least one row before publishing.');
+      return;
+    }
+    const confirmed = window.confirm(
+      `Publish your ${format(new Date(), 'MMMM yyyy')} matrix? Once published you can log scores but the row list, max scores, and rules are frozen until next month.`,
+    );
+    if (!confirmed) return;
+    publishConfig();
+  };
+
+  const submitUnpublish = () => {
+    const confirmed = window.confirm('Unlock the matrix for editing again? You can republish anytime.');
+    if (!confirmed) return;
+    unpublishConfig();
   };
 
   return (
@@ -351,20 +372,45 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
               <p className="text-sm text-muted-foreground">
                 {isLocked
                   ? 'This month is locked. You can review it, but not change daily scores or reasons.'
-                  : 'One row per thing you track. Add, edit, or remove rows — this matrix is yours.'}
+                  : isPublished
+                    ? 'Matrix published for the month. Add a daily score for each row — rows themselves are frozen until next month.'
+                    : 'Set up your rows for the month: one per thing you track. Publish when ready to start logging.'}
               </p>
             )}
           </div>
           <div className="flex items-center gap-3">
             <div className="text-xs font-mono text-muted-foreground">{currentMonth}</div>
-            {!readOnly && !isLocked && (
+            {!readOnly && !isLocked && !isPublished && (
               <Button size="sm" onClick={() => setEditorState({ mode: 'add' })} className="gap-1">
                 <Plus className="h-4 w-4" />
                 Add row
               </Button>
             )}
+            {!readOnly && !isLocked && isPublished && (
+              <Button size="sm" variant="ghost" onClick={submitUnpublish}>
+                Unlock setup
+              </Button>
+            )}
           </div>
         </div>
+
+        {!readOnly && !isLocked && !isPublished && items.length > 0 && (
+          <div className="mb-4 flex flex-col gap-3 rounded-xl border border-primary/40 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-sm">
+              <p className="font-semibold text-foreground">Ready to log for the month?</p>
+              <p className="text-muted-foreground">Publishing freezes the row list, max scores, and rules until {format(endOfMonth(new Date()), 'MMM d')}.</p>
+            </div>
+            <Button size="sm" onClick={submitPublish}>
+              Publish for the month
+            </Button>
+          </div>
+        )}
+
+        {!readOnly && !isLocked && isPublished && (
+          <div className="mb-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-800 dark:text-emerald-200">
+            Matrix is published for {format(new Date(), 'MMMM')}. The row list is frozen — focus on logging daily scores.
+          </div>
+        )}
 
         {isLocked && (
           <div className="mb-5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-800 dark:text-emerald-200">
@@ -395,8 +441,8 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
                 isLocked={isLocked}
                 readOnly={readOnly}
                 onChange={(patch) => setLog(item.id, patch)}
-                onEdit={() => setEditorState({ mode: 'edit', item })}
-                onRemove={() => removeItem(item.id)}
+                onEdit={!isPublished ? () => setEditorState({ mode: 'edit', item }) : undefined}
+                onRemove={!isPublished ? () => removeItem(item.id) : undefined}
               />
             ))}
           </div>

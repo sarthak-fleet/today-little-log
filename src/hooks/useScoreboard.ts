@@ -47,6 +47,20 @@ const ITEMS_KEY = 'tll:guest-scoreboard-items';
 const LOGS_KEY = 'tll:guest-scoreboard-logs';
 const LOCKS_KEY = 'tll:guest-scoreboard-locks';
 const DAY_NOTES_KEY = 'tll:guest-scoreboard-day-notes';
+// "Publish" = the user is done configuring the matrix for the month.
+// After publish, addItem/updateItem/removeItem are blocked but logging
+// continues until the month-end lock. Persisted in localStorage only
+// for now (single device); server-side persistence is a follow-up.
+const PUBLISHED_KEY_PREFIX = 'tll:scoreboard-published:';
+function readPublished(month: string): boolean {
+  try { return localStorage.getItem(`${PUBLISHED_KEY_PREFIX}${month}`) === '1'; } catch { return false; }
+}
+function writePublished(month: string, published: boolean) {
+  try {
+    if (published) localStorage.setItem(`${PUBLISHED_KEY_PREFIX}${month}`, '1');
+    else localStorage.removeItem(`${PUBLISHED_KEY_PREFIX}${month}`);
+  } catch { /* ignore */ }
+}
 
 function readGuest<T>(key: string): T[] {
   try {
@@ -137,6 +151,16 @@ export function useScoreboard(month: string = format(new Date(), 'yyyy-MM')) {
   const [lockedMonths, setLockedMonths] = useState<string[]>([]);
   const [storageMode, setStorageMode] = useState<'api' | 'guest'>('guest');
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isPublished, setIsPublished] = useState<boolean>(() => readPublished(month));
+  useEffect(() => { setIsPublished(readPublished(month)); }, [month]);
+  const publishConfig = useCallback(() => {
+    writePublished(month, true);
+    setIsPublished(true);
+  }, [month]);
+  const unpublishConfig = useCallback(() => {
+    writePublished(month, false);
+    setIsPublished(false);
+  }, [month]);
 
   const today = format(new Date(), 'yyyy-MM-dd');
   const { start: monthStart, end: monthEnd } = useMemo(() => monthBounds(month), [month]);
@@ -217,7 +241,7 @@ export function useScoreboard(month: string = format(new Date(), 'yyyy-MM')) {
   ), [monthDayNotes, today]);
 
   const addItem = useCallback(async ({ label, maxScore, criteria = '' }: ScoreboardItemInput) => {
-    if (isLocked) return;
+    if (isLocked || isPublished) return;
     const trimmed = label.trim();
     const boundedMax = Math.max(1, Math.round(Number(maxScore) || 1));
     if (!trimmed) return;
@@ -259,13 +283,13 @@ export function useScoreboard(month: string = format(new Date(), 'yyyy-MM')) {
       writeGuest(ITEMS_KEY, next);
       return next;
     });
-  }, [activeItems, isLocked, month, usingGuestStorage]);
+  }, [activeItems, isLocked, isPublished, month, usingGuestStorage]);
 
   const updateItem = useCallback(async (
     id: string,
     patch: Partial<Pick<ScoreboardItem, 'label' | 'max_score' | 'criteria' | 'archived'>>,
   ) => {
-    if (isLocked) return;
+    if (isLocked || isPublished) return;
     const updates = {
       ...patch,
       label: patch.label?.trim(),
@@ -287,10 +311,10 @@ export function useScoreboard(month: string = format(new Date(), 'yyyy-MM')) {
       writeGuest(ITEMS_KEY, next);
       return next;
     });
-  }, [isLocked, usingGuestStorage]);
+  }, [isLocked, isPublished, usingGuestStorage]);
 
   const removeItem = useCallback(async (id: string) => {
-    if (isLocked) return;
+    if (isLocked || isPublished) return;
     if (!usingGuestStorage) {
       await fetch(`/api/scoreboard-items?id=${encodeURIComponent(id)}`, {
         method: 'DELETE',
@@ -307,7 +331,7 @@ export function useScoreboard(month: string = format(new Date(), 'yyyy-MM')) {
       if (usingGuestStorage) writeGuest(LOGS_KEY, next);
       return next;
     });
-  }, [isLocked, usingGuestStorage]);
+  }, [isLocked, isPublished, usingGuestStorage]);
 
   const setLog = useCallback(async (
     itemId: string,
@@ -428,6 +452,7 @@ export function useScoreboard(month: string = format(new Date(), 'yyyy-MM')) {
     monthEnd,
     trackingStartDate,
     isLocked,
+    isPublished,
     isConfigured: Boolean(monthConfig),
     logFor,
     dayNoteFor,
@@ -437,6 +462,8 @@ export function useScoreboard(month: string = format(new Date(), 'yyyy-MM')) {
     setLog,
     setLowScoreReason,
     lockMonth,
+    publishConfig,
+    unpublishConfig,
   };
 }
 
