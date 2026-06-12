@@ -72,22 +72,22 @@ export function FocusMode() {
 
   const finish = useCallback(async () => {
     if (!session) return;
-    const min = session.durationMin;
-    const xp = Math.max(5, min - session.interruptions * 5);
-    await award(xp, 2);
+    if (user) {
+      const min = session.durationMin;
+      const xp = Math.max(5, min - session.interruptions * 5);
+      await award(xp, 2);
+    }
     update(null);
     setElapsed(0);
     setCompleted(true);
     setTimeout(() => setCompleted(false), 4000);
-  }, [session, award, update]);
+  }, [session, user, award, update]);
 
   // Auto-finish at duration.
   useEffect(() => {
     if (!session) return;
     if (elapsed >= session.durationMin * 60) finish();
   }, [elapsed, session, finish]);
-
-  if (!user) return null;
 
   const totalSec = (session?.durationMin ?? 0) * 60;
   const remaining = Math.max(0, totalSec - elapsed);
@@ -103,9 +103,14 @@ export function FocusMode() {
             <Target className="h-4 w-4" />
             <span className="text-xs font-semibold uppercase tracking-[0.25em]">Focus block</span>
           </div>
-          <Button size="sm" variant="ghost" onClick={() => update(null)} aria-label="Abort">
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button size="sm" variant="secondary" onClick={finish} aria-label="Stop">
+              Stop
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => update(null)} aria-label="Discard">
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         <div className="font-display font-semibold text-foreground">{session.taskTitle || '—'}</div>
         <div className="flex items-baseline gap-3">
