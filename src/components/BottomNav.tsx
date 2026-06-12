@@ -1,9 +1,10 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { BookOpen, Skull, Trophy } from 'lucide-react';
+import { BookOpen, Skull, Timer, Trophy } from 'lucide-react';
 
 const navItems = [
   { title: 'Score', url: '/', icon: Trophy },
   { title: 'Journal', url: '/journal', icon: BookOpen },
+  { title: 'Timer', url: '/focus', icon: Timer },
   { title: 'Life', url: '/life', icon: Skull },
 ];
 

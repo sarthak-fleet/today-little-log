@@ -78,7 +78,7 @@ test('retired tasks page redirects to score page', async ({ page }) => {
   const errs = await collectErrors(page);
   await page.goto('/tasks');
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.locator('body')).toContainText(/Today's scoreboard|Daily matrix/i);
+  await expect(page.locator('body')).toContainText(/Today's scoreboard|Habits, rituals & everything/i);
   expect(errs).toEqual([]);
 });
 

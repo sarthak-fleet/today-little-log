@@ -52,7 +52,7 @@ test.describe('scoreboard — guest interaction', () => {
     const errs = await collectErrors(page);
     await page.goto('/');
     await expect(page.getByText(/Today's scoreboard/i)).toBeVisible();
-    await expect(page.getByText(/Daily matrix/i)).toBeVisible();
+    await expect(page.getByText(/Habits, rituals & everything/i)).toBeVisible();
     expect(errs).toEqual([]);
   });
 });
@@ -85,24 +85,38 @@ test.describe('timer — focus block', () => {
   });
 });
 
-test('bottom nav has the simplified set: Score, Journal, Life', async ({ page }) => {
+test('bottom nav has Score, Journal, Timer, Life', async ({ page }) => {
   const errs = await collectErrors(page);
   await page.setViewportSize({ width: 375, height: 800 });
   await page.goto('/');
   const nav = page.locator('nav').last();
   await expect(nav.getByLabel('Score')).toBeVisible();
   await expect(nav.getByLabel('Journal')).toBeVisible();
+  await expect(nav.getByLabel('Timer')).toBeVisible();
   await expect(nav.getByLabel('Life')).toBeVisible();
-  await nav.getByLabel('Journal').click();
-  await expect(page).toHaveURL(/\/journal$/);
+  await nav.getByLabel('Timer').click();
+  await expect(page).toHaveURL(/\/focus$/);
   expect(errs).toEqual([]);
 });
 
-test('/journal embeds Timer and Habits', async ({ page }) => {
+test('/journal embeds Habits but not Timer', async ({ page }) => {
   const errs = await collectErrors(page);
   await page.goto('/journal');
-  await expect(page.getByRole('button', { name: /Start a block/i })).toBeVisible();
   await expect(page.getByText(/Daily ritual items/i)).toBeVisible();
+  await expect(page.getByRole('button', { name: /Start a block/i })).toHaveCount(0);
+  expect(errs).toEqual([]);
+});
+
+test('score matrix surfaces editability + the "habits + rituals + everything" framing', async ({ page }) => {
+  const errs = await collectErrors(page);
+  await page.goto('/');
+  await expect(page.getByText(/Habits, rituals & everything/i)).toBeVisible();
+  await expect(page.getByRole('button', { name: /Add row/i })).toBeVisible();
+  await page.getByRole('button', { name: /Add row/i }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.getByLabel(/Title/i).fill('Read 30 min');
+  await page.getByRole('button', { name: /^Add row$/ }).click();
+  await expect(page.getByText('Read 30 min')).toBeVisible();
   expect(errs).toEqual([]);
 });
 

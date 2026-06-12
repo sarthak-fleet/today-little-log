@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { CalendarView } from '@/components/CalendarView';
-import { FocusMode } from '@/components/FocusMode';
 import { JournalSkeleton } from '@/components/PageSkeleton';
 import { PastEntries } from '@/components/PastEntries';
 import { TodayPrompt } from '@/components/TodayPrompt';
@@ -74,8 +73,6 @@ const Journal = () => {
         )}
 
         <div className="space-y-5">
-          <FocusMode />
-
           <div className="rounded-2xl border border-border bg-card p-4 md:p-6 shadow-soft">
             {isLoaded ? (
               <TodayPrompt

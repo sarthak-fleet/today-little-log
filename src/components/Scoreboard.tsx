@@ -1,9 +1,12 @@
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useScoreboard, type ScoreboardItem } from '@/hooks/useScoreboard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { CalendarDays, Lock, Trophy } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Label } from '@/components/ui/label';
+import { CalendarDays, Lock, Pencil, Plus, Trash2, Trophy } from 'lucide-react';
 import { eachDayOfInterval, endOfMonth, format, isAfter, isToday, startOfMonth } from 'date-fns';
 
 type ScoreInputValue = string | boolean;
@@ -165,9 +168,13 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
     isConfigured,
     isLoaded,
     trackingStartDate,
+    addItem,
+    updateItem,
+    removeItem,
   } = useScoreboard(currentMonth);
 
   const scoringMatrixRef = useRef<HTMLElement>(null);
+  const [editorState, setEditorState] = useState<{ mode: 'add' } | { mode: 'edit'; item: ScoreboardItem } | null>(null);
 
   const days = useMemo(() => {
     const now = new Date();
@@ -335,7 +342,7 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
           <div>
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
               <Trophy className="h-4 w-4 text-primary" />
-              Daily matrix
+              Habits, rituals & everything
             </div>
             <h2 className="font-display text-xl font-bold text-foreground">
               {readOnly ? "Today's scores" : `${format(new Date(), 'MMMM yyyy')} scoring matrix`}
@@ -344,11 +351,19 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
               <p className="text-sm text-muted-foreground">
                 {isLocked
                   ? 'This month is locked. You can review it, but not change daily scores or reasons.'
-                  : 'Fill raw inputs every day. Criteria stay available inside each row.'}
+                  : 'One row per thing you track. Add, edit, or remove rows — this matrix is yours.'}
               </p>
             )}
           </div>
-          <div className="text-xs font-mono text-muted-foreground">{currentMonth}</div>
+          <div className="flex items-center gap-3">
+            <div className="text-xs font-mono text-muted-foreground">{currentMonth}</div>
+            {!readOnly && !isLocked && (
+              <Button size="sm" onClick={() => setEditorState({ mode: 'add' })} className="gap-1">
+                <Plus className="h-4 w-4" />
+                Add row
+              </Button>
+            )}
+          </div>
         </div>
 
         {isLocked && (
@@ -380,6 +395,8 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
                 isLocked={isLocked}
                 readOnly={readOnly}
                 onChange={(patch) => setLog(item.id, patch)}
+                onEdit={() => setEditorState({ mode: 'edit', item })}
+                onRemove={() => removeItem(item.id)}
               />
             ))}
           </div>
@@ -451,7 +468,93 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
         </div>
         </section>
       )}
+
+      {!readOnly && editorState && (
+        <ScoreItemEditor
+          state={editorState}
+          onClose={() => setEditorState(null)}
+          onSubmit={async ({ label, maxScore, criteria }) => {
+            if (editorState.mode === 'add') {
+              await addItem({ label, maxScore, criteria });
+            } else {
+              await updateItem(editorState.item.id, { label, max_score: maxScore, criteria });
+            }
+            setEditorState(null);
+          }}
+        />
+      )}
     </div>
+  );
+}
+
+function ScoreItemEditor({
+  state,
+  onClose,
+  onSubmit,
+}: {
+  state: { mode: 'add' } | { mode: 'edit'; item: ScoreboardItem };
+  onClose: () => void;
+  onSubmit: (values: { label: string; maxScore: number; criteria: string }) => Promise<void>;
+}) {
+  const initial = state.mode === 'edit' ? state.item : null;
+  const [label, setLabel] = useState(initial?.label ?? '');
+  const [maxScore, setMaxScore] = useState<string>(String(initial?.max_score ?? 5));
+  const [criteria, setCriteria] = useState(initial?.criteria ?? '');
+  const trimmed = label.trim();
+  const parsedMax = Math.max(1, Math.round(Number(maxScore) || 1));
+  const canSubmit = trimmed.length > 0;
+
+  return (
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{state.mode === 'add' ? 'Add row' : `Edit "${initial?.label}"`}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 pt-2">
+          <div className="space-y-2">
+            <Label htmlFor="score-label">Title</Label>
+            <Input
+              id="score-label"
+              autoFocus
+              value={label}
+              onChange={(event) => setLabel(event.target.value)}
+              placeholder="Read 30 min, Cold shower, Drink water…"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="score-max">Max score per day</Label>
+            <Input
+              id="score-max"
+              type="number"
+              min={1}
+              value={maxScore}
+              onChange={(event) => setMaxScore(event.target.value)}
+            />
+            <p className="text-[11px] text-muted-foreground">Daily score will be clamped between 0 and {parsedMax}.</p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="score-criteria">Scoring rule (optional)</Label>
+            <Textarea
+              id="score-criteria"
+              rows={3}
+              value={criteria}
+              onChange={(event) => setCriteria(event.target.value)}
+              placeholder="What earns full points? What loses points?"
+              className="resize-none"
+            />
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="ghost" onClick={onClose}>Cancel</Button>
+            <Button
+              disabled={!canSubmit}
+              onClick={() => onSubmit({ label: trimmed, maxScore: parsedMax, criteria })}
+            >
+              {state.mode === 'add' ? 'Add row' : 'Save'}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -476,6 +579,8 @@ function ScoreRow({
   isLocked,
   readOnly,
   onChange,
+  onEdit,
+  onRemove,
 }: {
   item: ScoreboardItem;
   score: number | null | undefined;
@@ -483,6 +588,8 @@ function ScoreRow({
   isLocked: boolean;
   readOnly: boolean;
   onChange: (patch: { value_score?: number | null; value_text?: string | null }) => void;
+  onEdit?: () => void;
+  onRemove?: () => void;
 }) {
   const entryNote = parseEntryNote(note, item.source_key);
   const inputs = entryNote?.inputs ?? {};
@@ -516,6 +623,47 @@ function ScoreRow({
             <span className="rounded-md bg-muted px-2 py-0.5 text-[11px] font-mono text-muted-foreground">
               {item.ideal_score === item.max_score ? `/${item.max_score}` : `/${item.ideal_score} ideal`}
             </span>
+            {!readOnly && !isLocked && (onEdit || onRemove) && (
+              <span className="ml-auto flex items-center gap-1">
+                {onEdit && (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label={`Edit ${item.label}`}
+                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                    onClick={onEdit}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+                {onRemove && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        aria-label={`Remove ${item.label}`}
+                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Remove row?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This removes "{item.label}" from the matrix along with all of its logged scores. Can't be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={onRemove}>Remove</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
+              </span>
+            )}
           </div>
           {!readOnly && item.criteria && (
             <details className="mt-2 group">
