@@ -72,9 +72,9 @@ export function useTasks() {
           }));
           setTasks(mapped);
 
-          // Migrate guest tasks to DB if DB is empty
+          // Migrate guest tasks to DB on first signed-in load.
           const guestTasks = readGuestTasks();
-          if (guestTasks.length > 0 && mapped.length === 0) {
+          if (guestTasks.length > 0) {
             for (const task of guestTasks) {
               await apiFetch('/api/tasks', {
                 method: 'POST',
@@ -149,8 +149,11 @@ export function useTasks() {
         }
         setIsSaving(false);
       } else {
-        const updated = [...tasks, newTask];
-        writeGuestTasks(updated);
+        setTasks((prev) => {
+          const next = [...prev, newTask];
+          writeGuestTasks(next);
+          return next;
+        });
       }
     },
     [isLoggedIn, user, tasks]
@@ -185,8 +188,11 @@ export function useTasks() {
         }
         setIsSaving(false);
       } else {
-        const updated = tasks.map((t) => (t.id === id ? { ...t, ...updates } : t));
-        writeGuestTasks(updated);
+        setTasks((prev) => {
+          const next = prev.map((task) => (task.id === id ? { ...task, ...updates } : task));
+          writeGuestTasks(next);
+          return next;
+        });
       }
     },
     [isLoggedIn, tasks]
@@ -217,10 +223,11 @@ export function useTasks() {
         }
         setIsSaving(false);
       } else {
-        const updated = tasks.map((t) =>
-          t.id === id ? { ...t, status: newStatus } : t
-        );
-        writeGuestTasks(updated);
+        setTasks((prev) => {
+          const next = prev.map((task) => (task.id === id ? { ...task, status: newStatus } : task));
+          writeGuestTasks(next);
+          return next;
+        });
       }
     },
     [isLoggedIn, tasks]
@@ -245,8 +252,11 @@ export function useTasks() {
         }
         setIsSaving(false);
       } else {
-        const updated = tasks.filter((t) => t.id !== id);
-        writeGuestTasks(updated);
+        setTasks((prev) => {
+          const next = prev.filter((task) => task.id !== id);
+          writeGuestTasks(next);
+          return next;
+        });
       }
     },
     [isLoggedIn, tasks]

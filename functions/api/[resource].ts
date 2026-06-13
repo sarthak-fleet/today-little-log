@@ -49,9 +49,37 @@ async function handleJournalEntries(method: string, db: DB, userId: string, body
     return json({ data: hasMore ? rows.slice(0, limit) : rows, hasMore });
   }
   if (method === 'POST') {
-    const { date, content, entry_type } = body as { date?: string; content?: string; entry_type?: string };
+    const { id, date, content, entry_type } = body as { id?: string; date?: string; content?: string; entry_type?: string };
+    const nextDate = date ?? today();
+    const nextType = entry_type ?? 'daily';
+    const nextContent = content ?? '';
+
+    if (id) {
+      const [existingById] = await db.select().from(journalEntries)
+        .where(and(eq(journalEntries.id, id), eq(journalEntries.user_id, userId)))
+        .limit(1);
+      if (existingById) {
+        const [row] = await db.update(journalEntries)
+          .set({ date: nextDate, content: nextContent, entry_type: nextType, updated_at: new Date().toISOString() })
+          .where(and(eq(journalEntries.id, id), eq(journalEntries.user_id, userId)))
+          .returning();
+        return json(row);
+      }
+    }
+
+    const [existingByDate] = await db.select().from(journalEntries)
+      .where(and(eq(journalEntries.user_id, userId), eq(journalEntries.date, nextDate), eq(journalEntries.entry_type, nextType)))
+      .limit(1);
+    if (existingByDate) {
+      const [row] = await db.update(journalEntries)
+        .set({ content: nextContent, updated_at: new Date().toISOString() })
+        .where(and(eq(journalEntries.id, existingByDate.id), eq(journalEntries.user_id, userId)))
+        .returning();
+      return json(row);
+    }
+
     const [row] = await db.insert(journalEntries)
-      .values({ user_id: userId, date: date ?? today(), content: content ?? '', entry_type: entry_type ?? 'daily' })
+      .values({ user_id: userId, date: nextDate, content: nextContent, entry_type: nextType })
       .returning();
     return json(row, { status: 201 });
   }

@@ -27,6 +27,7 @@ import { useJournalEntries } from '@/hooks/useJournalEntries';
 import { TodayPrompt } from '@/components/TodayPrompt';
 import { EntryEditor } from '@/components/EntryEditor';
 import { formatEntryPreview, getMoodFromContent, MOOD_META } from '@/lib/journalContent';
+import { categoryFromPosition } from '@/lib/scoreboardDefaults';
 
 const Review = () => {
   const { rows: checkins } = useDailyCheckins();
@@ -64,11 +65,11 @@ const Review = () => {
   const elapsedDays = useMemo(() => thisWeekDays.filter((d) => d <= todayKey), [thisWeekDays, todayKey]);
 
   const dailyItems = useMemo(
-    () => items.filter((item) => item.category === 'daily'),
+    () => items.filter((item) => categoryFromPosition(item.position) === 'daily'),
     [items],
   );
   const notToDos = useMemo(
-    () => items.filter((item) => item.category === 'not_to_do'),
+    () => items.filter((item) => categoryFromPosition(item.position) === 'not_to_do'),
     [items],
   );
   const logByItemDate = useMemo(
@@ -78,14 +79,13 @@ const Review = () => {
 
   const scoreFor = (date: string) => scoreForDay(dailyItems, logByItemDate, date);
 
-  const elapsedScored = elapsedDays.filter((d) => scoreFor(d) > 0);
-  const daysLogged = elapsedScored.length;
+  const daysWithLogs = elapsedDays.filter((d) => dailyItems.some((item) => logByItemDate.has(`${item.id}:${d}`)));
+  const daysLogged = daysWithLogs.length;
   const thisWeekAvg = daysLogged
-    ? Math.round(elapsedScored.reduce((s, d) => s + scoreFor(d), 0) / daysLogged)
+    ? Math.round(daysWithLogs.reduce((s, d) => s + scoreFor(d), 0) / daysLogged)
     : 0;
-  const bestDay = elapsedDays.reduce<{ date: string; score: number } | null>((winner, d) => {
+  const bestDay = daysWithLogs.reduce<{ date: string; score: number } | null>((winner, d) => {
     const score = scoreFor(d);
-    if (score <= 0) return winner;
     if (!winner || score > winner.score) return { date: d, score };
     return winner;
   }, null);
@@ -95,9 +95,11 @@ const Review = () => {
   // would mis-report a drop. Showing the comparison only when honest is the
   // smaller, safer surface.
   const lastWeekFullyLoaded = lastWeekStart >= parseISO(monthStart) && lastWeekEnd <= parseISO(monthEnd);
-  const lastWeekScored = lastWeekFullyLoaded ? lastWeekDays.filter((d) => scoreFor(d) > 0) : [];
-  const lastWeekAvg = lastWeekScored.length
-    ? Math.round(lastWeekScored.reduce((s, d) => s + scoreFor(d), 0) / lastWeekScored.length)
+  const lastWeekLogged = lastWeekFullyLoaded
+    ? lastWeekDays.filter((d) => dailyItems.some((item) => logByItemDate.has(`${item.id}:${d}`)))
+    : [];
+  const lastWeekAvg = lastWeekLogged.length
+    ? Math.round(lastWeekLogged.reduce((s, d) => s + scoreFor(d), 0) / lastWeekLogged.length)
     : null;
   const delta = lastWeekAvg !== null && daysLogged > 0 ? thisWeekAvg - lastWeekAvg : null;
 

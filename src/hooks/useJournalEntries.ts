@@ -45,22 +45,24 @@ export function useJournalEntries() {
         }
         setHasMore(Boolean(result.hasMore));
 
-        // Check for local storage migration (only on initial load)
+        // Check for local storage migration (only on initial load).
         if (!loadMore) {
           const savedEntries = localStorage.getItem(STORAGE_KEY);
-          if (savedEntries && newEntries.length === 0) {
+          if (savedEntries) {
             const localEntries = JSON.parse(savedEntries) as JournalEntry[];
             for (const entry of localEntries) {
               await apiFetch('/api/journal-entries', {
                 method: 'POST',
                 body: JSON.stringify({
+                  id: entry.id,
                   date: entry.date,
                   content: entry.content,
                   entry_type: entry.entry_type,
                 }),
               });
             }
-            // Reload after migration
+            localStorage.removeItem(STORAGE_KEY);
+            // Reload after migration.
             const reloaded = await apiFetch<{ data: JournalEntry[], hasMore: boolean }>(
               '/api/journal-entries?offset=0&limit=' + PAGE_SIZE
             );
@@ -193,26 +195,25 @@ export function useJournalEntries() {
       }
     } else {
       // Guest mode
-      let newEntries: JournalEntry[];
-      if (existingEntry) {
-        newEntries = entries.map(e =>
-          e.id === existingEntry.id
-            ? { ...e, content, updated_at: new Date().toISOString() }
-            : e
-        );
-      } else {
-        const newEntry: JournalEntry = {
-          id: crypto.randomUUID(),
-          date: targetDate,
-          content,
-          entry_type: entryType,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-        newEntries = [newEntry, ...entries];
-      }
-      setEntries(newEntries);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newEntries));
+      setEntries((prev) => {
+        const existing = prev.find((entry) => entry.date === targetDate && entry.entry_type === entryType);
+        const next = existing
+          ? prev.map((entry) => (
+              entry.id === existing.id
+                ? { ...entry, content, updated_at: new Date().toISOString() }
+                : entry
+            ))
+          : [{
+              id: crypto.randomUUID(),
+              date: targetDate,
+              content,
+              entry_type: entryType,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            }, ...prev];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        return next;
+      });
     }
 
     setIsSaving(false);
@@ -234,11 +235,13 @@ export function useJournalEntries() {
         return;
       }
     } else {
-      const newEntries = entries.map(e =>
-        e.id === id ? { ...e, content, updated_at: new Date().toISOString() } : e
-      );
-      setEntries(newEntries);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newEntries));
+      setEntries((prev) => {
+        const next = prev.map((entry) =>
+          entry.id === id ? { ...entry, content, updated_at: new Date().toISOString() } : entry,
+        );
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        return next;
+      });
     }
 
     setIsSaving(false);
@@ -260,9 +263,11 @@ export function useJournalEntries() {
         return;
       }
     } else {
-      const newEntries = entries.filter(e => e.id !== id);
-      setEntries(newEntries);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newEntries));
+      setEntries((prev) => {
+        const next = prev.filter((entry) => entry.id !== id);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        return next;
+      });
     }
 
     setIsSaving(false);

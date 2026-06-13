@@ -4,6 +4,7 @@ import { trackActivatedOnce, trackCoreAction } from '@/lib/analytics';
 import { useAuth } from './useAuth';
 import { endOfMonth, format, startOfMonth } from 'date-fns';
 import { getMonthlyScoreboardConfig, type MonthlyScoreboardEntryConfig, type MonthlyScoreboardItemConfig } from '@/config/monthlyScoreboards';
+import { categoryFromPosition } from '@/lib/scoreboardDefaults';
 
 export interface ScoreboardItem {
   id: string;
@@ -83,19 +84,20 @@ function writeGuestLocks(months: string[]) {
 }
 
 function normalizeItem(item: Partial<ScoreboardItem> & { id: string; label: string }): ScoreboardItem {
+  const position = Number(item.position ?? 0);
   return {
     id: item.id,
     label: item.label,
     kind: item.kind ?? 'score',
     cadence: item.cadence ?? 'daily',
-    category: item.category ?? 'daily',
+    category: item.category ?? categoryFromPosition(position),
     score_month: item.score_month ?? '',
     source_key: item.source_key ?? null,
     min_score: Number(item.min_score ?? 0),
     max_score: Number(item.max_score ?? 1),
     ideal_score: Math.max(0, Number(item.ideal_score ?? item.max_score ?? 1)),
     criteria: item.criteria ?? null,
-    position: Number(item.position ?? 0),
+    position,
     archived: Boolean(item.archived),
   };
 }
@@ -500,7 +502,7 @@ function syncConfiguredItemsForGuest(
       label: payload.label,
       kind: 'score',
       cadence: 'daily',
-      category: 'daily',
+      category: categoryFromPosition(payload.position),
       score_month: month,
       source_key: payload.source_key,
       min_score: payload.min_score,
