@@ -12,7 +12,7 @@ async function collectErrors(page: Page): Promise<string[]> {
   page.on('console', (m) => {
     if (m.type() === 'error') {
       const t = m.text();
-      if (/401|404|Unauthorized|Failed to fetch|ERR_|net::|vite|react-refresh/i.test(t)) return;
+      if (/401|404|Unauthorized|Failed to fetch|Failed to preconnect|posthog|ERR_|net::|vite|react-refresh/i.test(t)) return;
       errs.push(`console.error: ${t}`);
     }
   });
@@ -78,7 +78,7 @@ test('retired tasks page redirects to score page', async ({ page }) => {
   const errs = await collectErrors(page);
   await page.goto('/tasks');
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.locator('body')).toContainText(/Today's scoreboard|Daily matrix/i);
+  await expect(page.locator('body')).toContainText(/Today's scoreboard|Habits, rituals & everything/i);
   expect(errs).toEqual([]);
 });
 

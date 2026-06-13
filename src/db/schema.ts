@@ -360,6 +360,11 @@ export const scoreboardMonthLocks = sqliteTable('scoreboard_month_locks', {
   id: id(),
   user_id: userId(),
   score_month: text('score_month').notNull(),
-  locked_at: text('locked_at').notNull().$defaultFn(() => new Date().toISOString()),
+  // Two-stage lock — see migration 0010:
+  //   published_at — config (row list / max scores / rules) frozen,
+  //                  logging stays open until end of month.
+  //   locked_at    — end-of-month finalize: everything frozen.
+  locked_at: text('locked_at'),
+  published_at: text('published_at'),
   created_at: createdAt(),
 }, (t) => [uniqueIndex('scoreboard_month_locks_user_month_idx').on(t.user_id, t.score_month)]);

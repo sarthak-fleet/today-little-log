@@ -162,7 +162,7 @@ export function PastEntries({ entries, onUpdate, onDelete, hasMore, onLoadMore, 
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                    className="h-11 w-11 sm:h-9 sm:w-9 text-muted-foreground hover:text-foreground"
                     aria-label="Edit entry"
                     onClick={() => startEditing(entry)}
                   >
@@ -173,7 +173,7 @@ export function PastEntries({ entries, onUpdate, onDelete, hasMore, onLoadMore, 
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                        className="h-11 w-11 sm:h-9 sm:w-9 text-muted-foreground hover:text-destructive"
                         aria-label="Delete entry"
                       >
                         <Trash2 className="h-4 w-4" />

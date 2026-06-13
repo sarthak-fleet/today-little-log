@@ -1,55 +1,85 @@
-# Supabase Auth to Better Auth Migration Design
+# Supabase Auth to Better Auth Migration PRD
 
-**Goal:** Replace Supabase Auth with Better Auth (open-source, self-hosted) using the existing Turso DB for session storage, eliminating the Supabase dependency entirely.
+## Summary
 
-**Motivation:** Supabase free tier pauses the entire project (including Auth) after 7 days of inactivity, breaking login for users.
+Replace Supabase Auth with Better Auth while keeping the existing Turso-backed data model. The target state removes the external auth dependency, preserves the Google sign-in flow, and keeps all user-owned data reachable through the same app routes and API contract.
 
-## Architecture
+## Problem
 
-Better Auth runs as a server-side auth library in Vercel API routes. It manages its own tables (`user`, `session`, `account`) in the existing Turso DB via Drizzle. The React client talks to `/api/auth/*` endpoints that Better Auth handles automatically.
+Supabase free-tier inactivity pauses can take the app's login flow offline even when the rest of the product is healthy. That failure mode is too brittle for a personal logging app where sign-in is part of the daily habit loop.
 
-**Data flow:**
-1. User clicks "Continue with Google" -> `authClient.signIn.social({ provider: "google" })`
-2. Better Auth handles OAuth redirect -> Google -> callback -> creates/finds user + session in Turso
-3. Session cookie set automatically -> `authClient.useSession()` reads it on the client
-4. API routes call `auth.api.getSession({ headers })` to verify session and get user ID
+## Goals
 
-## Files Changed
+- Remove the Supabase auth dependency from runtime code.
+- Keep Google sign-in as the only supported login path.
+- Store sessions in Turso with cookie-based auth checks.
+- Preserve existing user data by linking old records to the new Better Auth user IDs.
+- Keep the migration reversible until the old auth layer is fully retired.
 
-| File | Action | What |
-|------|--------|------|
-| `src/db/schema.ts` | Modify | Add Better Auth tables (user, session, account) |
-| `api/_lib/auth.ts` | Rewrite | Better Auth server instance + Drizzle adapter |
-| `api/auth/[...all].ts` | Create | Catch-all route for Better Auth endpoints |
-| `src/lib/auth-client.ts` | Create | Better Auth React client |
-| `src/lib/api.ts` | Simplify | Remove Supabase token injection (cookies handle it) |
-| `src/hooks/useAuth.ts` | Rewrite | Use `authClient.useSession()` instead of Supabase |
-| `src/pages/Auth.tsx` | Rewrite | Use `authClient.signIn.social()` |
-| `src/integrations/supabase/` | Delete | No longer needed |
-| `api/*.ts` (all routes) | Modify | Update `getUserId()` calls (same function, new internals) |
+## Non-Goals
 
-## User ID Linking
+- No new auth providers.
+- No redesign of the logged-out or logged-in UI beyond auth flow wiring.
+- No schema changes outside the auth and user-linking tables needed for the migration.
+- No production cutover without a verified local and staging-equivalent smoke pass.
 
-- Better Auth creates new user IDs in its `user` table
-- A one-time migration script updates `user_id` across all existing tables, matching by email from the Supabase profile to the Better Auth user
-- After migration, all `user_id` foreign keys point to Better Auth user IDs
+## Target Architecture
 
-## What Gets Removed
+Better Auth runs server-side in Pages Functions and owns the auth session lifecycle.
 
-- `@supabase/supabase-js` dependency
-- `VITE_SUPABASE_*` env vars
-- `src/integrations/supabase/` directory
-- Supabase project dependency entirely
+**Request flow**
+1. User clicks "Continue with Google".
+2. The client calls `authClient.signIn.social({ provider: "google" })`.
+3. Better Auth handles the OAuth redirect and callback.
+4. Better Auth creates or reuses the user record and sets a secure session cookie.
+5. Client session state comes from `authClient.useSession()`.
+6. API routes call the server auth helper to resolve the current user ID.
 
-## New Env Vars
+**Data model**
+- Better Auth owns `user`, `session`, and `account` records.
+- Existing product tables continue to reference `user_id`.
+- A one-time linking migration maps legacy auth identities to the new Better Auth user IDs by email.
 
-```
-BETTER_AUTH_SECRET=<random-32-char-string>
-BETTER_AUTH_URL=https://your-domain.vercel.app
-GOOGLE_CLIENT_ID=<from-google-console>
-GOOGLE_CLIENT_SECRET=<from-google-console>
-```
+## Implementation Scope
 
-## Key Benefit
+| File | Change |
+|------|--------|
+| `src/db/schema.ts` | Add Better Auth tables and relation fields |
+| `functions/api/_helpers.ts` or equivalent auth helper | Centralize request/session lookup |
+| `functions/api/auth/[[all]].ts` | Add Better Auth catch-all route |
+| `src/lib/auth-client.ts` | Create the Better Auth client wrapper |
+| `src/lib/api.ts` | Remove bearer-token injection and rely on cookies |
+| `src/hooks/useAuth.ts` | Read session from Better Auth |
+| `src/pages/Auth.tsx` | Switch the sign-in button to Better Auth |
+| Existing data routes | Keep `requireUserId` behavior but source it from Better Auth |
+| Legacy Supabase integration files | Remove after the migration is verified |
 
-Session is cookie-based. No token injection needed in `apiFetch`. API routes just read the session from request headers. Simpler than the current JWT approach.
+## Migration Plan
+
+1. Add the Better Auth schema and server route alongside the existing auth implementation.
+2. Wire the client to Better Auth while keeping the current data API stable.
+3. Run a one-time user-linking migration that maps legacy identities by email.
+4. Verify that all user-scoped data still resolves under the new user IDs.
+5. Remove Supabase-specific code once the new flow passes smoke checks.
+
+## Validation
+
+The migration is done when:
+
+- Google sign-in works on localhost and the deployed Pages domain.
+- Sessions persist across refreshes and new browser tabs.
+- Authenticated API requests succeed without token injection.
+- Existing users still see their historical data after the user-ID mapping step.
+- The repo's typecheck, lint, and build checks pass after the cutover.
+
+## Risks
+
+- Email collisions or missing legacy profile data could break the user-ID mapping step.
+- Session cookie configuration mistakes could cause silent auth failures.
+- Removing the old auth path too early could strand existing users.
+
+## Rollout Notes
+
+- Keep the old auth wiring available until the new flow is validated.
+- Make the linking migration explicit and repeatable before deleting legacy code.
+- Prefer one small deploy after verification instead of mixing auth migration with unrelated UI work.

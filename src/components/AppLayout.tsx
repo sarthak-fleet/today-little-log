@@ -2,6 +2,7 @@ import { ReactNode, useState } from 'react';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
 import { BottomNav } from './BottomNav';
+import { ChatWidget } from './ChatWidget';
 import { Navbar } from './Navbar';
 import { OfflineBanner } from './OfflineBanner';
 import { SavingProvider, useSaving } from './SavingContext';
@@ -37,6 +38,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         </SidebarInset>
       </div>
       <BottomNav />
+      <ChatWidget />
     </SidebarProvider>
   );
 }

@@ -44,6 +44,9 @@ export function useAuth(options: UseAuthOptions = {}) {
     } else {
       setProfile(null);
     }
+    // sessionData?.user identity is captured by user?.id; pulling the
+    // whole object in would re-run on irrelevant field changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionData?.user?.id, includeProfile]);
 
   const signOut = async () => {

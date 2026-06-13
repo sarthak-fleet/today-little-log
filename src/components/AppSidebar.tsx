@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { BookOpen, Brain, LineChart, Skull, Trophy } from 'lucide-react';
+import { BookOpen, Skull, Timer, Trophy } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -18,8 +18,7 @@ import { format } from 'date-fns';
 const navItems = [
   { title: 'Score', url: '/', icon: Trophy, shortcut: 'S' },
   { title: 'Journal', url: '/journal', icon: BookOpen, shortcut: 'J' },
-  { title: 'Patterns', url: '/patterns', icon: Brain, shortcut: 'P' },
-  { title: 'Review', url: '/review', icon: LineChart, shortcut: 'R' },
+  { title: 'Timer', url: '/focus', icon: Timer, shortcut: 'F' },
   { title: 'Life', url: '/life', icon: Skull, shortcut: 'L' },
 ];
 

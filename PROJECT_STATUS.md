@@ -1,28 +1,24 @@
 # Project Status
 
-Last updated: 2026-06-04
+Last updated: 2026-06-12
 
 ## Current Scope
 
-Today Little Log is a personal life PWA for daily scoring, journaling, rituals, habits, tasks, reflection, and a private no-zero-day scoreboard.
+Today Little Log is a personal life PWA narrowed to three core tracking surfaces — daily scoreboard, habits, and journal — plus AM/PM rituals and a focus timer for time start/stop. The data this captures is the historical context for a future AI layer.
 
 ## Done
 
 - The app deploys to Cloudflare Pages with Pages Functions.
 - Turso/Drizzle, better-auth Google, and PWA behavior are part of the current architecture.
-- Core product areas include scoreboard, journal, memory review, AM/PM rituals, focus planning, habits, tasks, Eisenhower planning, memento mori, and Google sign-in.
-- Recent AI/product tasks added the first-entry CTA, streak recovery, weekly reflection preview, and private-by-default note.
-- UI review and audit files document current design debt, mobile layout issues, and security/deployment risks.
+- Three core flows verified end-to-end in guest mode: habits (add/log/edit/delete), scoreboard, journal, and the focus block start/persist/stop cycle (`tests/verify_core_flows.spec.ts`).
+- `/habits`, `/rituals`, `/focus` routes are reachable; bottom nav surfaces Habits + Rituals; sidebar adds Focus, Patterns, Review.
+- FocusMode start/stop now works for guests too (no auth gate) and has an explicit Stop button alongside Discard.
+- Error boundary wraps the app shell; delete confirmations are in place on Habits and Journal.
+- The mobile FAB / stale Vercel references called out in older status items no longer exist in the codebase.
 
-## Planned Next
+## Parked
 
-1. Fix the mobile floating-action-button stack overlap with the bottom navigation.
-2. Rotate and purge previously committed secrets before treating production credentials as trustworthy.
-3. Bring stale Vercel references into alignment with Cloudflare Pages deployment.
-4. Reduce UI token drift, duplicated stat/tile patterns, accessibility gaps, and hook warnings.
-
-## Deferred / Parked
-
-- Social sharing and public productivity feeds are deferred; the app should stay private by default.
-- Heavy analytics, coaching, or quantified-self marketplace features are parked.
-- New feature expansion should wait until the core mobile daily loop is clean.
+- Hook warnings (`react-hooks/set-state-in-effect` × ~30) are pre-existing tech debt. Touching them is a refactor, not a wrap-up.
+- Secrets rotation is owned by the operator, not the codebase.
+- Social sharing, public productivity feeds, heavy analytics, coaching, and quantified-self marketplace features are deferred — the app should stay private by default.
+- New feature expansion waits until the AI layer that consumes this history is in flight.

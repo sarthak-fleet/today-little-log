@@ -75,7 +75,7 @@ export async function apiFetch<T>(
   if (import.meta.env.DEV) {
     const serverTiming = res.headers.get('server-timing');
     const timingNote = serverTiming ? ` | ${serverTiming}` : '';
-    console.debug(`[api] ${method} ${path} ${res.status} ${Math.round(durationMs)}ms${timingNote}`);
+    console.info(`[api] ${method} ${path} ${res.status} ${Math.round(durationMs)}ms${timingNote}`);
   }
 
   if (!res.ok) {
