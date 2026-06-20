@@ -1,8 +1,28 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { VitePWA } from "vite-plugin-pwa";
 import tailwindcss from "@tailwindcss/vite";
+
+/** Load extracted app CSS without blocking first paint — index.html carries the LCP skeleton. */
+function deferAppCss(): Plugin {
+  return {
+    name: "defer-app-css",
+    apply: "build",
+    transformIndexHtml: {
+      order: "post",
+      handler(html) {
+        return html.replace(
+          /<link rel="stylesheet" crossorigin href="(\/assets\/index-[^"]+\.css)">/,
+          [
+            '<link rel="preload" href="$1" as="style" onload="this.onload=null;this.rel=\'stylesheet\'">',
+            "<noscript><link rel=\"stylesheet\" href=\"$1\"></noscript>",
+          ].join("\n    ")
+        );
+      },
+    },
+  };
+}
 
 // https://vitejs.dev/config/
 export default defineConfig(() => ({
@@ -13,6 +33,7 @@ export default defineConfig(() => ({
   plugins: [
     react(),
     tailwindcss(),
+    deferAppCss(),
     VitePWA({
       injectRegister: null,
       registerType: "autoUpdate",
@@ -107,6 +128,7 @@ export default defineConfig(() => ({
     },
   },
   build: {
+    modulePreload: false,
     cssMinify: "lightningcss",
   },
   resolve: {
