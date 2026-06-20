@@ -2,7 +2,6 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 
 import { PersistentLayout } from '@/components/AppLayout';
 import { GuestNotice } from '@/components/GuestNotice';
-import { HomeHero } from '@/components/HomeHero';
 import { useAuth } from '@/hooks/useAuth';
 
 const Scoreboard = lazy(() =>
@@ -14,20 +13,13 @@ const WeeklyReflection = lazy(() =>
 
 const Index = () => {
   const { user } = useAuth();
-  const [showHero, setShowHero] = useState(false);
   const [showBelowFold, setShowBelowFold] = useState(false);
 
   useEffect(() => {
-    const markHero = () => {
-      document.getElementById('lcp-shell')?.remove();
-      setShowHero(true);
-    };
     const markBelow = () => setShowBelowFold(true);
     if ('requestIdleCallback' in window) {
-      requestIdleCallback(markHero, { timeout: 2500 });
       requestIdleCallback(markBelow, { timeout: 3000 });
     } else {
-      setTimeout(markHero, 1);
       setTimeout(markBelow, 1);
     }
   }, []);
@@ -38,8 +30,6 @@ const Index = () => {
 
   const page = (
     <div className="min-h-screen bg-background text-foreground">
-      {isGuest && showHero ? <HomeHero /> : null}
-
       {showBelowFold && isGuest ? (
         <Suspense fallback={null}>
           <WeeklyReflection />
