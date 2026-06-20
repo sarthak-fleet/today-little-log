@@ -1,7 +1,7 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { reportPageCrash } from '@/lib/monitoring';
+
 
 interface Props {
   children: ReactNode;
@@ -23,7 +23,9 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught:', error, errorInfo);
-    reportPageCrash(error, { componentStack: errorInfo.componentStack });
+    void import('@/lib/monitoring').then((m) =>
+      m.reportPageCrash(error, { componentStack: errorInfo.componentStack }),
+    );
   }
 
   render() {

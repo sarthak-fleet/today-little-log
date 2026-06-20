@@ -13,11 +13,22 @@ const WeeklyReflection = lazy(() =>
 
 const Index = () => {
   const { user } = useAuth();
+  const [showHero, setShowHero] = useState(false);
   const [showBelowFold, setShowBelowFold] = useState(false);
 
   useEffect(() => {
-    const id = requestAnimationFrame(() => setShowBelowFold(true));
-    return () => cancelAnimationFrame(id);
+    const markHero = () => {
+      document.getElementById('lcp-shell')?.remove();
+      setShowHero(true);
+    };
+    const markBelow = () => setShowBelowFold(true);
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(markHero, { timeout: 2500 });
+      requestIdleCallback(markBelow, { timeout: 3000 });
+    } else {
+      setTimeout(markHero, 1);
+      setTimeout(markBelow, 1);
+    }
   }, []);
   // Show landing hero whenever there is no signed-in user — including while
   // auth is still resolving — so the index.html LCP shell isn't replaced by
@@ -26,7 +37,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {isGuest && <HomeHero />}
+      {isGuest && showHero ? <HomeHero /> : null}
 
       {showBelowFold && isGuest ? (
         <Suspense fallback={null}>

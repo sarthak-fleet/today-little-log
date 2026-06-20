@@ -63,7 +63,7 @@
       children on mount — visually identical because the live HomeHero uses
       the same copy. Same content, ~1s earlier paint.
     -->
-    <div id="root">
+    <div id="lcp-shell">
       <section style="margin:1rem auto 0;max-width:64rem;padding:0 1rem;">
         <div
           style="border-radius:1rem;border:1px solid rgba(0,0,0,0.08);background:#fff;padding:1.25rem;box-shadow:0 1px 2px rgba(0,0,0,0.04);"
@@ -81,6 +81,7 @@
         </div>
       </section>
     </div>
+    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
