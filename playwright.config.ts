@@ -1,9 +1,29 @@
-import { devices } from '@playwright/test';
-import { definePlaywrightConfig } from '@saas-maker/test-config/playwright';
+import { defineConfig, devices } from '@playwright/test';
 
-export default definePlaywrightConfig({
+// Plain Playwright config (formerly @saas-maker/test-config/playwright factory, inlined).
+const ci = Boolean(process.env.CI);
+
+export default defineConfig({
   testDir: './tests',
-  baseURL: 'http://localhost:8080',
+  timeout: 30_000,
+  expect: { timeout: 5_000 },
+  fullyParallel: true,
+  forbidOnly: ci,
+  retries: ci ? 2 : 0,
+  workers: ci ? 2 : undefined,
+  reporter: ci
+    ? [['list'], ['html', { open: 'never' }], ['junit', { outputFile: 'test-results/junit.xml' }]]
+    : 'list',
+  use: {
+    baseURL: 'http://localhost:8080',
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+    video: ci ? 'retain-on-failure' : 'off',
+  },
+  projects: [
+    { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
+    { name: 'mobile', use: { ...devices['iPhone 13'] } },
+  ],
   webServer: {
     command: 'pnpm dev',
     url: 'http://localhost:8080',
@@ -11,14 +31,5 @@ export default definePlaywrightConfig({
     timeout: 60_000,
     stdout: 'ignore',
     stderr: 'pipe',
-  },
-  extend: {
-    projects: [
-      // Desktop baseline.
-      { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
-      // Mobile-viewport project — iPhone 13 is 390px wide, the Wave 1 target.
-      // today-little-log is a PWA whose primary use case is mobile.
-      { name: 'mobile', use: { ...devices['iPhone 13'] } },
-    ],
   },
 });
