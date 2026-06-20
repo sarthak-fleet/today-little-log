@@ -1,6 +1,31 @@
-import { getAIConfig } from '@saas-maker/ai';
-
 const STORAGE_KEY = 'chatbot-ai-config';
+
+interface AIConfig {
+  endpointUrl: string;
+  apiKey: string;
+  model: string;
+}
+
+// Read the BYOK AI config from localStorage (formerly @saas-maker/ai's
+// getAIConfig). The chatbot settings UI writes the same `chatbot-ai-config` key.
+function getAIConfig(storageKey: string): AIConfig {
+  const empty: AIConfig = { endpointUrl: '', apiKey: '', model: '' };
+  if (typeof window === 'undefined') return empty;
+  try {
+    const raw = localStorage.getItem(storageKey);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<AIConfig>;
+      return {
+        endpointUrl: (parsed.endpointUrl ?? '').trim().replace(/\/+$/, ''),
+        apiKey: (parsed.apiKey ?? '').trim(),
+        model: (parsed.model ?? '').trim(),
+      };
+    }
+  } catch {
+    // ignore malformed config
+  }
+  return empty;
+}
 
 const PSI_SYSTEM_PROMPT = `You score "brain pressure" (PSI) from a morning journal entry.
 0 = completely calm, 100 = about to explode from pressure.

@@ -70,7 +70,7 @@ pnpm run deploy # vite build + wrangler pages deploy dist/
 - **PWA**: `vite-plugin-pwa` + Workbox, `registerType: autoUpdate` + `skipWaiting` + `clientsClaim` so new bundles activate immediately on next nav.
 - **TanStack Query**: optional — most hooks use plain useState + apiFetch.
 - **Gamification**: kept = XP + StreakBadge. Removed = Mana, LifeScore, PSI badges (PSI score still scored in AmRitual).
-- **`@saas-maker/ai` vendored** at `file:vendor/saas-maker-ai`.
+- **AI config** read from `localStorage['chatbot-ai-config']` via a small local helper in `src/lib/psiScore.ts` (no `@saas-maker/ai` package); chat goes through `/api/chat` to the free-ai gateway.
 - **Pre-push gates**: lint, tsc, build, secret-scan. No skip without reason.
 
 <!-- FLEET-GUIDANCE:START -->
