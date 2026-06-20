@@ -9,6 +9,7 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { AnalyticsTracker } from "./components/AnalyticsTracker";
 import { PersistentLayout } from "./components/AppLayout";
 import Index from "./pages/Index";
+import { useAuth } from "./hooks/useAuth";
 import { useTabTitleCountdown } from "./hooks/useTabTitleCountdown";
 
 const Journal = lazy(() => import("./pages/Journal"));
@@ -51,6 +52,17 @@ function LayoutWrapper() {
   );
 }
 
+/** Guest `/` skips app chrome so the static #lcp-shell stays the LCP element. */
+function HomeRoute() {
+  const { user } = useAuth();
+  if (!user) return <Index />;
+  return (
+    <PersistentLayout>
+      <Index />
+    </PersistentLayout>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="theme">
@@ -63,8 +75,8 @@ const App = () => (
           <ErrorBoundary>
             <Suspense fallback={null}>
               <Routes>
+                <Route path="/" element={<HomeRoute />} />
                 <Route element={<LayoutWrapper />}>
-                  <Route path="/" element={<Index />} />
                   <Route path="/journal" element={<Journal />} />
                   <Route path="/habits" element={<Habits />} />
                   <Route path="/rituals" element={<Navigate to="/habits" replace />} />

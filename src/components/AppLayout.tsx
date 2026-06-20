@@ -50,8 +50,8 @@ export function AppLayout({ children }: AppLayoutProps) {
         {/* Spacer to push content */}
         <div className="hidden md:block w-12 flex-shrink-0" />
         <SidebarInset className="flex-1 flex flex-col min-w-0">
-          <Navbar isSaving={isSaving} />
-          <OfflineBanner />
+          {showChrome ? <Navbar isSaving={isSaving} /> : null}
+          {showChrome ? <OfflineBanner /> : null}
           <main className="flex-1 overflow-auto pb-20 md:pb-6">
             {children}
           </main>

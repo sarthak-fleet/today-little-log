@@ -12,13 +12,24 @@ function deferAppCss(): Plugin {
     transformIndexHtml: {
       order: "post",
       handler(html) {
-        return html.replace(
+        let out = html.replace(
           /<link rel="stylesheet" crossorigin href="(\/assets\/index-[^"]+\.css)">/,
           [
             '<link rel="preload" href="$1" as="style" onload="this.onload=null;this.rel=\'stylesheet\'">',
             "<noscript><link rel=\"stylesheet\" href=\"$1\"></noscript>",
           ].join("\n    ")
         );
+        const jsTag = out.match(
+          /<script type="module" crossorigin src="(\/assets\/index-[^"]+\.js)"><\/script>/,
+        );
+        if (jsTag) {
+          out = out.replace(jsTag[0], "");
+          out = out.replace(
+            /<\/body>/,
+            `    <script type="module" crossorigin src="${jsTag[1]}"></script>\n  </body>`,
+          );
+        }
+        return out;
       },
     },
   };
