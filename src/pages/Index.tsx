@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 
+import { PersistentLayout } from '@/components/AppLayout';
 import { GuestNotice } from '@/components/GuestNotice';
 import { HomeHero } from '@/components/HomeHero';
 import { useAuth } from '@/hooks/useAuth';
@@ -35,7 +36,7 @@ const Index = () => {
   // a blank screen and then a late React paint.
   const isGuest = !user;
 
-  return (
+  const page = (
     <div className="min-h-screen bg-background text-foreground">
       {isGuest && showHero ? <HomeHero /> : null}
 
@@ -60,6 +61,9 @@ const Index = () => {
       </main>
     </div>
   );
+
+  if (user) return <PersistentLayout>{page}</PersistentLayout>;
+  return page;
 };
 
 export default Index;

@@ -5,13 +5,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
+import { PersistentLayout } from "./components/AppLayout";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { AnalyticsTracker } from "./components/AnalyticsTracker";
-import { PersistentLayout } from "./components/AppLayout";
-import Index from "./pages/Index";
-import { useAuth } from "./hooks/useAuth";
 import { useTabTitleCountdown } from "./hooks/useTabTitleCountdown";
 
+const Index = lazy(() => import("./pages/Index"));
 const Journal = lazy(() => import("./pages/Journal"));
 const Habits = lazy(() => import("./pages/Habits"));
 const Focus = lazy(() => import("./pages/Focus"));
@@ -23,18 +22,31 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const About = lazy(() => import("./pages/About"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 
-function DeferredAnalytics() {
+function useIdleReady(timeout = 3000) {
   const [ready, setReady] = useState(false);
   useEffect(() => {
     const schedule = () => setReady(true);
     if ("requestIdleCallback" in window) {
-      const id = requestIdleCallback(schedule, { timeout: 3000 });
+      const id = requestIdleCallback(schedule, { timeout });
       return () => cancelIdleCallback(id);
     }
     const id = setTimeout(schedule, 1);
     return () => clearTimeout(id);
-  }, []);
-  return ready ? <AnalyticsTracker /> : null;
+  }, [timeout]);
+  return ready;
+}
+
+function DeferredAnalytics() {
+  return useIdleReady() ? <AnalyticsTracker /> : null;
+}
+
+function DeferredToasters() {
+  return useIdleReady(2000) ? (
+    <>
+      <Toaster />
+      <Sonner />
+    </>
+  ) : null;
 }
 
 const queryClient = new QueryClient();
@@ -52,30 +64,18 @@ function LayoutWrapper() {
   );
 }
 
-/** Guest `/` skips app chrome so the static #lcp-shell stays the LCP element. */
-function HomeRoute() {
-  const { user } = useAuth();
-  if (!user) return <Index />;
-  return (
-    <PersistentLayout>
-      <Index />
-    </PersistentLayout>
-  );
-}
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="theme">
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
+        <DeferredToasters />
         <BrowserRouter>
           <TabTitleCountdown />
           <DeferredAnalytics />
           <ErrorBoundary>
             <Suspense fallback={null}>
               <Routes>
-                <Route path="/" element={<HomeRoute />} />
+                <Route path="/" element={<Index />} />
                 <Route element={<LayoutWrapper />}>
                   <Route path="/journal" element={<Journal />} />
                   <Route path="/habits" element={<Habits />} />
