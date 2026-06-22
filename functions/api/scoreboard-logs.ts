@@ -32,12 +32,17 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const [item] = await db.select().from(scoreboardItems)
       .where(and(eq(scoreboardItems.id, item_id), eq(scoreboardItems.user_id, userId))).limit(1);
     if (!item) return json({ error: 'Item not found' }, { status: 404 });
-    if (await isMonthLocked(db, userId, item.score_month)) {
+
+    // The lock check and the existing-log lookup are independent (both derive
+    // only from `item` + the request), so issue them in parallel.
+    const [locked, [existing]] = await Promise.all([
+      isMonthLocked(db, userId, item.score_month),
+      db.select().from(scoreboardLogs)
+        .where(and(eq(scoreboardLogs.item_id, item_id), eq(scoreboardLogs.date, date))).limit(1),
+    ]);
+    if (locked) {
       return json({ error: 'Month is locked' }, { status: 423 });
     }
-
-    const [existing] = await db.select().from(scoreboardLogs)
-      .where(and(eq(scoreboardLogs.item_id, item_id), eq(scoreboardLogs.date, date))).limit(1);
 
     const rawScore = body.value_score;
     const valueScore = rawScore === null || rawScore === undefined
