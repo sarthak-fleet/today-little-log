@@ -52,8 +52,10 @@ const Index = () => {
     </div>
   );
 
-  if (user) return <PersistentLayout>{page}</PersistentLayout>;
-  return page;
+  // Chrome (sidebar + bottom nav + navbar) renders for everyone, including
+  // guests — AppLayout defers it to idle so the static LCP shell is preserved.
+  // Gating it on `user` previously stranded mobile guests on `/` with no nav.
+  return <PersistentLayout>{page}</PersistentLayout>;
 };
 
 export default Index;
