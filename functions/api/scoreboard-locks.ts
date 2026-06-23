@@ -26,8 +26,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   if (method === 'GET') {
     const month = cleanMonth(url.searchParams.get('month'));
-    const [row] = await db.select().from(scoreboardMonthLocks)
-      .where(and(eq(scoreboardMonthLocks.user_id, userId), eq(scoreboardMonthLocks.score_month, month)))
+    const [row] = await db
+      .select()
+      .from(scoreboardMonthLocks)
+      .where(
+        and(eq(scoreboardMonthLocks.user_id, userId), eq(scoreboardMonthLocks.score_month, month))
+      )
       .limit(1);
     return json({
       locked: Boolean(row?.locked_at),
@@ -37,24 +41,33 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   }
 
   if (method === 'POST') {
-    const body = await context.request.json().catch(() => ({})) as Record<string, unknown>;
+    const body = (await context.request.json().catch(() => ({}))) as Record<string, unknown>;
     const month = cleanMonth(body.score_month);
     const kind = cleanKind(body.kind);
     const now = new Date().toISOString();
 
-    const [existing] = await db.select().from(scoreboardMonthLocks)
-      .where(and(eq(scoreboardMonthLocks.user_id, userId), eq(scoreboardMonthLocks.score_month, month)))
+    const [existing] = await db
+      .select()
+      .from(scoreboardMonthLocks)
+      .where(
+        and(eq(scoreboardMonthLocks.user_id, userId), eq(scoreboardMonthLocks.score_month, month))
+      )
       .limit(1);
 
     if (existing) {
-      const patch = kind === 'publish'
-        ? { published_at: existing.published_at ?? now }
-        : { locked_at: existing.locked_at ?? now };
-      await db.update(scoreboardMonthLocks)
+      const patch =
+        kind === 'publish'
+          ? { published_at: existing.published_at ?? now }
+          : { locked_at: existing.locked_at ?? now };
+      await db
+        .update(scoreboardMonthLocks)
         .set(patch)
         .where(eq(scoreboardMonthLocks.id, existing.id));
-      const [updated] = await db.select().from(scoreboardMonthLocks)
-        .where(eq(scoreboardMonthLocks.id, existing.id)).limit(1);
+      const [updated] = await db
+        .select()
+        .from(scoreboardMonthLocks)
+        .where(eq(scoreboardMonthLocks.id, existing.id))
+        .limit(1);
       return json({
         locked: Boolean(updated?.locked_at),
         published: Boolean(updated?.published_at),
@@ -62,18 +75,24 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       });
     }
 
-    const [inserted] = await db.insert(scoreboardMonthLocks).values({
-      user_id: userId,
-      score_month: month,
-      locked_at: kind === 'finalize' ? now : null,
-      published_at: kind === 'publish' ? now : null,
-      created_at: now,
-    }).returning();
-    return json({
-      locked: Boolean(inserted.locked_at),
-      published: Boolean(inserted.published_at),
-      lock: inserted,
-    }, { status: 201 });
+    const [inserted] = await db
+      .insert(scoreboardMonthLocks)
+      .values({
+        user_id: userId,
+        score_month: month,
+        locked_at: kind === 'finalize' ? now : null,
+        published_at: kind === 'publish' ? now : null,
+        created_at: now,
+      })
+      .returning();
+    return json(
+      {
+        locked: Boolean(inserted.locked_at),
+        published: Boolean(inserted.published_at),
+        lock: inserted,
+      },
+      { status: 201 }
+    );
   }
 
   if (method === 'DELETE') {
@@ -83,14 +102,19 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     if (kind !== 'publish') {
       return json({ error: 'Only publish state can be reverted.' }, { status: 400 });
     }
-    const [existing] = await db.select().from(scoreboardMonthLocks)
-      .where(and(eq(scoreboardMonthLocks.user_id, userId), eq(scoreboardMonthLocks.score_month, month)))
+    const [existing] = await db
+      .select()
+      .from(scoreboardMonthLocks)
+      .where(
+        and(eq(scoreboardMonthLocks.user_id, userId), eq(scoreboardMonthLocks.score_month, month))
+      )
       .limit(1);
     if (!existing) return json({ ok: true });
     if (existing.locked_at) {
       return json({ error: 'Month is locked; cannot unpublish.' }, { status: 409 });
     }
-    await db.update(scoreboardMonthLocks)
+    await db
+      .update(scoreboardMonthLocks)
       .set({ published_at: null })
       .where(eq(scoreboardMonthLocks.id, existing.id));
     return json({ ok: true });

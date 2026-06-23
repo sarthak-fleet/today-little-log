@@ -21,10 +21,7 @@ test('Google sign-in button fires auth request on click', async ({ page }) => {
   await expect(btn).toBeEnabled();
 
   // Click + wait briefly for request fan-out.
-  await Promise.race([
-    btn.click(),
-    page.waitForTimeout(3_000),
-  ]);
+  await Promise.race([btn.click(), page.waitForTimeout(3_000)]);
   await page.waitForTimeout(1_500);
 
   expect(authCalls.length).toBeGreaterThan(0);
@@ -39,10 +36,13 @@ test('Nothing visually overlaps the sign-in button', async ({ page }) => {
   // Probe top-level element at the button's center.
   const cx = box.x + box.width / 2;
   const cy = box.y + box.height / 2;
-  const tag = await page.evaluate(([x, y]) => {
-    const el = document.elementFromPoint(x as number, y as number);
-    return el?.tagName + (el?.getAttribute('role') ? `[role=${el.getAttribute('role')}]` : '');
-  }, [cx, cy]);
+  const tag = await page.evaluate(
+    ([x, y]) => {
+      const el = document.elementFromPoint(x as number, y as number);
+      return el?.tagName + (el?.getAttribute('role') ? `[role=${el.getAttribute('role')}]` : '');
+    },
+    [cx, cy]
+  );
   // Should resolve to the button itself or its inner svg/span — NOT a full-screen overlay.
   expect(tag?.toLowerCase()).toMatch(/button|svg|span|path/);
 });

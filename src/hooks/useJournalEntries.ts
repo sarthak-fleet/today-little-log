@@ -27,79 +27,82 @@ export function useJournalEntries() {
   const [hasMore, setHasMore] = useState(true);
   const PAGE_SIZE = 10;
 
-  const fetchEntries = useCallback(async (loadMore = false) => {
-    if (user) {
-      const currentOffset = loadMore ? entries.length : 0;
+  const fetchEntries = useCallback(
+    async (loadMore = false) => {
+      if (user) {
+        const currentOffset = loadMore ? entries.length : 0;
 
-      try {
-        if (!loadMore) setLoadError(null);
-        const result = await apiFetch<{ data: JournalEntry[], hasMore: boolean }>(
-          '/api/journal-entries?offset=' + currentOffset + '&limit=' + PAGE_SIZE
-        );
+        try {
+          if (!loadMore) setLoadError(null);
+          const result = await apiFetch<{ data: JournalEntry[]; hasMore: boolean }>(
+            `/api/journal-entries?offset=${currentOffset}&limit=${PAGE_SIZE}`
+          );
 
-        const newEntries = result.data || [];
-        if (loadMore) {
-          setEntries(prev => [...prev, ...newEntries]);
-        } else {
-          setEntries(newEntries);
-        }
-        setHasMore(Boolean(result.hasMore));
+          const newEntries = result.data || [];
+          if (loadMore) {
+            setEntries((prev) => [...prev, ...newEntries]);
+          } else {
+            setEntries(newEntries);
+          }
+          setHasMore(Boolean(result.hasMore));
 
-        // Check for local storage migration (only on initial load).
-        if (!loadMore) {
-          const savedEntries = localStorage.getItem(STORAGE_KEY);
-          if (savedEntries) {
-            const localEntries = JSON.parse(savedEntries) as JournalEntry[];
-            for (const entry of localEntries) {
-              await apiFetch('/api/journal-entries', {
-                method: 'POST',
-                body: JSON.stringify({
-                  id: entry.id,
-                  date: entry.date,
-                  content: entry.content,
-                  entry_type: entry.entry_type,
-                }),
-              });
-            }
-            localStorage.removeItem(STORAGE_KEY);
-            // Reload after migration.
-            const reloaded = await apiFetch<{ data: JournalEntry[], hasMore: boolean }>(
-              '/api/journal-entries?offset=0&limit=' + PAGE_SIZE
-            );
-            if (reloaded.data) {
-              setEntries(reloaded.data);
-              setHasMore(Boolean(reloaded.hasMore));
+          // Check for local storage migration (only on initial load).
+          if (!loadMore) {
+            const savedEntries = localStorage.getItem(STORAGE_KEY);
+            if (savedEntries) {
+              const localEntries = JSON.parse(savedEntries) as JournalEntry[];
+              for (const entry of localEntries) {
+                await apiFetch('/api/journal-entries', {
+                  method: 'POST',
+                  body: JSON.stringify({
+                    id: entry.id,
+                    date: entry.date,
+                    content: entry.content,
+                    entry_type: entry.entry_type,
+                  }),
+                });
+              }
+              localStorage.removeItem(STORAGE_KEY);
+              // Reload after migration.
+              const reloaded = await apiFetch<{ data: JournalEntry[]; hasMore: boolean }>(
+                `/api/journal-entries?offset=0&limit=${PAGE_SIZE}`
+              );
+              if (reloaded.data) {
+                setEntries(reloaded.data);
+                setHasMore(Boolean(reloaded.hasMore));
+              }
             }
           }
+        } catch (error) {
+          console.error('Failed to fetch entries:', error);
+          if (!loadMore) {
+            setLoadError('Could not load journal entries. Check your connection and try again.');
+          }
         }
-      } catch (error) {
-        console.error('Failed to fetch entries:', error);
-        if (!loadMore) {
-          setLoadError('Could not load journal entries. Check your connection and try again.');
+      } else {
+        // Guest mode - use localStorage
+        try {
+          const savedEntries = localStorage.getItem(STORAGE_KEY);
+          setEntries(savedEntries ? JSON.parse(savedEntries) : []);
+          setHasMore(false);
+          setLoadError(null);
+        } catch {
+          setEntries([]);
+          setHasMore(false);
+          setLoadError('Could not read saved journal entries from this device.');
         }
       }
-    } else {
-      // Guest mode - use localStorage
-      try {
-        const savedEntries = localStorage.getItem(STORAGE_KEY);
-        setEntries(savedEntries ? JSON.parse(savedEntries) : []);
-        setHasMore(false);
-        setLoadError(null);
-      } catch {
-        setEntries([]);
-        setHasMore(false);
-        setLoadError('Could not read saved journal entries from this device.');
-      }
-    }
-    setIsLoaded(true);
-  }, [user, entries.length]);
+      setIsLoaded(true);
+    },
+    [user, entries.length]
+  );
 
   useEffect(() => {
     fetchEntries(false);
     // fetchEntries closes over `user` already; adding it would loop on
     // each render because the callback identity changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [fetchEntries]);
 
   // Local-date keys ('yyyy-MM-dd'), matching useScoreboard/useDailyCheckins.
   // toISOString() here would shift to the UTC day near midnight, splitting
@@ -137,19 +140,21 @@ export function useJournalEntries() {
   };
 
   const getTodayEntry = (): JournalEntry | undefined => {
-    return entries.find(entry => entry.date === getTodayKey() && entry.entry_type === 'daily');
+    return entries.find((entry) => entry.date === getTodayKey() && entry.entry_type === 'daily');
   };
 
   const getWeeklyEntry = (): JournalEntry | undefined => {
-    return entries.find(entry => entry.date === getWeekKey() && entry.entry_type === 'weekly');
+    return entries.find((entry) => entry.date === getWeekKey() && entry.entry_type === 'weekly');
   };
 
   const getMonthlyEntry = (): JournalEntry | undefined => {
-    return entries.find(entry => entry.date === getMonthKey() && entry.entry_type === 'monthly');
+    return entries.find((entry) => entry.date === getMonthKey() && entry.entry_type === 'monthly');
   };
 
   const getNextWeekPlanEntry = (): JournalEntry | undefined => {
-    return entries.find(entry => entry.date === getNextWeekKey() && entry.entry_type === 'next_week');
+    return entries.find(
+      (entry) => entry.date === getNextWeekKey() && entry.entry_type === 'next_week'
+    );
   };
 
   const saveEntry = async (content: string, date?: string, entryType: EntryType = 'daily') => {
@@ -171,7 +176,7 @@ export function useJournalEntries() {
       }
     }
 
-    const existingEntry = entries.find(e => e.date === targetDate && e.entry_type === entryType);
+    const existingEntry = entries.find((e) => e.date === targetDate && e.entry_type === entryType);
 
     if (user) {
       try {
@@ -199,21 +204,26 @@ export function useJournalEntries() {
     } else {
       // Guest mode
       setEntries((prev) => {
-        const existing = prev.find((entry) => entry.date === targetDate && entry.entry_type === entryType);
+        const existing = prev.find(
+          (entry) => entry.date === targetDate && entry.entry_type === entryType
+        );
         const next = existing
-          ? prev.map((entry) => (
+          ? prev.map((entry) =>
               entry.id === existing.id
                 ? { ...entry, content, updated_at: new Date().toISOString() }
                 : entry
-            ))
-          : [{
-              id: crypto.randomUUID(),
-              date: targetDate,
-              content,
-              entry_type: entryType,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            }, ...prev];
+            )
+          : [
+              {
+                id: crypto.randomUUID(),
+                date: targetDate,
+                content,
+                entry_type: entryType,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              },
+              ...prev,
+            ];
         localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
         return next;
       });
@@ -240,7 +250,7 @@ export function useJournalEntries() {
     } else {
       setEntries((prev) => {
         const next = prev.map((entry) =>
-          entry.id === id ? { ...entry, content, updated_at: new Date().toISOString() } : entry,
+          entry.id === id ? { ...entry, content, updated_at: new Date().toISOString() } : entry
         );
         localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
         return next;
@@ -279,7 +289,7 @@ export function useJournalEntries() {
   const getRecentEntries = (count: number = 10): JournalEntry[] => {
     const todayKey = getTodayKey();
     return entries
-      .filter(entry => !(entry.date === todayKey && entry.entry_type === 'daily'))
+      .filter((entry) => !(entry.date === todayKey && entry.entry_type === 'daily'))
       .slice(0, count);
   };
 

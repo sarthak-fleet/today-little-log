@@ -23,9 +23,7 @@ export function BottomNav() {
             onClick={() => navigate(item.url)}
             aria-label={item.title}
             className={`flex flex-1 flex-col items-center justify-center min-w-[56px] min-h-[44px] gap-0.5 transition-colors ${
-              isActive(item.url)
-                ? 'text-primary'
-                : 'text-muted-foreground hover:text-foreground'
+              isActive(item.url) ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             <item.icon className="h-5 w-5" />

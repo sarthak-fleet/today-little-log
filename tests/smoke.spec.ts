@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 /**
  * Smoke tests — verify every route renders in guest mode without
@@ -26,7 +26,8 @@ async function goAndCollectErrors(page: Page, path: string): Promise<string[]> {
     if (msg.type() === 'error') {
       const text = msg.text();
       // Ignore expected 401 / network-related noise from guest-mode API calls.
-      if (/401|Unauthorized|Failed to fetch|Failed to preconnect|posthog|ERR_|net::/i.test(text)) return;
+      if (/401|Unauthorized|Failed to fetch|Failed to preconnect|posthog|ERR_|net::/i.test(text))
+        return;
       // Ignore vite HMR/devtools noise
       if (/vite|react-refresh|hot reload/i.test(text)) return;
       errors.push(`console.error: ${text}`);
@@ -34,7 +35,7 @@ async function goAndCollectErrors(page: Page, path: string): Promise<string[]> {
   });
   const response = await page.goto(path, { waitUntil: 'domcontentloaded' });
   expect(response, `${path} navigation`).not.toBeNull();
-  expect(response!.status(), `${path} status`).toBeLessThan(400);
+  expect(response?.status(), `${path} status`).toBeLessThan(400);
   return errors;
 }
 
@@ -65,7 +66,9 @@ test.describe('life math', () => {
   test('/life shows grid legend', async ({ page }) => {
     await page.goto('/life');
     // Either the DOB-gated grid legend, or the "set DOB" prompt.
-    await expect(page.locator('body')).toContainText(/lived|Set your date of birth|How many weeks/i);
+    await expect(page.locator('body')).toContainText(
+      /lived|Set your date of birth|How many weeks/i
+    );
   });
 });
 

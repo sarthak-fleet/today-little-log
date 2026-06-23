@@ -2,7 +2,13 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useUserStats } from '@/hooks/useUserStats';
 import { useAuth } from '@/hooks/useAuth';
 import { useHabits } from '@/hooks/useHabits';
@@ -24,13 +30,17 @@ function readSession(): Session | null {
   try {
     const raw = localStorage.getItem(SESSION_KEY);
     return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 function writeSession(s: Session | null) {
   try {
     if (s) localStorage.setItem(SESSION_KEY, JSON.stringify(s));
     else localStorage.removeItem(SESSION_KEY);
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 export function FocusMode() {
@@ -130,7 +140,8 @@ export function FocusMode() {
         <div className="font-display font-semibold text-foreground">{session.taskTitle || '—'}</div>
         {sessionHabit && (
           <p className="text-[11px] text-muted-foreground">
-            Will log to <span className="font-semibold text-foreground">{sessionHabit.title}</span> on stop.
+            Will log to <span className="font-semibold text-foreground">{sessionHabit.title}</span>{' '}
+            on stop.
           </p>
         )}
         <div className="flex items-baseline gap-3">
@@ -140,12 +151,16 @@ export function FocusMode() {
           <span className="text-xs text-muted-foreground">left of {session.durationMin}min</span>
         </div>
         <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-          <div className="h-full bg-primary transition-all" style={{ width: `${progress * 100}%` }} />
+          <div
+            className="h-full bg-primary transition-all"
+            style={{ width: `${progress * 100}%` }}
+          />
         </div>
         <div className="flex items-center justify-between text-[11px] text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <Flame className="h-3 w-3" />
-            <span className="font-mono">{session.interruptions}</span> tab-switch{session.interruptions === 1 ? '' : 'es'}
+            <span className="font-mono">{session.interruptions}</span> tab-switch
+            {session.interruptions === 1 ? '' : 'es'}
           </span>
           <span>−5 XP per switch</span>
         </div>
@@ -166,7 +181,9 @@ export function FocusMode() {
       </div>
 
       {!pickerOpen ? (
-        <Button size="sm" onClick={() => setPickerOpen(true)}>Start a block</Button>
+        <Button size="sm" onClick={() => setPickerOpen(true)}>
+          Start a block
+        </Button>
       ) : (
         <div className="space-y-3">
           <div className="flex gap-2">
@@ -202,7 +219,9 @@ export function FocusMode() {
                 <SelectContent>
                   <SelectItem value={HABIT_NONE}>Don't log to a habit</SelectItem>
                   {timeHabits.map((h) => (
-                    <SelectItem key={h.id} value={h.id}>{h.title}</SelectItem>
+                    <SelectItem key={h.id} value={h.id}>
+                      {h.title}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -212,7 +231,9 @@ export function FocusMode() {
             </div>
           )}
           <div className="flex gap-2 justify-end">
-            <Button size="sm" variant="ghost" onClick={() => setPickerOpen(false)}>Cancel</Button>
+            <Button size="sm" variant="ghost" onClick={() => setPickerOpen(false)}>
+              Cancel
+            </Button>
             <Button
               size="sm"
               disabled={!pickedTask.trim()}

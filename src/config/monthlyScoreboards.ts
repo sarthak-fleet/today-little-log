@@ -33,14 +33,23 @@ const monthlyScoreboards: Record<string, MonthlyScoreboardConfig> = {
     seededEntries: [
       {
         date: '2026-05-05',
-        lowScoreReason: 'Got Stripe callback, got excited, got new laptop, and ended up setting things up very late at night.',
+        lowScoreReason:
+          'Got Stripe callback, got excited, got new laptop, and ended up setting things up very late at night.',
         logs: [
           { sourceKey: 'sleep', valueScore: 0 },
           { sourceKey: 'steps', valueScore: 10, valueText: '11.5k steps' },
           { sourceKey: 'focus-hours', valueScore: 12, valueText: '4 hours of focus work' },
           { sourceKey: 'exercise', valueScore: 0 },
-          { sourceKey: 'journal-daily-tick', valueScore: 0, valueText: 'Did daily ticking only, no journal' },
-          { sourceKey: 'diet', valueScore: 8, valueText: '100g+ protein, 20g+ fiber, 8h eating window, no junk' },
+          {
+            sourceKey: 'journal-daily-tick',
+            valueScore: 0,
+            valueText: 'Did daily ticking only, no journal',
+          },
+          {
+            sourceKey: 'diet',
+            valueScore: 8,
+            valueText: '100g+ protein, 20g+ fiber, 8h eating window, no junk',
+          },
           { sourceKey: 'connections', valueScore: 3, valueText: 'Talked with friend a lot' },
           { sourceKey: 'adult-content', valueScore: 0 },
           { sourceKey: 'creatine-supplements', valueScore: 2 },
@@ -56,7 +65,8 @@ const monthlyScoreboards: Record<string, MonthlyScoreboardConfig> = {
         label: 'Sleep',
         maxScore: 14,
         idealScore: 14,
-        criteria: '14 max. 7h sleep + 6am wake = 14. Start from 7 pts for ~7h sleep, subtract 1 for each 30 min short. Add 1 for each 30 min earlier than 8am, subtract 1 for each 30 min later than 8am. Do not go below 0.',
+        criteria:
+          '14 max. 7h sleep + 6am wake = 14. Start from 7 pts for ~7h sleep, subtract 1 for each 30 min short. Add 1 for each 30 min earlier than 8am, subtract 1 for each 30 min later than 8am. Do not go below 0.',
       },
       {
         key: 'steps',
@@ -70,7 +80,8 @@ const monthlyScoreboards: Record<string, MonthlyScoreboardConfig> = {
         label: 'Focus hours',
         maxScore: 30,
         idealScore: 18,
-        criteria: '3 points per intentional focus hour across projects, learning, exploration, or office work. 6h = ideal 18. Extra focus can score above ideal, capped at 30.',
+        criteria:
+          '3 points per intentional focus hour across projects, learning, exploration, or office work. 6h = ideal 18. Extra focus can score above ideal, capped at 30.',
       },
       {
         key: 'exercise',
@@ -92,14 +103,16 @@ const monthlyScoreboards: Record<string, MonthlyScoreboardConfig> = {
         minScore: -3,
         maxScore: 9,
         idealScore: 8,
-        criteria: 'Protein 100g+ = +3. Fiber 20g+ = +2. Eating window: <=6h = +4, >6h to <=8h = +3, >8h to <=10h = +2, >10h = 0. Junk penalty: minor -1, moderate -2, major -3. Ideal is 8; perfect is 9.',
+        criteria:
+          'Protein 100g+ = +3. Fiber 20g+ = +2. Eating window: <=6h = +4, >6h to <=8h = +3, >8h to <=10h = +2, >10h = 0. Junk penalty: minor -1, moderate -2, major -3. Ideal is 8; perfect is 9.',
       },
       {
         key: 'connections',
         label: 'Connections',
         maxScore: 3,
         idealScore: 3,
-        criteria: '3 = intentional connection: call, meaningful conversation, meet, or deliberate relationship effort.',
+        criteria:
+          '3 = intentional connection: call, meaningful conversation, meet, or deliberate relationship effort.',
       },
       {
         key: 'adult-content',
@@ -129,7 +142,8 @@ const monthlyScoreboards: Record<string, MonthlyScoreboardConfig> = {
         minScore: -10,
         maxScore: 0,
         idealScore: 0,
-        criteria: 'Games, movies, shows, passive sitting entertainment. 0 = <=1h. -2 for each hour over 1h. Cap at -10.',
+        criteria:
+          'Games, movies, shows, passive sitting entertainment. 0 = <=1h. -2 for each hour over 1h. Cap at -10.',
       },
       {
         key: 'social-media',

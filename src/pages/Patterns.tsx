@@ -1,7 +1,21 @@
 import { useMemo } from 'react';
-import { AlertTriangle, Brain, CalendarClock, CheckCircle2, ListChecks, Target, TrendingDown, Trophy } from 'lucide-react';
+import {
+  AlertTriangle,
+  Brain,
+  CalendarClock,
+  CheckCircle2,
+  ListChecks,
+  Target,
+  TrendingDown,
+  Trophy,
+} from 'lucide-react';
 import { differenceInCalendarDays, eachDayOfInterval, format, parseISO } from 'date-fns';
-import { useScoreboard, type ScoreboardItem, type ScoreboardLog, type ScoreboardDayNote } from '@/hooks/useScoreboard';
+import {
+  useScoreboard,
+  type ScoreboardItem,
+  type ScoreboardLog,
+  type ScoreboardDayNote,
+} from '@/hooks/useScoreboard';
 import { useTasks, type TaskItem } from '@/hooks/useTasks';
 import { categoryFromPosition } from '@/lib/scoreboardDefaults';
 
@@ -13,7 +27,7 @@ const Patterns = () => {
 
   const patterns = useMemo(
     () => buildPatterns(items, logs, dayNotes, tasks, monthStart, today),
-    [items, logs, dayNotes, tasks, monthStart, today],
+    [items, logs, dayNotes, tasks, monthStart, today]
   );
 
   return (
@@ -77,11 +91,16 @@ const Patterns = () => {
             </div>
             <div className="grid grid-cols-7 gap-2">
               {patterns.days.map((day) => (
-                <div key={day.date} className="rounded-lg border border-border bg-background p-2 text-center">
+                <div
+                  key={day.date}
+                  className="rounded-lg border border-border bg-background p-2 text-center"
+                >
                   <div className="text-[9px] uppercase tracking-widest text-muted-foreground">
                     {format(parseISO(day.date), 'EEE')}
                   </div>
-                  <div className={`mt-1 font-display text-lg font-bold tabular-nums ${day.score === 0 ? 'text-destructive' : day.score >= 70 ? 'text-emerald-600' : 'text-foreground'}`}>
+                  <div
+                    className={`mt-1 font-display text-lg font-bold tabular-nums ${day.score === 0 ? 'text-destructive' : day.score >= 70 ? 'text-emerald-600' : 'text-foreground'}`}
+                  >
                     {day.score}
                   </div>
                   <div className="mt-0.5 text-[9px] text-muted-foreground">%</div>
@@ -93,13 +112,20 @@ const Patterns = () => {
           <section className="rounded-2xl border border-border bg-card p-5">
             <div className="flex items-center gap-2 text-muted-foreground mb-4">
               <ListChecks className="h-4 w-4" />
-              <h2 className="text-[11px] font-semibold uppercase tracking-[0.22em]">Task pressure</h2>
+              <h2 className="text-[11px] font-semibold uppercase tracking-[0.22em]">
+                Task pressure
+              </h2>
             </div>
             <div className="space-y-3">
               {patterns.taskBuckets.map((bucket) => (
-                <div key={bucket.label} className="flex items-center justify-between rounded-xl border border-border bg-background px-3 py-2">
+                <div
+                  key={bucket.label}
+                  className="flex items-center justify-between rounded-xl border border-border bg-background px-3 py-2"
+                >
                   <span className="text-sm text-muted-foreground">{bucket.label}</span>
-                  <span className="font-display text-lg font-bold tabular-nums">{bucket.value}</span>
+                  <span className="font-display text-lg font-bold tabular-nums">
+                    {bucket.value}
+                  </span>
                 </div>
               ))}
             </div>
@@ -117,7 +143,9 @@ const Patterns = () => {
             <div className="grid gap-3 md:grid-cols-3">
               {patterns.friction.map((item) => (
                 <div key={item.label} className="rounded-xl border border-border bg-background p-3">
-                  <div className="text-sm font-display font-semibold text-foreground">{item.label}</div>
+                  <div className="text-sm font-display font-semibold text-foreground">
+                    {item.label}
+                  </div>
                   <div className="mt-1 text-xs text-muted-foreground">{item.detail}</div>
                 </div>
               ))}
@@ -151,7 +179,8 @@ function InsightCard({
   detail: string;
   tone?: InsightTone;
 }) {
-  const toneClass = tone === 'good' ? 'text-emerald-600' : tone === 'warning' ? 'text-destructive' : 'text-primary';
+  const toneClass =
+    tone === 'good' ? 'text-emerald-600' : tone === 'warning' ? 'text-destructive' : 'text-primary';
 
   return (
     <article className="rounded-2xl border border-border bg-card p-5">
@@ -171,7 +200,7 @@ function buildPatterns(
   dayNotes: ScoreboardDayNote[],
   tasks: TaskItem[],
   monthStart: string,
-  today: string,
+  today: string
 ) {
   const days = eachDayOfInterval({
     start: parseISO(monthStart),
@@ -183,17 +212,25 @@ function buildPatterns(
     const score = scoreForDay(dailyItems, logByItemDate, date);
     return { date, score };
   });
-  const activeDays = scoreDays.filter((day) => dailyItems.some((item) => logByItemDate.has(`${item.id}:${day.date}`))).length;
+  const activeDays = scoreDays.filter((day) =>
+    dailyItems.some((item) => logByItemDate.has(`${item.id}:${day.date}`))
+  ).length;
   const averageDayScore = scoreDays.length
     ? Math.round(scoreDays.reduce((sum, day) => sum + day.score, 0) / scoreDays.length)
     : 0;
-  const best = scoreDays.reduce((winner, day) => (day.score > winner.score ? day : winner), scoreDays[0] ?? { date: today, score: 0 });
+  const best = scoreDays.reduce(
+    (winner, day) => (day.score > winner.score ? day : winner),
+    scoreDays[0] ?? { date: today, score: 0 }
+  );
   const itemStats = itemCompletionStats(dailyItems, logs, days);
   const reliable = itemStats.length
     ? itemStats.reduce((winner, item) => (item.rate > winner.rate ? item : winner), itemStats[0])
     : null;
   const missed = itemStats.length
-    ? itemStats.reduce((winner, item) => (item.missed > winner.missed ? item : winner), itemStats[0])
+    ? itemStats.reduce(
+        (winner, item) => (item.missed > winner.missed ? item : winner),
+        itemStats[0]
+      )
     : null;
   const reasonCounts = lowReasonCounts(dayNotes);
   const repeatedReason = reasonCounts[0];
@@ -210,10 +247,21 @@ function buildPatterns(
     averageDayScore,
     todoCount: todoTasks.length,
     doneCount: doneTasks.length,
-    bestDay: activeDays > 0 ? `${format(parseISO(best.date), 'MMM d')}: ${best.score}%` : 'No scored day yet',
-    mainDrag: repeatedReason ? `${repeatedReason[0]} (${repeatedReason[1]}x)` : missed ? `${missed.label}: ${missed.missed} misses` : 'No drag detected yet',
-    reliableRitual: reliable ? `${reliable.label}: ${reliable.rate}% hit rate` : 'No ritual data yet',
-    nextTask: nextTask ? `${nextTask.title}${nextTask.quadrant ? ` (${nextTask.quadrant.toUpperCase()})` : ''}` : 'No open tasks',
+    bestDay:
+      activeDays > 0
+        ? `${format(parseISO(best.date), 'MMM d')}: ${best.score}%`
+        : 'No scored day yet',
+    mainDrag: repeatedReason
+      ? `${repeatedReason[0]} (${repeatedReason[1]}x)`
+      : missed
+        ? `${missed.label}: ${missed.missed} misses`
+        : 'No drag detected yet',
+    reliableRitual: reliable
+      ? `${reliable.label}: ${reliable.rate}% hit rate`
+      : 'No ritual data yet',
+    nextTask: nextTask
+      ? `${nextTask.title}${nextTask.quadrant ? ` (${nextTask.quadrant.toUpperCase()})` : ''}`
+      : 'No open tasks',
     days: scoreDays.slice(-14),
     taskBuckets: [
       { label: 'Urgent open', value: urgentTasks },
@@ -221,17 +269,27 @@ function buildPatterns(
       { label: 'Stale 14d+', value: staleTasks },
     ],
     friction: [
-      ...reasonCounts.slice(0, 3).map(([label, count]) => ({ label, detail: `${count} low-score note${count === 1 ? '' : 's'}` })),
+      ...reasonCounts.slice(0, 3).map(([label, count]) => ({
+        label,
+        detail: `${count} low-score note${count === 1 ? '' : 's'}`,
+      })),
       ...itemStats
         .filter((item) => item.missed > 0)
         .sort((a, b) => b.missed - a.missed)
         .slice(0, 3)
-        .map((item) => ({ label: item.label, detail: `${item.missed} missed day${item.missed === 1 ? '' : 's'} this month` })),
+        .map((item) => ({
+          label: item.label,
+          detail: `${item.missed} missed day${item.missed === 1 ? '' : 's'} this month`,
+        })),
     ].slice(0, 6),
   };
 }
 
-function scoreForDay(items: ScoreboardItem[], logByItemDate: Map<string, ScoreboardLog>, date: string) {
+function scoreForDay(
+  items: ScoreboardItem[],
+  logByItemDate: Map<string, ScoreboardLog>,
+  date: string
+) {
   const trackable = items;
   if (trackable.length === 0) return 0;
 
@@ -251,22 +309,21 @@ function scoreForDay(items: ScoreboardItem[], logByItemDate: Map<string, Scorebo
 
 function itemCompletionStats(items: ScoreboardItem[], logs: ScoreboardLog[], days: string[]) {
   const logByItemDate = new Map(logs.map((log) => [`${log.item_id}:${log.date}`, log]));
-  return items
-    .map((item) => {
-      const hits = days.filter((day) => {
-        const log = logByItemDate.get(`${item.id}:${day}`);
-        if (!log) return false;
-        if (item.kind === 'score') return log.value_score !== null;
-        if (item.kind === 'check') return Boolean(log.value_bool);
-        return Boolean(log.value_text?.trim());
-      }).length;
-      return {
-        label: item.label,
-        hits,
-        missed: days.length - hits,
-        rate: days.length ? Math.round((hits / days.length) * 100) : 0,
-      };
-    });
+  return items.map((item) => {
+    const hits = days.filter((day) => {
+      const log = logByItemDate.get(`${item.id}:${day}`);
+      if (!log) return false;
+      if (item.kind === 'score') return log.value_score !== null;
+      if (item.kind === 'check') return Boolean(log.value_bool);
+      return Boolean(log.value_text?.trim());
+    }).length;
+    return {
+      label: item.label,
+      hits,
+      missed: days.length - hits,
+      rate: days.length ? Math.round((hits / days.length) * 100) : 0,
+    };
+  });
 }
 
 function lowReasonCounts(dayNotes: ScoreboardDayNote[]) {

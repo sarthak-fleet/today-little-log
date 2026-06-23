@@ -14,7 +14,7 @@
  * is browser-only. PostHog is already initialized by `src/lib/monitoring.ts`
  * (`installBrowserMonitoring`); this module just emits through the same client.
  */
-import posthog from "posthog-js";
+import posthog from 'posthog-js';
 
 const PROJECT = 'today-little-log' as const;
 
@@ -46,7 +46,7 @@ export function trackEvent(event: string, properties: Record<string, unknown> = 
 
 function emit<K extends keyof AnalyticsEventMap>(
   event: K,
-  props: Omit<AnalyticsEventMap[K], 'project_id'>,
+  props: Omit<AnalyticsEventMap[K], 'project_id'>
 ): void {
   trackEvent(event, props);
 }

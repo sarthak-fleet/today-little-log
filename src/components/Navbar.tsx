@@ -7,7 +7,15 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { LogOut, LogIn, Loader2, Cake, Moon, Sun } from 'lucide-react';
-import { differenceInDays, parseISO, isValid, format, getDaysInMonth, endOfYear, differenceInCalendarDays } from 'date-fns';
+import {
+  differenceInDays,
+  parseISO,
+  isValid,
+  format,
+  getDaysInMonth,
+  endOfYear,
+  differenceInCalendarDays,
+} from 'date-fns';
 import { useLifeMath, AVERAGE_LIFESPAN_DAYS } from '@/hooks/useLifeMath';
 
 type TimeView = 'month' | 'year' | 'life';
@@ -46,7 +54,10 @@ export function Navbar({ isSaving = false }: NavbarProps) {
     const endOfYearDate = endOfYear(today);
     const daysLeftYear = differenceInCalendarDays(endOfYearDate, today);
     const dayOfYear = differenceInCalendarDays(today, new Date(today.getFullYear(), 0, 0));
-    const totalDaysInYear = differenceInCalendarDays(endOfYearDate, new Date(today.getFullYear(), 0, 0));
+    const totalDaysInYear = differenceInCalendarDays(
+      endOfYearDate,
+      new Date(today.getFullYear(), 0, 0)
+    );
     const yearPercent = Math.round((dayOfYear / totalDaysInYear) * 100);
 
     return { daysLeftMonth, monthPercent, daysLeftYear, yearPercent, totalDaysInMonth, dayOfMonth };
@@ -94,7 +105,10 @@ export function Navbar({ isSaving = false }: NavbarProps) {
   };
 
   // Live today ticker HH:MM:SS until midnight (readable waking-window urgency)
-  const secsLeftToday = Math.max(0, Math.floor((new Date(today).setHours(23, 59, 59, 999) - today.getTime()) / 1000));
+  const secsLeftToday = Math.max(
+    0,
+    Math.floor((new Date(today).setHours(23, 59, 59, 999) - today.getTime()) / 1000)
+  );
   const hhmmss = `${String(Math.floor(secsLeftToday / 3600)).padStart(2, '0')}:${String(Math.floor((secsLeftToday % 3600) / 60)).padStart(2, '0')}:${String(secsLeftToday % 60).padStart(2, '0')}`;
   const crunch = life.isEndOfDayCrunch;
 
@@ -104,12 +118,8 @@ export function Navbar({ isSaving = false }: NavbarProps) {
         {/* Left: Date + Time counter */}
         <div className="flex min-w-0 items-center gap-3 md:gap-5">
           <div className="flex flex-col">
-            <span className="text-sm font-medium text-foreground">
-              {format(today, 'EEEE')}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {format(today, 'MMM d, yyyy')}
-            </span>
+            <span className="text-sm font-medium text-foreground">{format(today, 'EEEE')}</span>
+            <span className="text-xs text-muted-foreground">{format(today, 'MMM d, yyyy')}</span>
           </div>
 
           {/* Time remaining counter - bolder */}
@@ -133,7 +143,9 @@ export function Navbar({ isSaving = false }: NavbarProps) {
                   style={{ width: `${display.percent}%` }}
                 />
               </div>
-              <span className="text-[10px] text-muted-foreground font-mono">{display.percent}% spent</span>
+              <span className="text-[10px] text-muted-foreground font-mono">
+                {display.percent}% spent
+              </span>
             </div>
           </button>
 
@@ -142,10 +154,14 @@ export function Navbar({ isSaving = false }: NavbarProps) {
             className={`hidden md:flex flex-col items-start leading-tight pl-5 border-l border-border/60 ${crunch ? 'animate-pulse' : ''}`}
             title="Time left today"
           >
-            <span className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${crunch ? 'text-destructive' : 'text-muted-foreground'}`}>
+            <span
+              className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${crunch ? 'text-destructive' : 'text-muted-foreground'}`}
+            >
               Today
             </span>
-            <span className={`font-mono font-bold text-sm md:text-base tabular-nums ${crunch ? 'text-destructive' : 'text-foreground'}`}>
+            <span
+              className={`font-mono font-bold text-sm md:text-base tabular-nums ${crunch ? 'text-destructive' : 'text-foreground'}`}
+            >
               {hhmmss}
             </span>
           </div>
@@ -170,9 +186,7 @@ export function Navbar({ isSaving = false }: NavbarProps) {
               </PopoverTrigger>
               <PopoverContent className="w-64" align="end">
                 <div className="space-y-3">
-                  <label className="text-sm font-medium text-foreground">
-                    Date of Birth
-                  </label>
+                  <label className="text-sm font-medium text-foreground">Date of Birth</label>
                   <Input
                     type="date"
                     value={profile?.dob || ''}

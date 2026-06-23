@@ -52,10 +52,14 @@ export function parseEntryContent(content: string): Record<string, string> {
   return { general: content };
 }
 
-export function getFilledCategories(content: string): Array<{ key: string; label: string; value: string }> {
+export function getFilledCategories(
+  content: string
+): Array<{ key: string; label: string; value: string }> {
   const cats = parseEntryContent(content);
   return Object.entries(cats)
-    .filter(([key, value]) => key !== 'mood' && typeof value === 'string' && value.trim().length > 0)
+    .filter(
+      ([key, value]) => key !== 'mood' && typeof value === 'string' && value.trim().length > 0
+    )
     .map(([key, value]) => ({
       key,
       label: CATEGORY_META[key]?.label ?? key,

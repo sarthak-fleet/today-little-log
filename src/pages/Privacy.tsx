@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from 'react-router-dom';
 
 export default function Privacy() {
   return (
@@ -19,22 +19,25 @@ export default function Privacy() {
 
       <h2 className="mt-8 text-base font-semibold">Where</h2>
       <p className="mt-2">
-        Data lives in a Turso (libSQL) database scoped to your account.
-        Sessions are stored in the same DB via better-auth. Secrets are
-        Cloudflare Pages encrypted secrets &mdash; never in source.
+        Data lives in a Turso (libSQL) database scoped to your account. Sessions are stored in the
+        same DB via better-auth. Secrets are Cloudflare Pages encrypted secrets &mdash; never in
+        source.
       </p>
 
       <h2 className="mt-8 text-base font-semibold">What we don&apos;t do</h2>
       <ul className="mt-2 list-disc space-y-1 pl-5">
         <li>No third-party analytics or remarketing pixels.</li>
         <li>No selling of journal or scoreboard data.</li>
-        <li>PSI scoring (brain-pressure metric) runs against your configured AI provider; nothing is retained server-side beyond the score itself.</li>
+        <li>
+          PSI scoring (brain-pressure metric) runs against your configured AI provider; nothing is
+          retained server-side beyond the score itself.
+        </li>
       </ul>
 
       <h2 className="mt-8 text-base font-semibold">Deletion</h2>
       <p className="mt-2">
-        Revoke the Google OAuth grant in your Google account to disconnect.
-        Contact the maintainer to delete your full account data.
+        Revoke the Google OAuth grant in your Google account to disconnect. Contact the maintainer
+        to delete your full account data.
       </p>
     </main>
   );

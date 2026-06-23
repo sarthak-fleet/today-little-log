@@ -1,12 +1,30 @@
 import { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
-import { type JournalEntry, type EntryType } from '@/hooks/useJournalEntries';
+import type { JournalEntry, EntryType } from '@/hooks/useJournalEntries';
 import { format, isSameDay } from 'date-fns';
-import { X, Pencil, Trash2, Check, CalendarDays, Calendar as CalendarIcon, BookOpen } from 'lucide-react';
+import {
+  X,
+  Pencil,
+  Trash2,
+  Check,
+  CalendarDays,
+  Calendar as CalendarIcon,
+  BookOpen,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { CATEGORY_META, getFilledCategories } from '@/lib/journalContent';
 
 interface CalendarViewProps {
@@ -21,11 +39,11 @@ export function CalendarView({ entries, onUpdate, onDelete }: CalendarViewProps)
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
 
-  const entryDates = entries.map(e => e.date);
+  const entryDates = entries.map((e) => e.date);
 
   const getEntriesForDate = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    return entries.filter(e => e.date === dateStr);
+    return entries.filter((e) => e.date === dateStr);
   };
 
   const selectedEntries = selectedDate ? getEntriesForDate(selectedDate) : [];
@@ -53,7 +71,11 @@ export function CalendarView({ entries, onUpdate, onDelete }: CalendarViewProps)
     if (entryType === 'daily') return null;
     return (
       <Badge variant="secondary" className="text-xs gap-1">
-        {entryType === 'weekly' ? <CalendarDays className="h-3 w-3" /> : <CalendarIcon className="h-3 w-3" />}
+        {entryType === 'weekly' ? (
+          <CalendarDays className="h-3 w-3" />
+        ) : (
+          <CalendarIcon className="h-3 w-3" />
+        )}
         {entryType}
       </Badge>
     );
@@ -62,9 +84,7 @@ export function CalendarView({ entries, onUpdate, onDelete }: CalendarViewProps)
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-xl font-display font-medium text-foreground">
-          Calendar View
-        </h2>
+        <h2 className="text-xl font-display font-medium text-foreground">Calendar View</h2>
         {selectedDate && !isTodaySelected && (
           <Button
             variant="outline"
@@ -83,7 +103,11 @@ export function CalendarView({ entries, onUpdate, onDelete }: CalendarViewProps)
             mode="single"
             selected={selectedDate}
             onSelect={(date) => {
-              setSelectedDate(prev => prev && date && format(prev, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd') ? undefined : date);
+              setSelectedDate((prev) =>
+                prev && date && format(prev, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
+                  ? undefined
+                  : date
+              );
               cancelEditing();
             }}
             className="pointer-events-auto"
@@ -111,17 +135,16 @@ export function CalendarView({ entries, onUpdate, onDelete }: CalendarViewProps)
               <h3 className="font-display font-medium text-foreground">
                 {format(selectedDate, 'EEEE, MMMM d, yyyy')}
                 {isTodaySelected && (
-                  <span className="ml-2 text-xs font-sans uppercase tracking-widest text-primary">Today</span>
+                  <span className="ml-2 text-xs font-sans uppercase tracking-widest text-primary">
+                    Today
+                  </span>
                 )}
               </h3>
 
               {selectedEntries.length > 0 ? (
                 <div className="space-y-3">
                   {selectedEntries.map((entry) => (
-                    <div
-                      key={entry.id}
-                      className="journal-paper rounded-lg shadow-soft p-4 group"
-                    >
+                    <div key={entry.id} className="journal-paper rounded-lg shadow-soft p-4 group">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center gap-2">
                           {getEntryBadge(entry.entry_type)}
@@ -150,11 +173,15 @@ export function CalendarView({ entries, onUpdate, onDelete }: CalendarViewProps)
                             <AlertDialogContent>
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Delete entry?</AlertDialogTitle>
-                                <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+                                <AlertDialogDescription>
+                                  This action cannot be undone.
+                                </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => onDelete(entry.id)}>Delete</AlertDialogAction>
+                                <AlertDialogAction onClick={() => onDelete(entry.id)}>
+                                  Delete
+                                </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
@@ -174,7 +201,11 @@ export function CalendarView({ entries, onUpdate, onDelete }: CalendarViewProps)
                               <X className="h-4 w-4 mr-1" />
                               Cancel
                             </Button>
-                            <Button size="sm" onClick={() => saveEdit(entry.id)} disabled={!editContent.trim()}>
+                            <Button
+                              size="sm"
+                              onClick={() => saveEdit(entry.id)}
+                              disabled={!editContent.trim()}
+                            >
                               <Check className="h-4 w-4 mr-1" />
                               Save
                             </Button>
@@ -189,9 +220,13 @@ export function CalendarView({ entries, onUpdate, onDelete }: CalendarViewProps)
                               <div key={key} className="flex gap-2 text-sm">
                                 <div className="flex items-center gap-1.5 text-muted-foreground min-w-[110px] flex-shrink-0">
                                   <Icon className="h-3.5 w-3.5" />
-                                  <span className="font-medium text-xs uppercase tracking-wide">{label}</span>
+                                  <span className="font-medium text-xs uppercase tracking-wide">
+                                    {label}
+                                  </span>
                                 </div>
-                                <p className="text-journal-ink leading-relaxed whitespace-pre-wrap">{value}</p>
+                                <p className="text-journal-ink leading-relaxed whitespace-pre-wrap">
+                                  {value}
+                                </p>
                               </div>
                             );
                           })}
@@ -205,7 +240,9 @@ export function CalendarView({ entries, onUpdate, onDelete }: CalendarViewProps)
                   {isTodaySelected ? (
                     <>
                       <p className="font-medium text-foreground">No entry for today yet.</p>
-                      <p className="mt-1">Use the daily prompt above to log your first categories.</p>
+                      <p className="mt-1">
+                        Use the daily prompt above to log your first categories.
+                      </p>
                     </>
                   ) : (
                     <p>No entries for this date.</p>

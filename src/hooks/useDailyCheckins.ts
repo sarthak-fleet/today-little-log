@@ -24,11 +24,17 @@ function readGuest(): DailyCheckin[] {
   try {
     const raw = localStorage.getItem(GUEST_KEY);
     return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
+  } catch {
+    return [];
+  }
 }
 
 function writeGuest(r: DailyCheckin[]) {
-  try { localStorage.setItem(GUEST_KEY, JSON.stringify(r)); } catch { /* ignore */ }
+  try {
+    localStorage.setItem(GUEST_KEY, JSON.stringify(r));
+  } catch {
+    /* ignore */
+  }
 }
 
 export function useDailyCheckins() {
@@ -95,7 +101,7 @@ export function useDailyCheckins() {
       if (newlyAm) await award(XP_REWARDS.AM_INTENT, SCORE_DELTAS.DAILY_ENGAGEMENT);
       if (newlyPm) await award(XP_REWARDS.PM_REVIEW, SCORE_DELTAS.DAILY_ENGAGEMENT);
     },
-    [user, award, today, todayRow],
+    [user, award, today, todayRow]
   );
 
   return { rows, today, todayRow, isLoaded, save };

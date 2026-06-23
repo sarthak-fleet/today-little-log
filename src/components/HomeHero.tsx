@@ -12,8 +12,8 @@ export function HomeHero() {
           Write one line about your day. Every day.
         </h1>
         <p className="mt-3 max-w-prose text-sm leading-6 text-muted-foreground">
-          A tiny daily log. Fill in what you did — sleep, exercise, focus — and get a score.
-          Look back at how your month actually went. No guilt, no 27 dashboards.
+          A tiny daily log. Fill in what you did — sleep, exercise, focus — and get a score. Look
+          back at how your month actually went. No guilt, no 27 dashboards.
         </p>
 
         <div className="mt-5 rounded-xl border border-border bg-background p-4">
@@ -47,7 +47,8 @@ export function HomeHero() {
         </div>
 
         <p className="mt-4 text-xs text-muted-foreground">
-          Works without an account — your data stays in this browser. Sign in to sync across devices and install as an app.
+          Works without an account — your data stays in this browser. Sign in to sync across devices
+          and install as an app.
         </p>
       </div>
     </section>

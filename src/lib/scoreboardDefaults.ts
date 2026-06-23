@@ -41,15 +41,9 @@ const daily: Array<Pick<DefaultScoreboardItem, 'label' | 'kind'>> = [
   { label: 'Journal', kind: 'check' },
 ];
 
-const weekly = [
-  'Review',
-  'Catch-up',
-  'Network/outbound',
-];
+const weekly = ['Review', 'Catch-up', 'Network/outbound'];
 
-const monthly = [
-  'Wealth sync',
-];
+const monthly = ['Wealth sync'];
 
 const notToDos = [
   'No phone in bed',

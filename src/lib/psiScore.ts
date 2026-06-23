@@ -32,8 +32,14 @@ const PSI_SYSTEM_PROMPT = `You score "brain pressure" (PSI) from a morning journ
 Respond with ONLY the integer 0-100, nothing else. No punctuation, no words.
 Consider: stated stressors, urgency language, ruminating patterns, fatigue, overwhelm, excitement.`;
 
-interface Ok { score: number; error?: never }
-interface Err { score?: never; error: string }
+interface Ok {
+  score: number;
+  error?: never;
+}
+interface Err {
+  score?: never;
+  error: string;
+}
 
 /**
  * Client-side PSI scorer. Uses the same BYOK chat config as the

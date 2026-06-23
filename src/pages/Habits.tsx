@@ -7,9 +7,31 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Plus, Trash2, Target, CheckCircle2, Pencil, History } from 'lucide-react';
 import { HabitsSkeleton } from '@/components/PageSkeleton';
@@ -20,7 +42,19 @@ type HabitsProps = {
 };
 
 const Habits = ({ embedded = false }: HabitsProps) => {
-  const { habits, logs, isLoaded, isSaving, isLoggedIn, addHabit, updateHabit, deleteHabit, logHabit, getLog, getTodayLog } = useHabits();
+  const {
+    habits,
+    logs,
+    isLoaded,
+    isSaving,
+    isLoggedIn,
+    addHabit,
+    updateHabit,
+    deleteHabit,
+    logHabit,
+    getLog,
+    getTodayLog,
+  } = useHabits();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
@@ -121,7 +155,8 @@ const Habits = ({ embedded = false }: HabitsProps) => {
   const getProgress = (habit: Habit) => {
     const current = getLog(habit.id, today);
     const todayValue = getTodayLog(habit.id, today);
-    const percentage = habit.target_value > 0 ? Math.min((current / habit.target_value) * 100, 100) : 0;
+    const percentage =
+      habit.target_value > 0 ? Math.min((current / habit.target_value) * 100, 100) : 0;
     const remaining = habit.target_value - current;
     return { current, todayValue, percentage, remaining };
   };
@@ -195,12 +230,17 @@ const Habits = ({ embedded = false }: HabitsProps) => {
       <div className={cn('max-w-4xl mx-auto px-4', embedded ? 'pb-2' : 'pb-20')}>
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-xl font-display font-semibold text-foreground">Daily ritual items</h2>
+            <h2 className="text-xl font-display font-semibold text-foreground">
+              Daily ritual items
+            </h2>
             <p className="mt-1 text-sm text-muted-foreground">
               One checklist for the repeated things worth remembering, with history per item.
             </p>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={(open) => open ? handleOpenDialog() : handleCloseDialog()}>
+          <Dialog
+            open={isDialogOpen}
+            onOpenChange={(open) => (open ? handleOpenDialog() : handleCloseDialog())}
+          >
             <DialogTrigger asChild>
               <Button size="sm" className="gap-1">
                 <Plus className="h-4 w-4" />
@@ -209,7 +249,9 @@ const Habits = ({ embedded = false }: HabitsProps) => {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>{editingHabit ? 'Edit ritual item' : 'Create ritual item'}</DialogTitle>
+                <DialogTitle>
+                  {editingHabit ? 'Edit ritual item' : 'Create ritual item'}
+                </DialogTitle>
               </DialogHeader>
               <div className="space-y-4 pt-4">
                 <div className="space-y-2">
@@ -218,7 +260,7 @@ const Habits = ({ embedded = false }: HabitsProps) => {
                     id="title"
                     placeholder="e.g., Drink water, Exercise..."
                     value={formData.title}
-                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
                   />
                 </div>
 
@@ -227,7 +269,9 @@ const Habits = ({ embedded = false }: HabitsProps) => {
                     <Label>Type</Label>
                     <Select
                       value={formData.target_type}
-                      onValueChange={(v) => setFormData(prev => ({ ...prev, target_type: v as 'target' | 'limit' }))}
+                      onValueChange={(v) =>
+                        setFormData((prev) => ({ ...prev, target_type: v as 'target' | 'limit' }))
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -243,7 +287,9 @@ const Habits = ({ embedded = false }: HabitsProps) => {
                     <Label>Track by</Label>
                     <Select
                       value={formData.track_type}
-                      onValueChange={(v) => setFormData(prev => ({ ...prev, track_type: v as 'count' | 'time' }))}
+                      onValueChange={(v) =>
+                        setFormData((prev) => ({ ...prev, track_type: v as 'count' | 'time' }))
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -261,7 +307,9 @@ const Habits = ({ embedded = false }: HabitsProps) => {
                     <Label>Frequency</Label>
                     <Select
                       value={formData.frequency}
-                      onValueChange={(v) => setFormData(prev => ({ ...prev, frequency: v as 'daily' | 'weekly' }))}
+                      onValueChange={(v) =>
+                        setFormData((prev) => ({ ...prev, frequency: v as 'daily' | 'weekly' }))
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -279,7 +327,12 @@ const Habits = ({ embedded = false }: HabitsProps) => {
                       type="number"
                       min={1}
                       value={formData.target_value}
-                      onChange={(e) => setFormData(prev => ({ ...prev, target_value: parseInt(e.target.value) || 1 }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          target_value: parseInt(e.target.value, 10) || 1,
+                        }))
+                      }
                     />
                   </div>
                 </div>
@@ -296,7 +349,9 @@ const Habits = ({ embedded = false }: HabitsProps) => {
           <div className="text-center py-12">
             <Target className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
             <p className="text-sm font-medium text-muted-foreground">No ritual items yet</p>
-            <p className="text-xs text-muted-foreground/70 mt-1">Create the first daily item you want history for</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">
+              Create the first daily item you want history for
+            </p>
             <Button className="mt-4" onClick={() => handleOpenDialog()}>
               <Plus className="h-4 w-4 mr-2" />
               Add Item
@@ -321,32 +376,32 @@ const Habits = ({ embedded = false }: HabitsProps) => {
                   ? 'bg-destructive'
                   : 'bg-accent'
                 : 'bg-primary';
-              const summaryText = habit.frequency === 'weekly'
-                ? `Last 7 days: ${formatValue(habit, current)} (today: ${formatValue(habit, todayValue)})`
-                : `Today: ${formatValue(habit, current)}`;
+              const summaryText =
+                habit.frequency === 'weekly'
+                  ? `Last 7 days: ${formatValue(habit, current)} (today: ${formatValue(habit, todayValue)})`
+                  : `Today: ${formatValue(habit, current)}`;
               const limitStatus = isOverLimit
                 ? `Over by ${formatValue(habit, Math.abs(remaining))}`
                 : `${formatValue(habit, remaining)} left`;
 
               return (
-                <Card
-                  key={habit.id}
-                  className={`transition-colors hover:shadow-md ${cardTone}`}
-                >
+                <Card key={habit.id} className={`transition-colors hover:shadow-md ${cardTone}`}>
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <CardTitle className="text-base font-medium flex items-center gap-2">
                           {habit.title}
-                          {isComplete && (
-                            <CheckCircle2 className="h-4 w-4 text-primary" />
-                          )}
+                          {isComplete && <CheckCircle2 className="h-4 w-4 text-primary" />}
                         </CardTitle>
                         <div className="mt-2 flex flex-wrap items-center gap-2">
                           <Badge variant="secondary" className="capitalize">
                             {habit.frequency}
                           </Badge>
-                          <Badge variant={isLimit ? (isOverLimit ? 'destructive' : 'outline') : 'secondary'}>
+                          <Badge
+                            variant={
+                              isLimit ? (isOverLimit ? 'destructive' : 'outline') : 'secondary'
+                            }
+                          >
                             {isLimit ? 'Limit' : 'Target'}
                           </Badge>
                           <Badge variant="outline">
@@ -365,18 +420,27 @@ const Habits = ({ embedded = false }: HabitsProps) => {
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-11 w-11 sm:h-9 sm:w-9 text-muted-foreground hover:text-destructive">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-11 w-11 sm:h-9 sm:w-9 text-muted-foreground hover:text-destructive"
+                            >
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
                               <AlertDialogTitle>Delete habit?</AlertDialogTitle>
-                              <AlertDialogDescription>This will delete the habit and all its logged history. This action cannot be undone.</AlertDialogDescription>
+                              <AlertDialogDescription>
+                                This will delete the habit and all its logged history. This action
+                                cannot be undone.
+                              </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => deleteHabit(habit.id)}>Delete</AlertDialogAction>
+                              <AlertDialogAction onClick={() => deleteHabit(habit.id)}>
+                                Delete
+                              </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
@@ -387,7 +451,9 @@ const Habits = ({ embedded = false }: HabitsProps) => {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">{summaryText}</span>
-                        <span className={`font-medium ${isOverLimit ? 'text-destructive' : 'text-foreground'}`}>
+                        <span
+                          className={`font-medium ${isOverLimit ? 'text-destructive' : 'text-foreground'}`}
+                        >
                           {isLimit
                             ? limitStatus
                             : `Goal: ${formatValue(habit, habit.target_value)}${habit.frequency === 'weekly' ? '/7d' : ''}`}
@@ -441,7 +507,12 @@ const Habits = ({ embedded = false }: HabitsProps) => {
         )}
       </div>
 
-      <Dialog open={logModal.open} onOpenChange={(open) => { if (!open) handleCloseLog(); }}>
+      <Dialog
+        open={logModal.open}
+        onOpenChange={(open) => {
+          if (!open) handleCloseLog();
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
@@ -470,7 +541,9 @@ const Habits = ({ embedded = false }: HabitsProps) => {
                   min={0}
                   value={logModal.value}
                   onChange={(e) => setLogModal((prev) => ({ ...prev, value: e.target.value }))}
-                  placeholder={logModal.habit.track_type === 'time' ? 'Minutes for today' : 'Total for today'}
+                  placeholder={
+                    logModal.habit.track_type === 'time' ? 'Minutes for today' : 'Total for today'
+                  }
                 />
                 <p className="text-xs text-muted-foreground">
                   {logModal.habit.track_type === 'time'
@@ -494,81 +567,103 @@ const Habits = ({ embedded = false }: HabitsProps) => {
       <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
         <DialogContent className="sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>{historyHabit ? `${historyHabit.title} history` : 'Item history'}</DialogTitle>
+            <DialogTitle>
+              {historyHabit ? `${historyHabit.title} history` : 'Item history'}
+            </DialogTitle>
           </DialogHeader>
-          {historyHabit && (() => {
-            const stats = getHistoryStats(historyHabit);
-            const recentLogs = logs
-              .filter((log) => log.habit_id === historyHabit.id)
-              .sort((a, b) => b.date.localeCompare(a.date))
-              .slice(0, 8);
+          {historyHabit &&
+            (() => {
+              const stats = getHistoryStats(historyHabit);
+              const recentLogs = logs
+                .filter((log) => log.habit_id === historyHabit.id)
+                .sort((a, b) => b.date.localeCompare(a.date))
+                .slice(0, 8);
 
-            return (
-              <div className="space-y-5 pt-2">
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="rounded-lg border bg-muted/30 p-3">
-                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">30d rate</p>
-                    <p className="mt-1 font-display text-2xl font-semibold">{stats.completionRate}%</p>
-                  </div>
-                  <div className="rounded-lg border bg-muted/30 p-3">
-                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Done days</p>
-                    <p className="mt-1 font-display text-2xl font-semibold">{stats.completedDays}/30</p>
-                  </div>
-                  <div className="rounded-lg border bg-muted/30 p-3">
-                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Streak</p>
-                    <p className="mt-1 font-display text-2xl font-semibold">{stats.streak}</p>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
-                    <span>Last 30 days</span>
-                    <span>{historyHabit.target_type === 'limit' ? 'Within limit' : 'Met target'}</span>
-                  </div>
-                  <div className="grid grid-cols-10 gap-1.5">
-                    {stats.values.map(({ date, value }) => {
-                      const met = isGoalMet(historyHabit, value);
-                      const dayLog = getDayLog(historyHabit.id, date);
-                      return (
-                        <div
-                          key={date}
-                          title={`${format(new Date(`${date}T00:00:00`), 'MMM d')}: ${formatValue(historyHabit, value)}`}
-                          className={cn(
-                            'aspect-square rounded-md border',
-                            met
-                              ? 'border-primary/40 bg-primary/80'
-                              : dayLog
-                                ? 'border-accent/40 bg-accent/40'
-                                : 'border-border bg-muted/50'
-                          )}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Recent logs</p>
-                  {recentLogs.length === 0 ? (
-                    <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-                      No logged history yet.
-                    </p>
-                  ) : (
-                    <div className="divide-y rounded-lg border">
-                      {recentLogs.map((log) => (
-                        <div key={log.id} className="flex items-center justify-between px-3 py-2 text-sm">
-                          <span className="text-muted-foreground">
-                            {format(new Date(`${log.date}T00:00:00`), 'EEE, MMM d')}
-                          </span>
-                          <span className="font-medium">{formatValue(historyHabit, log.value)}</span>
-                        </div>
-                      ))}
+              return (
+                <div className="space-y-5 pt-2">
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="rounded-lg border bg-muted/30 p-3">
+                      <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                        30d rate
+                      </p>
+                      <p className="mt-1 font-display text-2xl font-semibold">
+                        {stats.completionRate}%
+                      </p>
                     </div>
-                  )}
+                    <div className="rounded-lg border bg-muted/30 p-3">
+                      <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                        Done days
+                      </p>
+                      <p className="mt-1 font-display text-2xl font-semibold">
+                        {stats.completedDays}/30
+                      </p>
+                    </div>
+                    <div className="rounded-lg border bg-muted/30 p-3">
+                      <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                        Streak
+                      </p>
+                      <p className="mt-1 font-display text-2xl font-semibold">{stats.streak}</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Last 30 days</span>
+                      <span>
+                        {historyHabit.target_type === 'limit' ? 'Within limit' : 'Met target'}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-10 gap-1.5">
+                      {stats.values.map(({ date, value }) => {
+                        const met = isGoalMet(historyHabit, value);
+                        const dayLog = getDayLog(historyHabit.id, date);
+                        return (
+                          <div
+                            key={date}
+                            title={`${format(new Date(`${date}T00:00:00`), 'MMM d')}: ${formatValue(historyHabit, value)}`}
+                            className={cn(
+                              'aspect-square rounded-md border',
+                              met
+                                ? 'border-primary/40 bg-primary/80'
+                                : dayLog
+                                  ? 'border-accent/40 bg-accent/40'
+                                  : 'border-border bg-muted/50'
+                            )}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Recent logs
+                    </p>
+                    {recentLogs.length === 0 ? (
+                      <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+                        No logged history yet.
+                      </p>
+                    ) : (
+                      <div className="divide-y rounded-lg border">
+                        {recentLogs.map((log) => (
+                          <div
+                            key={log.id}
+                            className="flex items-center justify-between px-3 py-2 text-sm"
+                          >
+                            <span className="text-muted-foreground">
+                              {format(new Date(`${log.date}T00:00:00`), 'EEE, MMM d')}
+                            </span>
+                            <span className="font-medium">
+                              {formatValue(historyHabit, log.value)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })()}
+              );
+            })()}
         </DialogContent>
       </Dialog>
     </div>

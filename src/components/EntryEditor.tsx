@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Check, Loader2, Pencil, X } from 'lucide-react';
-import { type EntryType, type JournalEntry } from '@/hooks/useJournalEntries';
+import type { EntryType, JournalEntry } from '@/hooks/useJournalEntries';
 
 interface EntryEditorProps {
   entry?: JournalEntry;
@@ -13,7 +13,14 @@ interface EntryEditorProps {
   isSaving?: boolean;
 }
 
-export function EntryEditor({ entry, entryType, title, placeholder, onSave, isSaving = false }: EntryEditorProps) {
+export function EntryEditor({
+  entry,
+  entryType,
+  title,
+  placeholder,
+  onSave,
+  isSaving = false,
+}: EntryEditorProps) {
   const [content, setContent] = useState(entry?.content || '');
   const [isEditing, setIsEditing] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
@@ -23,7 +30,7 @@ export function EntryEditor({ entry, entryType, title, placeholder, onSave, isSa
       setContent(entry.content);
       setIsEditing(false);
     }
-  }, [entry?.content, entry?.id]);
+  }, [entry?.content]);
 
   const handleSave = () => {
     if (content.trim()) {
@@ -94,9 +101,7 @@ export function EntryEditor({ entry, entryType, title, placeholder, onSave, isSa
         </Button>
       )}
 
-      {isSaved && (
-        <p className="text-sm text-primary mt-2 animate-fade-in">✓ Saved</p>
-      )}
+      {isSaved && <p className="text-sm text-primary mt-2 animate-fade-in">✓ Saved</p>}
     </div>
   );
 }

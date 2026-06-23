@@ -12,10 +12,7 @@ import { expect, test } from '@playwright/test';
 const PRIMARY_ROUTES = ['/', '/journal', '/patterns', '/life', '/review'];
 
 test.describe('mobile viewport — 390px', () => {
-  test.skip(
-    ({ viewport }) => (viewport?.width ?? 1280) > 600,
-    'mobile-only checks',
-  );
+  test.skip(({ viewport }) => (viewport?.width ?? 1280) > 600, 'mobile-only checks');
 
   for (const path of PRIMARY_ROUTES) {
     test(`no horizontal scroll on ${path}`, async ({ page }) => {
@@ -43,7 +40,7 @@ test.describe('mobile viewport — 390px', () => {
       els.map((el) => {
         const r = el.getBoundingClientRect();
         return { width: r.width, height: r.height };
-      }),
+      })
     );
     expect(sizes.length).toBeGreaterThan(0);
     sizes.forEach((size, i) => {

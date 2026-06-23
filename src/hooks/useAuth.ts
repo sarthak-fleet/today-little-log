@@ -47,7 +47,7 @@ export function useAuth(options: UseAuthOptions = {}) {
     // sessionData?.user identity is captured by user?.id; pulling the
     // whole object in would re-run on irrelevant field changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionData?.user?.id, includeProfile]);
+  }, [sessionData?.user?.id, includeProfile, sessionData?.user, fetchProfile]);
 
   const signOut = async () => {
     setCachedDob(null);
@@ -75,7 +75,19 @@ export function useAuth(options: UseAuthOptions = {}) {
     }
   };
 
-  const updateProfile = async (patch: Partial<Pick<Profile, 'name' | 'avatar_url' | 'dob' | 'identity_statement' | 'sleep_target_bed' | 'sleep_target_wake'>>) => {
+  const updateProfile = async (
+    patch: Partial<
+      Pick<
+        Profile,
+        | 'name'
+        | 'avatar_url'
+        | 'dob'
+        | 'identity_statement'
+        | 'sleep_target_bed'
+        | 'sleep_target_wake'
+      >
+    >
+  ) => {
     if (!sessionData?.user) return { error: new Error('Not authenticated') };
     try {
       const updated = await apiFetch<Profile>('/api/profiles', {

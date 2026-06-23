@@ -22,7 +22,9 @@ export function FooterStamp() {
       `}
       aria-label="Today time stamp"
     >
-      <span>{h}h {m}m dead</span>
+      <span>
+        {h}h {m}m dead
+      </span>
       <span className="opacity-40">·</span>
       <span className={urgent ? 'font-semibold' : ''}>{left} left</span>
     </div>

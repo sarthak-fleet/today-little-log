@@ -57,7 +57,8 @@ interface ToolDef {
 const TOOL_DEFS: ToolDef[] = [
   {
     name: 'list_habits',
-    description: 'List the authenticated user\'s defined habits (title, target type/value, frequency, time vs count).',
+    description:
+      "List the authenticated user's defined habits (title, target type/value, frequency, time vs count).",
     inputSchema: { type: 'object', properties: {}, additionalProperties: false },
   },
   {
@@ -76,7 +77,8 @@ const TOOL_DEFS: ToolDef[] = [
   },
   {
     name: 'list_journal_entries',
-    description: 'List journal entries. Returns date, entry_type, and content. Filter by date range.',
+    description:
+      'List journal entries. Returns date, entry_type, and content. Filter by date range.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -90,7 +92,8 @@ const TOOL_DEFS: ToolDef[] = [
   },
   {
     name: 'list_daily_checkins',
-    description: 'List AM/PM ritual rows: intents, regret line, sleep hours, wins, wastes, day score.',
+    description:
+      'List AM/PM ritual rows: intents, regret line, sleep hours, wins, wastes, day score.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -103,7 +106,8 @@ const TOOL_DEFS: ToolDef[] = [
   },
   {
     name: 'list_timer_sessions',
-    description: 'List completed timer/focus sessions. Each row: started_at, ended_at, duration_seconds, reference (habit or task), notes.',
+    description:
+      'List completed timer/focus sessions. Each row: started_at, ended_at, duration_seconds, reference (habit or task), notes.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -129,7 +133,8 @@ const TOOL_DEFS: ToolDef[] = [
   },
   {
     name: 'list_scoreboard_items',
-    description: 'List the user\'s scoreboard items (the rows of the daily matrix) with their score bounds and ideal.',
+    description:
+      "List the user's scoreboard items (the rows of the daily matrix) with their score bounds and ideal.",
     inputSchema: {
       type: 'object',
       properties: {
@@ -140,7 +145,12 @@ const TOOL_DEFS: ToolDef[] = [
   },
 ];
 
-function err(id: JsonRpcRequest['id'], code: number, message: string, data?: unknown): JsonRpcError {
+function err(
+  id: JsonRpcRequest['id'],
+  code: number,
+  message: string,
+  data?: unknown
+): JsonRpcError {
   return { jsonrpc: '2.0', id: id ?? null, error: { code, message, data } };
 }
 function ok(id: JsonRpcRequest['id'], result: unknown): JsonRpcSuccess {
@@ -159,7 +169,7 @@ async function runTool(
   name: string,
   rawArgs: unknown,
   db: ReturnType<typeof createDb>,
-  userId: string,
+  userId: string
 ): Promise<unknown> {
   const args = (rawArgs && typeof rawArgs === 'object' ? rawArgs : {}) as Record<string, unknown>;
 
@@ -177,7 +187,12 @@ async function runTool(
       if (dateFrom) conds.push(gte(habitLogsTable.date, dateFrom));
       if (dateTo) conds.push(lte(habitLogsTable.date, dateTo));
       if (habitId) conds.push(eq(habitLogsTable.habit_id, habitId));
-      const rows = await db.select().from(habitLogsTable).where(and(...conds)).orderBy(desc(habitLogsTable.date)).limit(limit);
+      const rows = await db
+        .select()
+        .from(habitLogsTable)
+        .where(and(...conds))
+        .orderBy(desc(habitLogsTable.date))
+        .limit(limit);
       return { logs: rows };
     }
     case 'list_journal_entries': {
@@ -189,7 +204,12 @@ async function runTool(
       if (dateFrom) conds.push(gte(journalEntriesTable.date, dateFrom));
       if (dateTo) conds.push(lte(journalEntriesTable.date, dateTo));
       if (entryType) conds.push(eq(journalEntriesTable.entry_type, entryType));
-      const rows = await db.select().from(journalEntriesTable).where(and(...conds)).orderBy(desc(journalEntriesTable.date)).limit(limit);
+      const rows = await db
+        .select()
+        .from(journalEntriesTable)
+        .where(and(...conds))
+        .orderBy(desc(journalEntriesTable.date))
+        .limit(limit);
       return { entries: rows };
     }
     case 'list_daily_checkins': {
@@ -199,7 +219,12 @@ async function runTool(
       const conds = [eq(dailyCheckinsTable.user_id, userId)];
       if (dateFrom) conds.push(gte(dailyCheckinsTable.date, dateFrom));
       if (dateTo) conds.push(lte(dailyCheckinsTable.date, dateTo));
-      const rows = await db.select().from(dailyCheckinsTable).where(and(...conds)).orderBy(desc(dailyCheckinsTable.date)).limit(limit);
+      const rows = await db
+        .select()
+        .from(dailyCheckinsTable)
+        .where(and(...conds))
+        .orderBy(desc(dailyCheckinsTable.date))
+        .limit(limit);
       return { checkins: rows };
     }
     case 'list_timer_sessions': {
@@ -209,7 +234,12 @@ async function runTool(
       const conds = [eq(timeSessionsTable.user_id, userId)];
       if (dateFrom) conds.push(gte(timeSessionsTable.started_at, dateFrom));
       if (dateTo) conds.push(lte(timeSessionsTable.started_at, `${dateTo}T23:59:59Z`));
-      const rows = await db.select().from(timeSessionsTable).where(and(...conds)).orderBy(desc(timeSessionsTable.started_at)).limit(limit);
+      const rows = await db
+        .select()
+        .from(timeSessionsTable)
+        .where(and(...conds))
+        .orderBy(desc(timeSessionsTable.started_at))
+        .limit(limit);
       return { sessions: rows };
     }
     case 'list_scoreboard_logs': {
@@ -219,14 +249,22 @@ async function runTool(
       const conds = [eq(scoreboardLogsTable.user_id, userId)];
       if (dateFrom) conds.push(gte(scoreboardLogsTable.date, dateFrom));
       if (dateTo) conds.push(lte(scoreboardLogsTable.date, dateTo));
-      const rows = await db.select().from(scoreboardLogsTable).where(and(...conds)).orderBy(desc(scoreboardLogsTable.date)).limit(limit);
+      const rows = await db
+        .select()
+        .from(scoreboardLogsTable)
+        .where(and(...conds))
+        .orderBy(desc(scoreboardLogsTable.date))
+        .limit(limit);
       return { logs: rows };
     }
     case 'list_scoreboard_items': {
       const month = asString(args.month);
       const conds = [eq(scoreboardItemsTable.user_id, userId)];
       if (month) conds.push(eq(scoreboardItemsTable.score_month, month));
-      const rows = await db.select().from(scoreboardItemsTable).where(and(...conds));
+      const rows = await db
+        .select()
+        .from(scoreboardItemsTable)
+        .where(and(...conds));
       return { items: rows };
     }
     default:
@@ -237,7 +275,7 @@ async function runTool(
 async function handleRpc(
   rpc: JsonRpcRequest,
   db: ReturnType<typeof createDb>,
-  userId: string,
+  userId: string
 ): Promise<JsonRpcSuccess | JsonRpcError | null> {
   const id = rpc.id ?? null;
   switch (rpc.method) {
@@ -282,15 +320,19 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   if (request.method === 'GET') {
     return new Response(
-      JSON.stringify({
-        server: SERVER_INFO,
-        protocolVersion: PROTOCOL_VERSION,
-        transport: 'http+json-rpc',
-        endpoint: '/api/mcp',
-        auth: 'better-auth session cookie',
-        tools: TOOL_DEFS.map((t) => ({ name: t.name, description: t.description })),
-      }, null, 2),
-      { headers: { 'content-type': 'application/json' } },
+      JSON.stringify(
+        {
+          server: SERVER_INFO,
+          protocolVersion: PROTOCOL_VERSION,
+          transport: 'http+json-rpc',
+          endpoint: '/api/mcp',
+          auth: 'better-auth session cookie',
+          tools: TOOL_DEFS.map((t) => ({ name: t.name, description: t.description })),
+        },
+        null,
+        2
+      ),
+      { headers: { 'content-type': 'application/json' } }
     );
   }
   if (request.method !== 'POST') {
@@ -332,7 +374,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const rpcs = batch ? body : [body];
   const responses: Array<JsonRpcSuccess | JsonRpcError> = [];
   for (const rpc of rpcs) {
-    if (!rpc || rpc.jsonrpc !== '2.0' || typeof rpc.method !== 'string') {
+    if (rpc?.jsonrpc !== '2.0' || typeof rpc.method !== 'string') {
       responses.push(err(rpc?.id ?? null, -32600, 'Invalid Request'));
       continue;
     }

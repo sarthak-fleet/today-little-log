@@ -6,9 +6,7 @@ import { useEffect, useState } from 'react';
  * offline (reads come from local state / cache), it just can't persist.
  */
 export function useOnlineStatus(): boolean {
-  const [online, setOnline] = useState(
-    typeof navigator === 'undefined' ? true : navigator.onLine,
-  );
+  const [online, setOnline] = useState(typeof navigator === 'undefined' ? true : navigator.onLine);
 
   useEffect(() => {
     const goOnline = () => setOnline(true);

@@ -107,7 +107,7 @@
     --journal-date: 25 55% 45%;
     --journal-highlight: 40 95% 85%;
 
-    --shadow-soft: 0 4px 20px -4px hsl(25 40% 25% / 0.10);
+    --shadow-soft: 0 4px 20px -4px hsl(25 40% 25% / 0.1);
     --shadow-card: 0 8px 30px -8px hsl(25 40% 25% / 0.15);
     --shadow-glow: 0 0 30px hsl(25 85% 50% / 0.25);
 
@@ -158,7 +158,7 @@
 
     --shadow-soft: 0 4px 20px -4px hsl(0 0% 0% / 0.35);
     --shadow-card: 0 8px 30px -8px hsl(0 0% 0% / 0.45);
-    --shadow-glow: 0 0 40px hsl(25 90% 58% / 0.30);
+    --shadow-glow: 0 0 40px hsl(25 90% 58% / 0.3);
 
     --sidebar-background: 25 18% 8%;
     --sidebar-foreground: 40 20% 88%;
@@ -221,7 +221,8 @@
 }
 
 @keyframes sidebarPulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.6;
     transform: scale(1);
   }

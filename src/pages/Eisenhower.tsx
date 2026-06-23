@@ -25,11 +25,20 @@ const Eisenhower = () => {
           <div className="h-64 rounded-2xl bg-muted/40 animate-pulse" />
         ) : tasks.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border p-12 text-center text-muted-foreground">
-            No tasks yet. Add some in <a className="text-primary underline" href="/tasks">Tasks</a>.
+            No tasks yet. Add some in{' '}
+            <a className="text-primary underline" href="/tasks">
+              Tasks
+            </a>
+            .
           </div>
         ) : (
           <EisenhowerBoard
-            tasks={tasks.map((t) => ({ id: t.id, title: t.title, status: t.status, quadrant: t.quadrant ?? null }))}
+            tasks={tasks.map((t) => ({
+              id: t.id,
+              title: t.title,
+              status: t.status,
+              quadrant: t.quadrant ?? null,
+            }))}
             onToggle={toggleTask}
             onDelete={deleteTask}
           />

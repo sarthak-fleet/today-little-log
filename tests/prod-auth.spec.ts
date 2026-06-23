@@ -24,10 +24,13 @@ test('prod /auth — button present, click fires auth flow', async ({ page }) =>
   const box = await btn.boundingBox();
   expect(box).not.toBeNull();
   if (box) {
-    const tag = await page.evaluate(([x, y]) => {
-      const el = document.elementFromPoint(x as number, y as number);
-      return el?.tagName.toLowerCase();
-    }, [box.x + box.width / 2, box.y + box.height / 2]);
+    const tag = await page.evaluate(
+      ([x, y]) => {
+        const el = document.elementFromPoint(x as number, y as number);
+        return el?.tagName.toLowerCase();
+      },
+      [box.x + box.width / 2, box.y + box.height / 2]
+    );
     expect(['button', 'svg', 'path', 'span'], `element at button center = ${tag}`).toContain(tag);
   }
 

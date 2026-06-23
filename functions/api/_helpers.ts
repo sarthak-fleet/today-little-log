@@ -38,7 +38,11 @@ export function createAuth(env: Env, db: ReturnType<typeof createDb>) {
   });
 }
 
-export async function requireUserId(request: Request, env: Env, db: ReturnType<typeof createDb>): Promise<string | null> {
+export async function requireUserId(
+  request: Request,
+  env: Env,
+  db: ReturnType<typeof createDb>
+): Promise<string | null> {
   const auth = createAuth(env, db);
   const session = await auth.api.getSession({ headers: request.headers });
   return session?.user?.id ?? null;

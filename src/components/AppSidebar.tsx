@@ -32,10 +32,7 @@ export function AppSidebar() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <Sidebar
-      collapsible="icon"
-      className="border-r-0 transition-all duration-300 ease-out"
-    >
+    <Sidebar collapsible="icon" className="border-r-0 transition-all duration-300 ease-out">
       {/* Logo area */}
       <SidebarHeader className="px-3 py-5">
         <button
@@ -55,8 +52,12 @@ export function AppSidebar() {
               transition: 'opacity 0.3s ease, transform 0.3s ease',
             }}
           >
-            <span className="font-display text-[13px] font-semibold whitespace-nowrap tracking-tight">Today Score</span>
-            <span className="text-[11px] text-sidebar-foreground/50 whitespace-nowrap font-medium">{format(today, 'EEEE, MMM d')}</span>
+            <span className="font-display text-[13px] font-semibold whitespace-nowrap tracking-tight">
+              Today Score
+            </span>
+            <span className="text-[11px] text-sidebar-foreground/50 whitespace-nowrap font-medium">
+              {format(today, 'EEEE, MMM d')}
+            </span>
           </div>
         </button>
       </SidebarHeader>
@@ -85,9 +86,10 @@ export function AppSidebar() {
                       className={`
                         sidebar-nav-item relative rounded-lg overflow-hidden
                         transition-all duration-200 ease-out
-                        ${active
-                          ? 'bg-primary/10 text-primary font-medium hover:bg-primary/15 hover:text-primary'
-                          : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
+                        ${
+                          active
+                            ? 'bg-primary/10 text-primary font-medium hover:bg-primary/15 hover:text-primary'
+                            : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
                         }
                       `}
                     >
@@ -97,7 +99,9 @@ export function AppSidebar() {
                           ${active ? 'text-primary' : ''}
                         `}
                       />
-                      <span className="group-data-[collapsible=icon]:hidden text-[13px]">{item.title}</span>
+                      <span className="group-data-[collapsible=icon]:hidden text-[13px]">
+                        {item.title}
+                      </span>
                       {active && (
                         <div className="sidebar-active-indicator absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-full bg-primary group-data-[collapsible=icon]:hidden" />
                       )}
@@ -124,7 +128,9 @@ export function AppSidebar() {
           }}
         >
           <div className="sidebar-status-dot h-1.5 w-1.5 rounded-full bg-emerald-500/80" />
-          <span className="text-[10px] text-sidebar-foreground/35 font-medium uppercase tracking-widest">Online</span>
+          <span className="text-[10px] text-sidebar-foreground/35 font-medium uppercase tracking-widest">
+            Online
+          </span>
         </div>
       </SidebarFooter>
     </Sidebar>

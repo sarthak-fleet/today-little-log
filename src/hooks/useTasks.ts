@@ -90,17 +90,19 @@ export function useTasks() {
             }
             // Reload after migration
             const reloaded = await apiFetch<TaskRow[]>('/api/tasks');
-            setTasks(reloaded.map((t) => ({
-              id: t.id,
-              title: t.title,
-              notes: t.notes ?? undefined,
-              estimate_minutes: t.estimate_minutes ?? undefined,
-              status: t.status as 'todo' | 'done',
-              sort_order: t.sort_order ?? 0,
-              created_at: t.created_at,
-              quadrant: (t.quadrant ?? null) as TaskItem['quadrant'],
-              mana_cost: t.mana_cost ?? null,
-            })));
+            setTasks(
+              reloaded.map((t) => ({
+                id: t.id,
+                title: t.title,
+                notes: t.notes ?? undefined,
+                estimate_minutes: t.estimate_minutes ?? undefined,
+                status: t.status as 'todo' | 'done',
+                sort_order: t.sort_order ?? 0,
+                created_at: t.created_at,
+                quadrant: (t.quadrant ?? null) as TaskItem['quadrant'],
+                mana_cost: t.mana_cost ?? null,
+              }))
+            );
             localStorage.removeItem(GUEST_TASKS_KEY);
           }
         } catch {
@@ -117,7 +119,7 @@ export function useTasks() {
 
   const addTask = useCallback(
     async (payload: { title: string; notes?: string; estimate_minutes?: number }) => {
-      const maxOrder = tasks.length > 0 ? Math.max(...tasks.map(t => t.sort_order)) : 0;
+      const maxOrder = tasks.length > 0 ? Math.max(...tasks.map((t) => t.sort_order)) : 0;
       const newTask: TaskItem = {
         id: crypto.randomUUID(),
         title: payload.title,
@@ -164,9 +166,7 @@ export function useTasks() {
       const prev = tasks.find((t) => t.id === id);
       if (!prev) return;
 
-      setTasks((current) =>
-        current.map((t) => (t.id === id ? { ...t, ...updates } : t))
-      );
+      setTasks((current) => current.map((t) => (t.id === id ? { ...t, ...updates } : t)));
 
       if (isLoggedIn) {
         setIsSaving(true);
@@ -182,9 +182,7 @@ export function useTasks() {
             }),
           });
         } catch {
-          setTasks((current) =>
-            current.map((t) => (t.id === id ? prev : t))
-          );
+          setTasks((current) => current.map((t) => (t.id === id ? prev : t)));
         }
         setIsSaving(false);
       } else {
@@ -205,9 +203,7 @@ export function useTasks() {
 
       const newStatus: 'todo' | 'done' = task.status === 'done' ? 'todo' : 'done';
 
-      setTasks((current) =>
-        current.map((t) => (t.id === id ? { ...t, status: newStatus } : t))
-      );
+      setTasks((current) => current.map((t) => (t.id === id ? { ...t, status: newStatus } : t)));
 
       if (isLoggedIn) {
         setIsSaving(true);

@@ -13,14 +13,7 @@ import {
   TrendingUp,
   Trophy,
 } from 'lucide-react';
-import {
-  eachDayOfInterval,
-  endOfWeek,
-  format,
-  parseISO,
-  startOfWeek,
-  subDays,
-} from 'date-fns';
+import { eachDayOfInterval, endOfWeek, format, parseISO, startOfWeek, subDays } from 'date-fns';
 import { useDailyCheckins } from '@/hooks/useDailyCheckins';
 import { useScoreboard, type ScoreboardItem, type ScoreboardLog } from '@/hooks/useScoreboard';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
@@ -55,31 +48,42 @@ const Review = () => {
   const lastWeekEnd = useMemo(() => subDays(thisWeekStart, 1), [thisWeekStart]);
 
   const thisWeekDays = useMemo(
-    () => eachDayOfInterval({ start: thisWeekStart, end: thisWeekEnd }).map((d) => format(d, 'yyyy-MM-dd')),
-    [thisWeekStart, thisWeekEnd],
+    () =>
+      eachDayOfInterval({ start: thisWeekStart, end: thisWeekEnd }).map((d) =>
+        format(d, 'yyyy-MM-dd')
+      ),
+    [thisWeekStart, thisWeekEnd]
   );
   const lastWeekDays = useMemo(
-    () => eachDayOfInterval({ start: lastWeekStart, end: lastWeekEnd }).map((d) => format(d, 'yyyy-MM-dd')),
-    [lastWeekStart, lastWeekEnd],
+    () =>
+      eachDayOfInterval({ start: lastWeekStart, end: lastWeekEnd }).map((d) =>
+        format(d, 'yyyy-MM-dd')
+      ),
+    [lastWeekStart, lastWeekEnd]
   );
-  const elapsedDays = useMemo(() => thisWeekDays.filter((d) => d <= todayKey), [thisWeekDays, todayKey]);
+  const elapsedDays = useMemo(
+    () => thisWeekDays.filter((d) => d <= todayKey),
+    [thisWeekDays, todayKey]
+  );
 
   const dailyItems = useMemo(
     () => items.filter((item) => categoryFromPosition(item.position) === 'daily'),
-    [items],
+    [items]
   );
   const notToDos = useMemo(
     () => items.filter((item) => categoryFromPosition(item.position) === 'not_to_do'),
-    [items],
+    [items]
   );
   const logByItemDate = useMemo(
     () => new Map(logs.map((log) => [`${log.item_id}:${log.date}`, log] as const)),
-    [logs],
+    [logs]
   );
 
   const scoreFor = (date: string) => scoreForDay(dailyItems, logByItemDate, date);
 
-  const daysWithLogs = elapsedDays.filter((d) => dailyItems.some((item) => logByItemDate.has(`${item.id}:${d}`)));
+  const daysWithLogs = elapsedDays.filter((d) =>
+    dailyItems.some((item) => logByItemDate.has(`${item.id}:${d}`))
+  );
   const daysLogged = daysWithLogs.length;
   const thisWeekAvg = daysLogged
     ? Math.round(daysWithLogs.reduce((s, d) => s + scoreFor(d), 0) / daysLogged)
@@ -94,7 +98,8 @@ const Review = () => {
   // month — useScoreboard fetches one month at a time, so cross-month weeks
   // would mis-report a drop. Showing the comparison only when honest is the
   // smaller, safer surface.
-  const lastWeekFullyLoaded = lastWeekStart >= parseISO(monthStart) && lastWeekEnd <= parseISO(monthEnd);
+  const lastWeekFullyLoaded =
+    lastWeekStart >= parseISO(monthStart) && lastWeekEnd <= parseISO(monthEnd);
   const lastWeekLogged = lastWeekFullyLoaded
     ? lastWeekDays.filter((d) => dailyItems.some((item) => logByItemDate.has(`${item.id}:${d}`)))
     : [];
@@ -114,16 +119,18 @@ const Review = () => {
 
   const patterns = useMemo(
     () => getWeeklyPatterns(dailyItems, notToDos, logs, thisWeekDays),
-    [dailyItems, notToDos, logs, thisWeekDays],
+    [dailyItems, notToDos, logs, thisWeekDays]
   );
   const planningPrompts = useMemo(() => getPlanningPrompts(patterns), [patterns]);
   const reflectionQuestion = useMemo(
     () => getReflectionQuestion(thisWeekAvg, daysLogged, patterns),
-    [thisWeekAvg, daysLogged, patterns],
+    [thisWeekAvg, daysLogged, patterns]
   );
 
   const nextWeekStart = format(new Date(getNextWeekKey()), 'MMM d');
-  const weekCheckins = checkins.filter((c) => c.date >= thisWeekDays[0] && c.date <= thisWeekDays[thisWeekDays.length - 1]);
+  const weekCheckins = checkins.filter(
+    (c) => c.date >= thisWeekDays[0] && c.date <= thisWeekDays[thisWeekDays.length - 1]
+  );
   const weekLabel = `${format(thisWeekStart, 'MMM d')} – ${format(thisWeekEnd, 'MMM d')}`;
   const elapsedCount = elapsedDays.length;
 
@@ -189,10 +196,10 @@ const Review = () => {
                           !elapsed
                             ? 'text-muted-foreground/40'
                             : score === 0
-                            ? 'text-destructive/80'
-                            : score >= 70
-                            ? 'text-emerald-600'
-                            : 'text-foreground'
+                              ? 'text-destructive/80'
+                              : score >= 70
+                                ? 'text-emerald-600'
+                                : 'text-foreground'
                         }`}
                       >
                         {!elapsed ? '—' : score}
@@ -212,10 +219,29 @@ const Review = () => {
                 <span className="text-[11px] uppercase tracking-widest">Weekly patterns</span>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
-                <PatternCard icon={Trophy} label="Best streak" value={patterns.bestStreak} tone="good" />
-                <PatternCard icon={TrendingDown} label="Most skipped" value={patterns.mostSkipped} tone="bad" />
-                <PatternCard icon={Ban} label="Not-to-do breaches" value={patterns.breaches} tone="bad" />
-                <PatternCard icon={LineChart} label="Repeated reason" value={patterns.repeatedReason} />
+                <PatternCard
+                  icon={Trophy}
+                  label="Best streak"
+                  value={patterns.bestStreak}
+                  tone="good"
+                />
+                <PatternCard
+                  icon={TrendingDown}
+                  label="Most skipped"
+                  value={patterns.mostSkipped}
+                  tone="bad"
+                />
+                <PatternCard
+                  icon={Ban}
+                  label="Not-to-do breaches"
+                  value={patterns.breaches}
+                  tone="bad"
+                />
+                <PatternCard
+                  icon={LineChart}
+                  label="Repeated reason"
+                  value={patterns.repeatedReason}
+                />
               </div>
             </div>
 
@@ -224,7 +250,9 @@ const Review = () => {
                 <div className="flex items-center justify-between gap-3 mb-3">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <BookOpen className="h-3.5 w-3.5" />
-                    <span className="text-[11px] uppercase tracking-widest">Daily entries this week</span>
+                    <span className="text-[11px] uppercase tracking-widest">
+                      Daily entries this week
+                    </span>
                   </div>
                   <Link to="/journal" className="text-xs font-medium text-primary hover:underline">
                     Open journal
@@ -258,9 +286,14 @@ const Review = () => {
                 </ul>
                 {reflectionQuestion && (
                   <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-3">
-                    <p className="text-[10px] uppercase tracking-widest text-primary/70 mb-1">Reflection</p>
+                    <p className="text-[10px] uppercase tracking-widest text-primary/70 mb-1">
+                      Reflection
+                    </p>
                     <p className="text-sm text-foreground">{reflectionQuestion}</p>
-                    <Link to="/journal" className="mt-2 inline-block text-xs font-medium text-primary hover:underline">
+                    <Link
+                      to="/journal"
+                      className="mt-2 inline-block text-xs font-medium text-primary hover:underline"
+                    >
                       Write in journal →
                     </Link>
                   </div>
@@ -275,7 +308,10 @@ const Review = () => {
                 </h2>
                 <ul className="space-y-3">
                   {weekCheckins.map((c) => (
-                    <li key={c.id} className="rounded-xl border border-border bg-background p-3 text-sm">
+                    <li
+                      key={c.id}
+                      className="rounded-xl border border-border bg-background p-3 text-sm"
+                    >
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground mb-1">
                         <span className="font-mono">{c.date}</span>
                         {c.pm_score != null && <span>· score {c.pm_score}/10</span>}
@@ -315,7 +351,10 @@ const Review = () => {
           {daysLogged > 0 && (
             <div className="grid gap-3 md:grid-cols-3 mb-4">
               {planningPrompts.map((prompt) => (
-                <div key={prompt.label} className="rounded-xl border border-border bg-background p-3">
+                <div
+                  key={prompt.label}
+                  className="rounded-xl border border-border bg-background p-3"
+                >
                   <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
                     {prompt.label}
                   </div>
@@ -357,7 +396,8 @@ const Review = () => {
               />
               {!isSunday() && !isLastDayOfMonth() && (
                 <p className="text-sm text-muted-foreground mt-4">
-                  Weekly reflection unlocks on Sunday. Monthly summary unlocks on the last day of the month.
+                  Weekly reflection unlocks on Sunday. Monthly summary unlocks on the last day of
+                  the month.
                 </p>
               )}
             </>
@@ -421,8 +461,7 @@ function RewardHero({
           Recap starts after day one
         </div>
         <p className="text-sm text-foreground mb-3">
-          You're {elapsedCount}/7 days in. Score even one item today and your week comes alive
-          here.
+          You're {elapsedCount}/7 days in. Score even one item today and your week comes alive here.
         </p>
         <Link
           to="/"
@@ -435,20 +474,14 @@ function RewardHero({
   }
 
   const isPartial = daysLogged < elapsedCount;
-  const deltaTone = delta === null
-    ? 'neutral'
-    : delta > 0
-    ? 'good'
-    : delta < 0
-    ? 'bad'
-    : 'neutral';
+  const deltaTone = delta === null ? 'neutral' : delta > 0 ? 'good' : delta < 0 ? 'bad' : 'neutral';
   const DeltaIcon = delta === null || delta === 0 ? Minus : delta > 0 ? TrendingUp : TrendingDown;
   const deltaClass =
     deltaTone === 'good'
       ? 'text-emerald-600 bg-emerald-500/10 border-emerald-500/30'
       : deltaTone === 'bad'
-      ? 'text-destructive bg-destructive/10 border-destructive/30'
-      : 'text-muted-foreground bg-muted/40 border-border';
+        ? 'text-destructive bg-destructive/10 border-destructive/30'
+        : 'text-muted-foreground bg-muted/40 border-border';
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5 md:p-6">
@@ -461,16 +494,20 @@ function RewardHero({
             <span className="font-display text-5xl md:text-6xl font-extrabold tabular-nums text-foreground">
               {thisWeekAvg}
             </span>
-            <span className="text-2xl md:text-3xl font-display font-bold text-muted-foreground">%</span>
+            <span className="text-2xl md:text-3xl font-display font-bold text-muted-foreground">
+              %
+            </span>
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs ${deltaClass}`}>
+            <span
+              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs ${deltaClass}`}
+            >
               <DeltaIcon className="h-3 w-3" />
               {delta === null
                 ? 'No prior week yet'
                 : delta === 0
-                ? 'Same as last week'
-                : `${delta > 0 ? '+' : ''}${delta}% vs last week`}
+                  ? 'Same as last week'
+                  : `${delta > 0 ? '+' : ''}${delta}% vs last week`}
             </span>
             <span className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 text-xs text-muted-foreground">
               {daysLogged}/{elapsedCount} days logged
@@ -515,9 +552,11 @@ function PatternCard({
   return (
     <div className="rounded-xl border border-border bg-background p-3">
       <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground">
-        <Icon className={`h-3.5 w-3.5 ${
-          tone === 'good' ? 'text-emerald-600' : tone === 'bad' ? 'text-destructive' : ''
-        }`} />
+        <Icon
+          className={`h-3.5 w-3.5 ${
+            tone === 'good' ? 'text-emerald-600' : tone === 'bad' ? 'text-destructive' : ''
+          }`}
+        />
         <span>{label}</span>
       </div>
       <div className="mt-2 text-sm font-display font-semibold text-foreground">{value}</div>
@@ -528,7 +567,7 @@ function PatternCard({
 function scoreForDay(
   dailyItems: ScoreboardItem[],
   logByItemDate: Map<string, ScoreboardLog>,
-  date: string,
+  date: string
 ) {
   if (dailyItems.length === 0) return 0;
   const score = dailyItems.reduce((sum, item) => {
@@ -548,7 +587,7 @@ function getWeeklyPatterns(
   dailyItems: ScoreboardItem[],
   notToDos: ScoreboardItem[],
   logs: ScoreboardLog[],
-  days: string[],
+  days: string[]
 ) {
   const logByItemDate = new Map(logs.map((log) => [`${log.item_id}:${log.date}`, log] as const));
   const dailyStats = dailyItems.map((item) => {
@@ -557,11 +596,12 @@ function getWeeklyPatterns(
     let best = 0;
     for (const day of days) {
       const log = logByItemDate.get(`${item.id}:${day}`);
-      const hit = item.kind === 'score'
-        ? Boolean(log?.value_score && log.value_score > 0)
-        : item.kind === 'check'
-        ? Boolean(log?.value_bool)
-        : Boolean(log?.value_text && log.value_text.trim());
+      const hit =
+        item.kind === 'score'
+          ? Boolean(log?.value_score && log.value_score > 0)
+          : item.kind === 'check'
+            ? Boolean(log?.value_bool)
+            : Boolean(log?.value_text?.trim());
       if (hit) {
         hits += 1;
         current += 1;
@@ -573,20 +613,22 @@ function getWeeklyPatterns(
     return { item, hits, skips: days.length - hits, best };
   });
 
-  const best = dailyStats.length > 0
-    ? dailyStats.reduce((winner, row) => (row.best > winner.best ? row : winner), dailyStats[0])
-    : null;
-  const worst = dailyStats.length > 0
-    ? dailyStats.reduce((winner, row) => (row.skips > winner.skips ? row : winner), dailyStats[0])
-    : null;
+  const best =
+    dailyStats.length > 0
+      ? dailyStats.reduce((winner, row) => (row.best > winner.best ? row : winner), dailyStats[0])
+      : null;
+  const worst =
+    dailyStats.length > 0
+      ? dailyStats.reduce((winner, row) => (row.skips > winner.skips ? row : winner), dailyStats[0])
+      : null;
   const breachCount = notToDos.reduce(
     (sum, item) =>
       sum +
       days.filter((day) => {
         const log = logByItemDate.get(`${item.id}:${day}`);
-        return Boolean(log?.value_bool || (log?.value_text && log.value_text.trim()));
+        return Boolean(log?.value_bool || log?.value_text?.trim());
       }).length,
-    0,
+    0
   );
 
   const reasonCounts = new Map<string, number>();
@@ -602,14 +644,16 @@ function getWeeklyPatterns(
   const repeatedReason = [...reasonCounts.entries()].sort((a, b) => b[1] - a[1])[0];
 
   return {
-    bestStreak: best && best.best > 0
-      ? `${best.item.label}: ${best.best} day${best.best === 1 ? '' : 's'}`
-      : 'No streak yet',
-    mostSkipped: worst && worst.skips > 0
-      ? `${worst.item.label}: ${worst.skips} missed`
-      : 'No misses yet',
+    bestStreak:
+      best && best.best > 0
+        ? `${best.item.label}: ${best.best} day${best.best === 1 ? '' : 's'}`
+        : 'No streak yet',
+    mostSkipped:
+      worst && worst.skips > 0 ? `${worst.item.label}: ${worst.skips} missed` : 'No misses yet',
     breaches: `${breachCount} this week`,
-    repeatedReason: repeatedReason ? `${repeatedReason[0]} (${repeatedReason[1]}x)` : 'No repeated reason yet',
+    repeatedReason: repeatedReason
+      ? `${repeatedReason[0]} (${repeatedReason[1]}x)`
+      : 'No repeated reason yet',
   };
 }
 
@@ -624,11 +668,13 @@ function getPlanningPrompts(patterns: ReturnType<typeof getWeeklyPatterns>) {
 function getReflectionQuestion(
   avg: number,
   daysLogged: number,
-  patterns: ReturnType<typeof getWeeklyPatterns>,
+  patterns: ReturnType<typeof getWeeklyPatterns>
 ): string | null {
   if (daysLogged === 0) return null;
-  const anchorItem = patterns.bestStreak !== 'No streak yet' ? patterns.bestStreak.split(':')[0] : null;
-  const skippedItem = patterns.mostSkipped !== 'No misses yet' ? patterns.mostSkipped.split(':')[0] : null;
+  const anchorItem =
+    patterns.bestStreak !== 'No streak yet' ? patterns.bestStreak.split(':')[0] : null;
+  const skippedItem =
+    patterns.mostSkipped !== 'No misses yet' ? patterns.mostSkipped.split(':')[0] : null;
   if (avg >= 70 && anchorItem) {
     return `${anchorItem} was your anchor this week. What made it stick — and can you design next week to protect it?`;
   }

@@ -18,8 +18,8 @@ const Life = () => {
         <h1 className="text-4xl md:text-5xl font-display font-extrabold text-foreground leading-tight">
           {life.dayOfLife !== null ? (
             <>
-              You are on <span className="text-primary">day {life.dayOfLife.toLocaleString()}</span>
-              {' '}of roughly <span className="text-accent">{(30000).toLocaleString()}</span>.
+              You are on <span className="text-primary">day {life.dayOfLife.toLocaleString()}</span>{' '}
+              of roughly <span className="text-accent">{(30000).toLocaleString()}</span>.
             </>
           ) : (
             <>How many weeks do you think you have?</>
@@ -27,7 +27,9 @@ const Life = () => {
         </h1>
         {life.dayOfLife !== null && life.daysLeft !== null && (
           <p className="mt-3 text-lg text-muted-foreground max-w-2xl">
-            About <span className="font-semibold text-foreground">{life.daysLeft.toLocaleString()}</span> days left. Each square below is one week.
+            About{' '}
+            <span className="font-semibold text-foreground">{life.daysLeft.toLocaleString()}</span>{' '}
+            days left. Each square below is one week.
           </p>
         )}
       </section>
@@ -48,7 +50,10 @@ const Life = () => {
             <Stat label="Lived" value={`${life.pctLived?.toFixed(1)}%`} />
             <Stat label="Left" value={`${life.pctLeft?.toFixed(1)}%`} />
             <Stat label="Weeks lived" value={life.weeksLived?.toLocaleString() ?? '—'} />
-            <Stat label="Days left today" value={`${life.hoursLeftToday}h ${life.remainingMinutesToday}m`} />
+            <Stat
+              label="Days left today"
+              value={`${life.hoursLeftToday}h ${life.remainingMinutesToday}m`}
+            />
           </div>
         </section>
       )}
@@ -56,7 +61,9 @@ const Life = () => {
       <section className="px-4 max-w-3xl mx-auto pb-20">
         <blockquote className="border-l-2 border-primary/60 pl-5 italic text-foreground/80">
           "{quote.text}"
-          {quote.source && <div className="not-italic text-xs text-muted-foreground mt-1">— {quote.source}</div>}
+          {quote.source && (
+            <div className="not-italic text-xs text-muted-foreground mt-1">— {quote.source}</div>
+          )}
         </blockquote>
       </section>
     </div>

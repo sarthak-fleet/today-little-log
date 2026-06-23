@@ -1,12 +1,27 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { type JournalEntry, type EntryType } from '@/hooks/useJournalEntries';
+import type { JournalEntry, EntryType } from '@/hooks/useJournalEntries';
 import { BookOpen, Pencil, Trash2, Check, X, Calendar, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { CATEGORY_META, MOOD_META, getFilledCategories, getMoodFromContent } from '@/lib/journalContent';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
+  CATEGORY_META,
+  MOOD_META,
+  getFilledCategories,
+  getMoodFromContent,
+} from '@/lib/journalContent';
 
 interface PastEntriesProps {
   entries: JournalEntry[];
@@ -17,12 +32,19 @@ interface PastEntriesProps {
   searchQuery?: string;
 }
 
-export function PastEntries({ entries, onUpdate, onDelete, hasMore, onLoadMore, searchQuery = '' }: PastEntriesProps) {
+export function PastEntries({
+  entries,
+  onUpdate,
+  onDelete,
+  hasMore,
+  onLoadMore,
+  searchQuery = '',
+}: PastEntriesProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
 
   const formatDate = (dateStr: string, entryType: EntryType) => {
-    const date = new Date(dateStr + 'T00:00:00');
+    const date = new Date(`${dateStr}T00:00:00`);
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
@@ -51,7 +73,7 @@ export function PastEntries({ entries, onUpdate, onDelete, hasMore, onLoadMore, 
   };
 
   const getDaysAgo = (dateStr: string) => {
-    const date = new Date(dateStr + 'T00:00:00');
+    const date = new Date(`${dateStr}T00:00:00`);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const diffTime = today.getTime() - date.getTime();
@@ -116,7 +138,9 @@ export function PastEntries({ entries, onUpdate, onDelete, hasMore, onLoadMore, 
         ) : (
           <>
             <p className="text-sm font-medium text-muted-foreground">No past entries yet</p>
-            <p className="text-xs text-muted-foreground/70 mt-1">After today&apos;s entry is saved, older days show up here</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">
+              After today&apos;s entry is saved, older days show up here
+            </p>
           </>
         )}
       </div>
@@ -125,9 +149,7 @@ export function PastEntries({ entries, onUpdate, onDelete, hasMore, onLoadMore, 
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-display font-medium text-foreground mb-6">
-        Previous Entries
-      </h2>
+      <h2 className="text-xl font-display font-medium text-foreground mb-6">Previous Entries</h2>
 
       <div className="space-y-3">
         {entries.map((entry, index) => (
@@ -143,20 +165,19 @@ export function PastEntries({ entries, onUpdate, onDelete, hasMore, onLoadMore, 
                     <p className="font-display font-medium text-foreground">
                       {formatDate(entry.date, entry.entry_type)}
                     </p>
-                    <p className="text-xs text-journal-date font-sans">
-                      {getDaysAgo(entry.date)}
-                    </p>
+                    <p className="text-xs text-journal-date font-sans">{getDaysAgo(entry.date)}</p>
                   </div>
                   {getEntryBadge(entry.entry_type)}
-                  {entry.entry_type === 'daily' && (() => {
-                    const mood = getMoodFromContent(entry.content);
-                    if (!mood || !MOOD_META[mood]) return null;
-                    return (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/30 px-2 py-0.5 text-xs text-muted-foreground">
-                        {MOOD_META[mood].emoji} {MOOD_META[mood].label}
-                      </span>
-                    );
-                  })()}
+                  {entry.entry_type === 'daily' &&
+                    (() => {
+                      const mood = getMoodFromContent(entry.content);
+                      if (!mood || !MOOD_META[mood]) return null;
+                      return (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/30 px-2 py-0.5 text-xs text-muted-foreground">
+                          {MOOD_META[mood].emoji} {MOOD_META[mood].label}
+                        </span>
+                      );
+                    })()}
                 </div>
                 <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity">
                   <Button
@@ -182,11 +203,15 @@ export function PastEntries({ entries, onUpdate, onDelete, hasMore, onLoadMore, 
                     <AlertDialogContent>
                       <AlertDialogHeader>
                         <AlertDialogTitle>Delete entry?</AlertDialogTitle>
-                        <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+                        <AlertDialogDescription>
+                          This action cannot be undone.
+                        </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => onDelete(entry.id)}>Delete</AlertDialogAction>
+                        <AlertDialogAction onClick={() => onDelete(entry.id)}>
+                          Delete
+                        </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
@@ -206,7 +231,11 @@ export function PastEntries({ entries, onUpdate, onDelete, hasMore, onLoadMore, 
                       <X className="h-4 w-4 mr-1" />
                       Cancel
                     </Button>
-                    <Button size="sm" onClick={() => saveEdit(entry.id)} disabled={!editContent.trim()}>
+                    <Button
+                      size="sm"
+                      onClick={() => saveEdit(entry.id)}
+                      disabled={!editContent.trim()}
+                    >
                       <Check className="h-4 w-4 mr-1" />
                       Save
                     </Button>
@@ -221,9 +250,13 @@ export function PastEntries({ entries, onUpdate, onDelete, hasMore, onLoadMore, 
                       <div key={key} className="flex gap-2 text-sm">
                         <div className="flex items-center gap-1.5 text-muted-foreground min-w-[110px] flex-shrink-0">
                           <Icon className="h-3.5 w-3.5" />
-                          <span className="font-medium text-xs uppercase tracking-wide">{label}</span>
+                          <span className="font-medium text-xs uppercase tracking-wide">
+                            {label}
+                          </span>
                         </div>
-                        <p className="text-journal-ink leading-relaxed whitespace-pre-wrap">{value}</p>
+                        <p className="text-journal-ink leading-relaxed whitespace-pre-wrap">
+                          {value}
+                        </p>
                       </div>
                     );
                   })}

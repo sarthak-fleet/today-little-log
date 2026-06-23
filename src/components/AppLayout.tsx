@@ -1,16 +1,12 @@
-import { lazy, ReactNode, Suspense, useEffect, useState } from 'react';
+import { lazy, type ReactNode, Suspense, useEffect, useState } from 'react';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { BottomNav } from './BottomNav';
 import { Navbar } from './Navbar';
 import { OfflineBanner } from './OfflineBanner';
 import { SavingProvider, useSaving } from './SavingContext';
 
-const AppSidebar = lazy(() =>
-  import('./AppSidebar').then((m) => ({ default: m.AppSidebar })),
-);
-const ChatWidget = lazy(() =>
-  import('./ChatWidget').then((m) => ({ default: m.ChatWidget })),
-);
+const AppSidebar = lazy(() => import('./AppSidebar').then((m) => ({ default: m.AppSidebar })));
+const ChatWidget = lazy(() => import('./ChatWidget').then((m) => ({ default: m.ChatWidget })));
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -52,9 +48,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         <SidebarInset className="flex-1 flex flex-col min-w-0">
           {showChrome ? <Navbar isSaving={isSaving} /> : null}
           {showChrome ? <OfflineBanner /> : null}
-          <main className="flex-1 overflow-auto pb-20 md:pb-6">
-            {children}
-          </main>
+          <main className="flex-1 overflow-auto pb-20 md:pb-6">{children}</main>
         </SidebarInset>
       </div>
       {showChrome ? <BottomNav /> : null}
