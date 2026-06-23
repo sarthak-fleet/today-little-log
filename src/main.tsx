@@ -22,3 +22,12 @@ if ("requestIdleCallback" in window) {
 } else {
   setTimeout(scheduleMonitoring, 1);
 }
+
+const scheduleVitals = () => {
+  void import("./lib/vitals").then((m) => m.initVitals()).catch(() => {});
+};
+if ("requestIdleCallback" in window) {
+  requestIdleCallback(scheduleVitals, { timeout: 3000 });
+} else {
+  setTimeout(scheduleVitals, 1);
+}
