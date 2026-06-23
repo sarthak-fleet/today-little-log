@@ -49,17 +49,33 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const where = month
       ? and(eq(scoreboardItems.user_id, userId), eq(scoreboardItems.score_month, cleanMonth(month)))
       : eq(scoreboardItems.user_id, userId);
-    const rows = await db.select().from(scoreboardItems)
+    const rows = await db
+      .select()
+      .from(scoreboardItems)
       .where(where)
       .orderBy(asc(scoreboardItems.position), asc(scoreboardItems.created_at));
     return json(rows);
   }
 
   if (method === 'POST') {
-    const body = await context.request.json().catch(() => ({})) as Record<string, unknown>;
-    const { id: itemId, label, kind, position, archived, score_month, source_key, min_score, max_score, ideal_score, criteria } = body;
+    const body = (await context.request.json().catch(() => ({}))) as Record<string, unknown>;
+    const {
+      id: itemId,
+      label,
+      kind,
+      position,
+      archived,
+      score_month,
+      source_key,
+      min_score,
+      max_score,
+      ideal_score,
+      criteria,
+    } = body;
     if (typeof itemId === 'string' && itemId) {
-      const [existingItem] = await db.select().from(scoreboardItems)
+      const [existingItem] = await db
+        .select()
+        .from(scoreboardItems)
         .where(and(eq(scoreboardItems.id, itemId), eq(scoreboardItems.user_id, userId)))
         .limit(1);
       if (!existingItem) return json({ error: 'Item not found' }, { status: 404 });
@@ -74,11 +90,17 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       if (source_key !== undefined) updates.source_key = cleanSourceKey(source_key);
       if (min_score !== undefined) updates.min_score = cleanMinScore(min_score);
       if (max_score !== undefined) updates.max_score = cleanMaxScore(max_score);
-      if (ideal_score !== undefined) updates.ideal_score = cleanIdealScore(ideal_score, cleanMaxScore(max_score ?? existingItem.max_score));
+      if (ideal_score !== undefined)
+        updates.ideal_score = cleanIdealScore(
+          ideal_score,
+          cleanMaxScore(max_score ?? existingItem.max_score)
+        );
       if (criteria !== undefined) updates.criteria = cleanCriteria(criteria);
       if (position !== undefined) updates.position = Number(position);
       if (archived !== undefined) updates.archived = Boolean(archived);
-      const [row] = await db.update(scoreboardItems).set(updates)
+      const [row] = await db
+        .update(scoreboardItems)
+        .set(updates)
         .where(and(eq(scoreboardItems.id, itemId), eq(scoreboardItems.user_id, userId)))
         .returning();
       return json(row);
@@ -91,33 +113,39 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       return json({ error: 'Month is locked' }, { status: 423 });
     }
     const maxScore = cleanMaxScore(max_score);
-    const [inserted] = await db.insert(scoreboardItems).values({
-      user_id: userId,
-      label: label.trim(),
-      kind: kind === 'check' || kind === 'output' ? kind : 'score',
-      score_month: month,
-      source_key: cleanSourceKey(source_key),
-      min_score: cleanMinScore(min_score),
-      max_score: maxScore,
-      ideal_score: cleanIdealScore(ideal_score, maxScore),
-      criteria: cleanCriteria(criteria),
-      position: typeof position === 'number' ? position : 0,
-      archived: false,
-    }).returning();
+    const [inserted] = await db
+      .insert(scoreboardItems)
+      .values({
+        user_id: userId,
+        label: label.trim(),
+        kind: kind === 'check' || kind === 'output' ? kind : 'score',
+        score_month: month,
+        source_key: cleanSourceKey(source_key),
+        min_score: cleanMinScore(min_score),
+        max_score: maxScore,
+        ideal_score: cleanIdealScore(ideal_score, maxScore),
+        criteria: cleanCriteria(criteria),
+        position: typeof position === 'number' ? position : 0,
+        archived: false,
+      })
+      .returning();
     return json(inserted, { status: 201 });
   }
 
   if (method === 'DELETE') {
     const itemId = url.searchParams.get('id') ?? '';
     if (!itemId) return json({ error: 'id required' }, { status: 400 });
-    const [existingItem] = await db.select().from(scoreboardItems)
+    const [existingItem] = await db
+      .select()
+      .from(scoreboardItems)
       .where(and(eq(scoreboardItems.id, itemId), eq(scoreboardItems.user_id, userId)))
       .limit(1);
     if (!existingItem) return json({ error: 'Item not found' }, { status: 404 });
     if (await isMonthLocked(db, userId, existingItem.score_month)) {
       return json({ error: 'Month is locked' }, { status: 423 });
     }
-    await db.delete(scoreboardItems)
+    await db
+      .delete(scoreboardItems)
       .where(and(eq(scoreboardItems.id, itemId), eq(scoreboardItems.user_id, userId)));
     return new Response(null, { status: 204 });
   }
@@ -126,8 +154,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 };
 
 async function isMonthLocked(db: ReturnType<typeof createDb>, userId: string, month: string) {
-  const [lock] = await db.select().from(scoreboardMonthLocks)
-    .where(and(eq(scoreboardMonthLocks.user_id, userId), eq(scoreboardMonthLocks.score_month, month)))
+  const [lock] = await db
+    .select()
+    .from(scoreboardMonthLocks)
+    .where(
+      and(eq(scoreboardMonthLocks.user_id, userId), eq(scoreboardMonthLocks.score_month, month))
+    )
     .limit(1);
   return Boolean(lock);
 }

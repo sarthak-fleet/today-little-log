@@ -78,15 +78,25 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   if (!endpointUrl) return jsonError('endpointUrl required', 400, 'MISSING_ENDPOINT');
   if (!apiKey) return jsonError('apiKey required', 400, 'MISSING_KEY');
   if (!model) return jsonError('model required', 400, 'MISSING_MODEL');
-  if (!messages || messages.length === 0) return jsonError('messages required', 400, 'MISSING_MESSAGES');
+  if (!messages || messages.length === 0)
+    return jsonError('messages required', 400, 'MISSING_MESSAGES');
 
   const provider = detectProvider(body);
   const systemPrompt = body.systemPrompt?.trim() || undefined;
-  const maxTokens = Number.isFinite(body.maxTokens) ? Math.max(64, Math.min(8192, body.maxTokens!)) : DEFAULT_MAX_TOKENS;
+  const maxTokens = Number.isFinite(body.maxTokens)
+    ? Math.max(64, Math.min(8192, body.maxTokens!))
+    : DEFAULT_MAX_TOKENS;
 
   try {
     if (provider === 'anthropic') {
-      return await proxyAnthropic({ endpointUrl, apiKey, model, systemPrompt, messages, maxTokens });
+      return await proxyAnthropic({
+        endpointUrl,
+        apiKey,
+        model,
+        systemPrompt,
+        messages,
+        maxTokens,
+      });
     }
     return await proxyOpenAI({ endpointUrl, apiKey, model, systemPrompt, messages, maxTokens });
   } catch (err) {
@@ -125,7 +135,11 @@ async function proxyOpenAI(args: ProxyArgs): Promise<Response> {
 
   if (!upstream.ok || !upstream.body) {
     const text = await upstream.text().catch(() => '');
-    return jsonError(`Provider error: ${upstream.status} ${text.slice(0, 500)}`, upstream.status || 502, 'PROVIDER_ERROR');
+    return jsonError(
+      `Provider error: ${upstream.status} ${text.slice(0, 500)}`,
+      upstream.status || 502,
+      'PROVIDER_ERROR'
+    );
   }
 
   return streamSse(upstream.body, parseOpenAIChunk);
@@ -165,7 +179,11 @@ async function proxyAnthropic(args: ProxyArgs): Promise<Response> {
 
   if (!upstream.ok || !upstream.body) {
     const text = await upstream.text().catch(() => '');
-    return jsonError(`Provider error: ${upstream.status} ${text.slice(0, 500)}`, upstream.status || 502, 'PROVIDER_ERROR');
+    return jsonError(
+      `Provider error: ${upstream.status} ${text.slice(0, 500)}`,
+      upstream.status || 502,
+      'PROVIDER_ERROR'
+    );
   }
 
   return streamSse(upstream.body, parseAnthropicChunk);
@@ -174,7 +192,7 @@ async function proxyAnthropic(args: ProxyArgs): Promise<Response> {
 /** Re-stream an upstream SSE body as plain text, extracting deltas via `parser`. */
 function streamSse(
   upstream: ReadableStream<Uint8Array>,
-  parser: (line: string) => string | null,
+  parser: (line: string) => string | null
 ): Response {
   const decoder = new TextDecoder();
   const encoder = new TextEncoder();

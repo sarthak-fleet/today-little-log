@@ -5,7 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Trash2, Clock, StickyNote, Plus, ListChecks, CheckCheck } from 'lucide-react';
 import { TasksSkeleton } from '@/components/PageSkeleton';
 import { useTasks, type TaskItem } from '@/hooks/useTasks';
@@ -109,7 +119,8 @@ const Tasks = () => {
   const [activeTab, setActiveTab] = useState('open');
 
   const parsedEstimate = Number.parseInt(estimate, 10);
-  const isEstimateValid = estimate.trim() === '' || (!Number.isNaN(parsedEstimate) && parsedEstimate >= 0);
+  const isEstimateValid =
+    estimate.trim() === '' || (!Number.isNaN(parsedEstimate) && parsedEstimate >= 0);
 
   const handleAddTask = () => {
     if (!title.trim() || !isEstimateValid) return;
@@ -159,7 +170,8 @@ const Tasks = () => {
     .filter((t) => t.status === 'todo' && t.estimate_minutes)
     .reduce((sum, t) => sum + (t.estimate_minutes ?? 0), 0);
 
-  const progressPercent = taskCounts.total > 0 ? Math.round((taskCounts.done / taskCounts.total) * 100) : 0;
+  const progressPercent =
+    taskCounts.total > 0 ? Math.round((taskCounts.done / taskCounts.total) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -172,7 +184,8 @@ const Tasks = () => {
           Ship it. <span className="text-primary italic font-medium">Or cut it.</span>
         </h1>
         <p className="mt-3 text-base text-muted-foreground">
-          {taskCounts.open} open{totalMinutes > 0 && ` · ~${totalMinutes} min`} · {taskCounts.done}/{taskCounts.total} done
+          {taskCounts.open} open{totalMinutes > 0 && ` · ~${totalMinutes} min`} · {taskCounts.done}/
+          {taskCounts.total} done
         </p>
       </section>
 
@@ -193,7 +206,9 @@ const Tasks = () => {
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
-              <span className="text-xs tabular-nums text-muted-foreground/60 w-8 text-right">{progressPercent}%</span>
+              <span className="text-xs tabular-nums text-muted-foreground/60 w-8 text-right">
+                {progressPercent}%
+              </span>
             </div>
           )}
         </div>
@@ -266,7 +281,7 @@ const Tasks = () => {
                 size="sm"
                 className="h-8 text-xs text-muted-foreground hover:text-destructive gap-1.5"
                 onClick={() => {
-                  tasks.filter(t => t.status === 'done').forEach(t => deleteTask(t.id));
+                  tasks.filter((t) => t.status === 'done').forEach((t) => deleteTask(t.id));
                 }}
               >
                 <CheckCheck className="h-3.5 w-3.5" />
@@ -278,28 +293,34 @@ const Tasks = () => {
           <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId="task-list">
               {(provided) => (
-                <div
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  className="space-y-1.5"
-                >
+                <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-1.5">
                   {filteredTasks.length === 0 ? (
                     <div className="text-center py-12">
                       <ListChecks className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
                       {activeTab === 'open' && taskCounts.done > 0 ? (
                         <>
-                          <p className="text-sm font-medium text-muted-foreground">All caught up!</p>
-                          <p className="text-xs text-muted-foreground/70 mt-1">{taskCounts.done} task{taskCounts.done !== 1 ? 's' : ''} completed</p>
+                          <p className="text-sm font-medium text-muted-foreground">
+                            All caught up!
+                          </p>
+                          <p className="text-xs text-muted-foreground/70 mt-1">
+                            {taskCounts.done} task{taskCounts.done !== 1 ? 's' : ''} completed
+                          </p>
                         </>
                       ) : activeTab === 'done' ? (
                         <>
-                          <p className="text-sm font-medium text-muted-foreground">Nothing done yet</p>
-                          <p className="text-xs text-muted-foreground/70 mt-1">Check off tasks to see them here</p>
+                          <p className="text-sm font-medium text-muted-foreground">
+                            Nothing done yet
+                          </p>
+                          <p className="text-xs text-muted-foreground/70 mt-1">
+                            Check off tasks to see them here
+                          </p>
                         </>
                       ) : (
                         <>
                           <p className="text-sm font-medium text-muted-foreground">No tasks yet</p>
-                          <p className="text-xs text-muted-foreground/70 mt-1">Add your first task above</p>
+                          <p className="text-xs text-muted-foreground/70 mt-1">
+                            Add your first task above
+                          </p>
                         </>
                       )}
                     </div>

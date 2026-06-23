@@ -1,32 +1,32 @@
-import { lazy, Suspense, useEffect, useState } from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ThemeProvider } from "next-themes";
-import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
-import { PersistentLayout } from "./components/AppLayout";
-import { ErrorBoundary } from "./components/ErrorBoundary";
-import { AnalyticsTracker } from "./components/AnalyticsTracker";
-import { useTabTitleCountdown } from "./hooks/useTabTitleCountdown";
+import { lazy, Suspense, useEffect, useState } from 'react';
+import { Toaster } from '@/components/ui/toaster';
+import { Toaster as Sonner } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from 'next-themes';
+import { BrowserRouter, Routes, Route, Outlet, Navigate } from 'react-router-dom';
+import { PersistentLayout } from './components/AppLayout';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { AnalyticsTracker } from './components/AnalyticsTracker';
+import { useTabTitleCountdown } from './hooks/useTabTitleCountdown';
 
-const Index = lazy(() => import("./pages/Index"));
-const Journal = lazy(() => import("./pages/Journal"));
-const Habits = lazy(() => import("./pages/Habits"));
-const Focus = lazy(() => import("./pages/Focus"));
-const Auth = lazy(() => import("./pages/Auth"));
-const Life = lazy(() => import("./pages/Life"));
-const Review = lazy(() => import("./pages/Review"));
-const Patterns = lazy(() => import("./pages/Patterns"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const About = lazy(() => import("./pages/About"));
-const Privacy = lazy(() => import("./pages/Privacy"));
+const Index = lazy(() => import('./pages/Index'));
+const Journal = lazy(() => import('./pages/Journal'));
+const Habits = lazy(() => import('./pages/Habits'));
+const Focus = lazy(() => import('./pages/Focus'));
+const Auth = lazy(() => import('./pages/Auth'));
+const Life = lazy(() => import('./pages/Life'));
+const Review = lazy(() => import('./pages/Review'));
+const Patterns = lazy(() => import('./pages/Patterns'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+const About = lazy(() => import('./pages/About'));
+const Privacy = lazy(() => import('./pages/Privacy'));
 
 function useIdleReady(timeout = 3000) {
   const [ready, setReady] = useState(false);
   useEffect(() => {
     const schedule = () => setReady(true);
-    if ("requestIdleCallback" in window) {
+    if ('requestIdleCallback' in window) {
       const id = requestIdleCallback(schedule, { timeout });
       return () => cancelIdleCallback(id);
     }

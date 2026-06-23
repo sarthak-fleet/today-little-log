@@ -30,22 +30,33 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const since = url.searchParams.get('since');
     const month = url.searchParams.get('month');
     const rows = since
-      ? await db.select().from(scoreboardDayNotes)
+      ? await db
+          .select()
+          .from(scoreboardDayNotes)
           .where(and(eq(scoreboardDayNotes.user_id, userId), gte(scoreboardDayNotes.date, since)))
           .orderBy(desc(scoreboardDayNotes.date))
       : month
-      ? await db.select().from(scoreboardDayNotes)
-          .where(and(eq(scoreboardDayNotes.user_id, userId), eq(scoreboardDayNotes.score_month, cleanMonth(month))))
-          .orderBy(desc(scoreboardDayNotes.date))
-      : await db.select().from(scoreboardDayNotes)
-          .where(eq(scoreboardDayNotes.user_id, userId))
-          .orderBy(desc(scoreboardDayNotes.date))
-          .limit(500);
+        ? await db
+            .select()
+            .from(scoreboardDayNotes)
+            .where(
+              and(
+                eq(scoreboardDayNotes.user_id, userId),
+                eq(scoreboardDayNotes.score_month, cleanMonth(month))
+              )
+            )
+            .orderBy(desc(scoreboardDayNotes.date))
+        : await db
+            .select()
+            .from(scoreboardDayNotes)
+            .where(eq(scoreboardDayNotes.user_id, userId))
+            .orderBy(desc(scoreboardDayNotes.date))
+            .limit(500);
     return json(rows);
   }
 
   if (method === 'POST') {
-    const body = await context.request.json().catch(() => ({})) as Record<string, unknown>;
+    const body = (await context.request.json().catch(() => ({}))) as Record<string, unknown>;
     const date = typeof body.date === 'string' ? body.date : '';
     if (!date) return json({ error: 'date required' }, { status: 400 });
 
@@ -54,7 +65,9 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       return json({ error: 'Month is locked' }, { status: 423 });
     }
 
-    const [existing] = await db.select().from(scoreboardDayNotes)
+    const [existing] = await db
+      .select()
+      .from(scoreboardDayNotes)
       .where(and(eq(scoreboardDayNotes.user_id, userId), eq(scoreboardDayNotes.date, date)))
       .limit(1);
 
@@ -62,22 +75,28 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const low_score_reason = cleanReason(body.low_score_reason);
 
     if (!existing) {
-      const [inserted] = await db.insert(scoreboardDayNotes).values({
-        user_id: userId,
-        score_month: month,
-        date,
-        low_score_reason,
-        created_at: now,
-        updated_at: now,
-      }).returning();
+      const [inserted] = await db
+        .insert(scoreboardDayNotes)
+        .values({
+          user_id: userId,
+          score_month: month,
+          date,
+          low_score_reason,
+          created_at: now,
+          updated_at: now,
+        })
+        .returning();
       return json(inserted, { status: 201 });
     }
 
-    const [row] = await db.update(scoreboardDayNotes).set({
-      score_month: month,
-      low_score_reason,
-      updated_at: now,
-    }).where(and(eq(scoreboardDayNotes.user_id, userId), eq(scoreboardDayNotes.date, date)))
+    const [row] = await db
+      .update(scoreboardDayNotes)
+      .set({
+        score_month: month,
+        low_score_reason,
+        updated_at: now,
+      })
+      .where(and(eq(scoreboardDayNotes.user_id, userId), eq(scoreboardDayNotes.date, date)))
       .returning();
     return json(row);
   }
@@ -86,8 +105,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 };
 
 async function isMonthLocked(db: ReturnType<typeof createDb>, userId: string, month: string) {
-  const [lock] = await db.select().from(scoreboardMonthLocks)
-    .where(and(eq(scoreboardMonthLocks.user_id, userId), eq(scoreboardMonthLocks.score_month, month)))
+  const [lock] = await db
+    .select()
+    .from(scoreboardMonthLocks)
+    .where(
+      and(eq(scoreboardMonthLocks.user_id, userId), eq(scoreboardMonthLocks.score_month, month))
+    )
     .limit(1);
   return Boolean(lock);
 }

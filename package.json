@@ -12,14 +12,16 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
+    "lint": "biome check .",
     "test": "playwright test",
     "preview": "vite preview",
     "prepare": "husky",
     "deploy": "pnpm build && wrangler pages deploy dist/ --project-name=today-little-log",
     "format": "biome format --write .",
     "format:check": "biome format .",
-    "check": "biome check ."
+    "check": "biome check .",
+    "size": "size-limit",
+    "size:check": "size-limit --json"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
@@ -46,6 +48,7 @@
     "drizzle-orm": "^0.45.2",
     "lucide-react": "^1.11.0",
     "next-themes": "^0.4.6",
+    "posthog-js": "^1.372.1",
     "react": "^19.2.5",
     "react-day-picker": "^9.14.0",
     "react-dom": "^19.2.5",
@@ -53,13 +56,14 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",
     "vite-plugin-pwa": "^1.2.0",
-    "workbox-window": "^7.4.0",
-    "posthog-js": "^1.372.1"
+    "web-vitals": "^4.2.4",
+    "workbox-window": "^7.4.0"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.2",
-    "@eslint/js": "^10.0.1",
+    "@biomejs/biome": "2.5.0",
     "@playwright/test": "^1.59.1",
+    "@size-limit/file": "^11.2.0",
     "@tailwindcss/vite": "^4.2.4",
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
@@ -67,21 +71,17 @@
     "@vitejs/plugin-react-swc": "^4.3.0",
     "drizzle-kit": "^0.31.10",
     "esbuild": "^0.28.0",
-    "eslint": "^10.2.1",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.2",
-    "globals": "^17.5.0",
     "husky": "^9.1.7",
     "knip": "^6.6.3",
+    "lightningcss": "latest",
     "lint-staged": "^16.4.0",
+    "size-limit": "^11.2.0",
     "tailwindcss": "^4.2.4",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.59.0",
     "vite": "^8.0.10",
-    "wrangler": "^4.85.0",
-    "@biomejs/biome": "2.5.0"
+    "wrangler": "^4.85.0"
   },
   "lint-staged": {
-    "*.{ts,tsx}": "eslint --no-warn-ignored"
+    "*.{ts,tsx}": "biome check --no-warn-ignored"
   }
 }

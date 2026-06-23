@@ -12,7 +12,7 @@ export class NetworkError extends Error {
 export class ApiError extends Error {
   constructor(
     message: string,
-    public readonly status: number,
+    public readonly status: number
   ) {
     super(message);
     this.name = 'ApiError';
@@ -41,10 +41,7 @@ interface ApiFetchOptions extends RequestInit {
   toastOnNetworkError?: boolean;
 }
 
-export async function apiFetch<T>(
-  path: string,
-  options: ApiFetchOptions = {},
-): Promise<T> {
+export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<T> {
   const method = (options.method ?? 'GET').toUpperCase();
   const isWrite = method !== 'GET' && method !== 'HEAD';
   const toastOnNetworkError = options.toastOnNetworkError ?? isWrite;
@@ -66,9 +63,7 @@ export async function apiFetch<T>(
     // `fetch` only rejects when the request never completed — i.e. the
     // network is down. Surface it so a failed sync degrades gracefully.
     if (toastOnNetworkError) notifyNetworkFailure();
-    throw new NetworkError(
-      cause instanceof Error ? cause.message : 'network request failed',
-    );
+    throw new NetworkError(cause instanceof Error ? cause.message : 'network request failed');
   }
   const durationMs = performance.now() - startedAt;
 

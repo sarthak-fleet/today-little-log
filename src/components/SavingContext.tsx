@@ -13,9 +13,7 @@ const SavingContext = createContext<SavingContextValue>({
 export function SavingProvider({ children }: { children: ReactNode }) {
   const [isSaving, setIsSaving] = useState(false);
   return (
-    <SavingContext.Provider value={{ isSaving, setIsSaving }}>
-      {children}
-    </SavingContext.Provider>
+    <SavingContext.Provider value={{ isSaving, setIsSaving }}>{children}</SavingContext.Provider>
   );
 }
 

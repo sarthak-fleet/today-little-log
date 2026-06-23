@@ -19,14 +19,18 @@ export const session = sqliteTable('session', {
   updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull(),
   ipAddress: text('ipAddress'),
   userAgent: text('userAgent'),
-  userId: text('userId').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  userId: text('userId')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
 });
 
 export const account = sqliteTable('account', {
   id: text('id').primaryKey(),
   accountId: text('accountId').notNull(),
   providerId: text('providerId').notNull(),
-  userId: text('userId').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  userId: text('userId')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
   accessToken: text('accessToken'),
   refreshToken: text('refreshToken'),
   idToken: text('idToken'),
@@ -48,37 +52,54 @@ export const verification = sqliteTable('verification', {
 });
 
 // ── App tables ───────────────────────────────────────────────
-const id = () => text('id').primaryKey().$defaultFn(() => crypto.randomUUID());
+const id = () =>
+  text('id')
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID());
 const userId = () => text('user_id').notNull();
-const createdAt = () => text('created_at').notNull().$defaultFn(() => new Date().toISOString());
-const updatedAt = () => text('updated_at').notNull().$defaultFn(() => new Date().toISOString());
+const createdAt = () =>
+  text('created_at')
+    .notNull()
+    .$defaultFn(() => new Date().toISOString());
+const updatedAt = () =>
+  text('updated_at')
+    .notNull()
+    .$defaultFn(() => new Date().toISOString());
 
-export const profiles = sqliteTable('profiles', {
-  id: id(),
-  user_id: userId(),
-  name: text('name'),
-  avatar_url: text('avatar_url'),
-  dob: text('dob'),
-  // Highest-self identity statement shown at ShockCard + home.
-  identity_statement: text('identity_statement'),
-  // Sleep targets, "HH:MM" 24h.
-  sleep_target_bed: text('sleep_target_bed'),
-  sleep_target_wake: text('sleep_target_wake'),
-  created_at: createdAt(),
-  updated_at: updatedAt(),
-}, (t) => [uniqueIndex('profiles_user_id_idx').on(t.user_id)]);
+export const profiles = sqliteTable(
+  'profiles',
+  {
+    id: id(),
+    user_id: userId(),
+    name: text('name'),
+    avatar_url: text('avatar_url'),
+    dob: text('dob'),
+    // Highest-self identity statement shown at ShockCard + home.
+    identity_statement: text('identity_statement'),
+    // Sleep targets, "HH:MM" 24h.
+    sleep_target_bed: text('sleep_target_bed'),
+    sleep_target_wake: text('sleep_target_wake'),
+    created_at: createdAt(),
+    updated_at: updatedAt(),
+  },
+  (t) => [uniqueIndex('profiles_user_id_idx').on(t.user_id)]
+);
 
 // ── Urgency / gamification tables ────────────────────────────
 
-export const userStats = sqliteTable('user_stats', {
-  id: id(),
-  user_id: userId(),
-  life_score: real('life_score').notNull().default(50),
-  xp: integer('xp').notNull().default(0),
-  last_activity_date: text('last_activity_date'),
-  created_at: createdAt(),
-  updated_at: updatedAt(),
-}, (t) => [uniqueIndex('user_stats_user_id_idx').on(t.user_id)]);
+export const userStats = sqliteTable(
+  'user_stats',
+  {
+    id: id(),
+    user_id: userId(),
+    life_score: real('life_score').notNull().default(50),
+    xp: integer('xp').notNull().default(0),
+    last_activity_date: text('last_activity_date'),
+    created_at: createdAt(),
+    updated_at: updatedAt(),
+  },
+  (t) => [uniqueIndex('user_stats_user_id_idx').on(t.user_id)]
+);
 
 export const quickLogs = sqliteTable('quick_logs', {
   id: id(),
@@ -87,19 +108,25 @@ export const quickLogs = sqliteTable('quick_logs', {
   kind: text('kind').notNull(),
   value_num: real('value_num'),
   value_text: text('value_text'),
-  logged_at: text('logged_at').notNull().$defaultFn(() => new Date().toISOString()),
+  logged_at: text('logged_at')
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
   created_at: createdAt(),
 });
 
-export const weightLogs = sqliteTable('weight_logs', {
-  id: id(),
-  user_id: userId(),
-  date: text('date').notNull(),
-  kg: real('kg').notNull(),
-  notes: text('notes'),
-  created_at: createdAt(),
-  updated_at: updatedAt(),
-}, (t) => [uniqueIndex('weight_logs_user_date_idx').on(t.user_id, t.date)]);
+export const weightLogs = sqliteTable(
+  'weight_logs',
+  {
+    id: id(),
+    user_id: userId(),
+    date: text('date').notNull(),
+    kg: real('kg').notNull(),
+    notes: text('notes'),
+    created_at: createdAt(),
+    updated_at: updatedAt(),
+  },
+  (t) => [uniqueIndex('weight_logs_user_date_idx').on(t.user_id, t.date)]
+);
 
 export const urgeLogs = sqliteTable('urge_logs', {
   id: id(),
@@ -109,7 +136,9 @@ export const urgeLogs = sqliteTable('urge_logs', {
   reflection: text('reflection'),
   // 'cooldown' | 'resisted' | 'acted'
   status: text('status').notNull().default('cooldown'),
-  logged_at: text('logged_at').notNull().$defaultFn(() => new Date().toISOString()),
+  logged_at: text('logged_at')
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
   // 24h from logged_at
   expires_at: text('expires_at').notNull(),
   created_at: createdAt(),
@@ -118,43 +147,55 @@ export const urgeLogs = sqliteTable('urge_logs', {
 
 // ── Ritual + goal tables ─────────────────────────────────────
 
-export const dailyCheckins = sqliteTable('daily_checkins', {
-  id: id(),
-  user_id: userId(),
-  date: text('date').notNull(),
-  am_intents: text('am_intents', { mode: 'json' }).$type<string[]>(),
-  am_regret: text('am_regret'),
-  sleep_hours: real('sleep_hours'),
-  psi_score: integer('psi_score'),
-  pm_wins: text('pm_wins'),
-  pm_wastes: text('pm_wastes'),
-  pm_score: integer('pm_score'),
-  hit: integer('hit', { mode: 'boolean' }).notNull().default(false),
-  created_at: createdAt(),
-  updated_at: updatedAt(),
-}, (t) => [uniqueIndex('daily_checkins_user_date_idx').on(t.user_id, t.date)]);
+export const dailyCheckins = sqliteTable(
+  'daily_checkins',
+  {
+    id: id(),
+    user_id: userId(),
+    date: text('date').notNull(),
+    am_intents: text('am_intents', { mode: 'json' }).$type<string[]>(),
+    am_regret: text('am_regret'),
+    sleep_hours: real('sleep_hours'),
+    psi_score: integer('psi_score'),
+    pm_wins: text('pm_wins'),
+    pm_wastes: text('pm_wastes'),
+    pm_score: integer('pm_score'),
+    hit: integer('hit', { mode: 'boolean' }).notNull().default(false),
+    created_at: createdAt(),
+    updated_at: updatedAt(),
+  },
+  (t) => [uniqueIndex('daily_checkins_user_date_idx').on(t.user_id, t.date)]
+);
 
-export const devLogs = sqliteTable('dev_logs', {
-  id: id(),
-  user_id: userId(),
-  date: text('date').notNull(),
-  leetcode_count: integer('leetcode_count').notNull().default(0),
-  deep_work_minutes: integer('deep_work_minutes').notNull().default(0),
-  commits: integer('commits').notNull().default(0),
-  summary: text('summary'),
-  created_at: createdAt(),
-  updated_at: updatedAt(),
-}, (t) => [uniqueIndex('dev_logs_user_date_idx').on(t.user_id, t.date)]);
+export const devLogs = sqliteTable(
+  'dev_logs',
+  {
+    id: id(),
+    user_id: userId(),
+    date: text('date').notNull(),
+    leetcode_count: integer('leetcode_count').notNull().default(0),
+    deep_work_minutes: integer('deep_work_minutes').notNull().default(0),
+    commits: integer('commits').notNull().default(0),
+    summary: text('summary'),
+    created_at: createdAt(),
+    updated_at: updatedAt(),
+  },
+  (t) => [uniqueIndex('dev_logs_user_date_idx').on(t.user_id, t.date)]
+);
 
-export const weeklyReviews = sqliteTable('weekly_reviews', {
-  id: id(),
-  user_id: userId(),
-  week_start: text('week_start').notNull(),
-  achieved: text('achieved'),
-  gratitude: text('gratitude'),
-  created_at: createdAt(),
-  updated_at: updatedAt(),
-}, (t) => [uniqueIndex('weekly_reviews_user_week_idx').on(t.user_id, t.week_start)]);
+export const weeklyReviews = sqliteTable(
+  'weekly_reviews',
+  {
+    id: id(),
+    user_id: userId(),
+    week_start: text('week_start').notNull(),
+    achieved: text('achieved'),
+    gratitude: text('gratitude'),
+    created_at: createdAt(),
+    updated_at: updatedAt(),
+  },
+  (t) => [uniqueIndex('weekly_reviews_user_week_idx').on(t.user_id, t.week_start)]
+);
 
 // ── Food + goals + mana tables ───────────────────────────────
 
@@ -175,7 +216,9 @@ export const foodLogs = sqliteTable('food_logs', {
   id: id(),
   user_id: userId(),
   date: text('date').notNull(),
-  food_item_id: text('food_item_id').notNull().references(() => foodItems.id, { onDelete: 'cascade' }),
+  food_item_id: text('food_item_id')
+    .notNull()
+    .references(() => foodItems.id, { onDelete: 'cascade' }),
   servings: real('servings').notNull().default(1),
   meal_type: text('meal_type'),
   created_at: createdAt(),
@@ -197,23 +240,31 @@ export const goals = sqliteTable('goals', {
 export const goalActions = sqliteTable('goal_actions', {
   id: id(),
   user_id: userId(),
-  goal_id: text('goal_id').notNull().references(() => goals.id, { onDelete: 'cascade' }),
-  action_at: text('action_at').notNull().$defaultFn(() => new Date().toISOString()),
+  goal_id: text('goal_id')
+    .notNull()
+    .references(() => goals.id, { onDelete: 'cascade' }),
+  action_at: text('action_at')
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
   delta: real('delta').notNull().default(0),
   source: text('source'),
   note: text('note'),
   created_at: createdAt(),
 });
 
-export const manaState = sqliteTable('mana_state', {
-  id: id(),
-  user_id: userId(),
-  date: text('date').notNull(),
-  daily_max: integer('daily_max').notNull().default(10),
-  bank_remaining: integer('bank_remaining').notNull().default(10),
-  created_at: createdAt(),
-  updated_at: updatedAt(),
-}, (t) => [uniqueIndex('mana_state_user_date_idx').on(t.user_id, t.date)]);
+export const manaState = sqliteTable(
+  'mana_state',
+  {
+    id: id(),
+    user_id: userId(),
+    date: text('date').notNull(),
+    daily_max: integer('daily_max').notNull().default(10),
+    bank_remaining: integer('bank_remaining').notNull().default(10),
+    created_at: createdAt(),
+    updated_at: updatedAt(),
+  },
+  (t) => [uniqueIndex('mana_state_user_date_idx').on(t.user_id, t.date)]
+);
 
 export const projects = sqliteTable('projects', {
   id: id(),
@@ -255,22 +306,30 @@ export const habits = sqliteTable('habits', {
   updated_at: updatedAt(),
 });
 
-export const habitLogs = sqliteTable('habit_logs', {
-  id: id(),
-  user_id: userId(),
-  habit_id: text('habit_id').notNull().references(() => habits.id, { onDelete: 'cascade' }),
-  date: text('date').notNull(),
-  value: real('value').notNull().default(0),
-  created_at: createdAt(),
-  updated_at: updatedAt(),
-}, (t) => [uniqueIndex('habit_logs_habit_date_idx').on(t.habit_id, t.date)]);
+export const habitLogs = sqliteTable(
+  'habit_logs',
+  {
+    id: id(),
+    user_id: userId(),
+    habit_id: text('habit_id')
+      .notNull()
+      .references(() => habits.id, { onDelete: 'cascade' }),
+    date: text('date').notNull(),
+    value: real('value').notNull().default(0),
+    created_at: createdAt(),
+    updated_at: updatedAt(),
+  },
+  (t) => [uniqueIndex('habit_logs_habit_date_idx').on(t.habit_id, t.date)]
+);
 
 export const emotions = sqliteTable('emotions', {
   id: id(),
   user_id: userId(),
   emotion: text('emotion').notNull(),
   comment: text('comment'),
-  logged_at: text('logged_at').notNull().$defaultFn(() => new Date().toISOString()),
+  logged_at: text('logged_at')
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
   created_at: createdAt(),
 });
 
@@ -293,13 +352,17 @@ export const lifeRules = sqliteTable('life_rules', {
   updated_at: updatedAt(),
 });
 
-export const schedules = sqliteTable('schedules', {
-  id: id(),
-  user_id: userId(),
-  blocks: text('blocks', { mode: 'json' }).notNull().$type<unknown[]>().default([]),
-  created_at: createdAt(),
-  updated_at: updatedAt(),
-}, (t) => [uniqueIndex('schedules_user_id_idx').on(t.user_id)]);
+export const schedules = sqliteTable(
+  'schedules',
+  {
+    id: id(),
+    user_id: userId(),
+    blocks: text('blocks', { mode: 'json' }).notNull().$type<unknown[]>().default([]),
+    created_at: createdAt(),
+    updated_at: updatedAt(),
+  },
+  (t) => [uniqueIndex('schedules_user_id_idx').on(t.user_id)]
+);
 
 export const timeSessions = sqliteTable('time_sessions', {
   id: id(),
@@ -334,37 +397,51 @@ export const scoreboardItems = sqliteTable('scoreboard_items', {
   updated_at: updatedAt(),
 });
 
-export const scoreboardLogs = sqliteTable('scoreboard_logs', {
-  id: id(),
-  user_id: userId(),
-  item_id: text('item_id').notNull().references(() => scoreboardItems.id, { onDelete: 'cascade' }),
-  date: text('date').notNull(),
-  value_bool: integer('value_bool', { mode: 'boolean' }).notNull().default(false),
-  value_score: integer('value_score'),
-  value_text: text('value_text'),
-  created_at: createdAt(),
-  updated_at: updatedAt(),
-}, (t) => [uniqueIndex('scoreboard_logs_item_date_idx').on(t.item_id, t.date)]);
+export const scoreboardLogs = sqliteTable(
+  'scoreboard_logs',
+  {
+    id: id(),
+    user_id: userId(),
+    item_id: text('item_id')
+      .notNull()
+      .references(() => scoreboardItems.id, { onDelete: 'cascade' }),
+    date: text('date').notNull(),
+    value_bool: integer('value_bool', { mode: 'boolean' }).notNull().default(false),
+    value_score: integer('value_score'),
+    value_text: text('value_text'),
+    created_at: createdAt(),
+    updated_at: updatedAt(),
+  },
+  (t) => [uniqueIndex('scoreboard_logs_item_date_idx').on(t.item_id, t.date)]
+);
 
-export const scoreboardDayNotes = sqliteTable('scoreboard_day_notes', {
-  id: id(),
-  user_id: userId(),
-  score_month: text('score_month').notNull(),
-  date: text('date').notNull(),
-  low_score_reason: text('low_score_reason'),
-  created_at: createdAt(),
-  updated_at: updatedAt(),
-}, (t) => [uniqueIndex('scoreboard_day_notes_user_date_idx').on(t.user_id, t.date)]);
+export const scoreboardDayNotes = sqliteTable(
+  'scoreboard_day_notes',
+  {
+    id: id(),
+    user_id: userId(),
+    score_month: text('score_month').notNull(),
+    date: text('date').notNull(),
+    low_score_reason: text('low_score_reason'),
+    created_at: createdAt(),
+    updated_at: updatedAt(),
+  },
+  (t) => [uniqueIndex('scoreboard_day_notes_user_date_idx').on(t.user_id, t.date)]
+);
 
-export const scoreboardMonthLocks = sqliteTable('scoreboard_month_locks', {
-  id: id(),
-  user_id: userId(),
-  score_month: text('score_month').notNull(),
-  // Two-stage lock — see migration 0010:
-  //   published_at — config (row list / max scores / rules) frozen,
-  //                  logging stays open until end of month.
-  //   locked_at    — end-of-month finalize: everything frozen.
-  locked_at: text('locked_at'),
-  published_at: text('published_at'),
-  created_at: createdAt(),
-}, (t) => [uniqueIndex('scoreboard_month_locks_user_month_idx').on(t.user_id, t.score_month)]);
+export const scoreboardMonthLocks = sqliteTable(
+  'scoreboard_month_locks',
+  {
+    id: id(),
+    user_id: userId(),
+    score_month: text('score_month').notNull(),
+    // Two-stage lock — see migration 0010:
+    //   published_at — config (row list / max scores / rules) frozen,
+    //                  logging stays open until end of month.
+    //   locked_at    — end-of-month finalize: everything frozen.
+    locked_at: text('locked_at'),
+    published_at: text('published_at'),
+    created_at: createdAt(),
+  },
+  (t) => [uniqueIndex('scoreboard_month_locks_user_month_idx').on(t.user_id, t.score_month)]
+);

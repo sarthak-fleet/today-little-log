@@ -33,7 +33,8 @@ export function useStreak() {
 
     // Longest = longest contiguous run in the full set.
     const sorted = [...hitDates].sort();
-    let longest = 0, run = 0;
+    let longest = 0,
+      run = 0;
     let prev: string | null = null;
     for (const d of sorted) {
       if (prev && +new Date(d) - +new Date(prev) === 86_400_000) {

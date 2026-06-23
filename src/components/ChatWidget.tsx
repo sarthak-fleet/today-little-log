@@ -81,7 +81,7 @@ export function ChatWidget() {
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [messages, streaming]);
+  }, []);
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
@@ -129,7 +129,7 @@ export function ChatWidget() {
       });
 
       if (!res.ok || !res.body) {
-        const errorBody = await res.json().catch(() => ({})) as { error?: string };
+        const errorBody = (await res.json().catch(() => ({}))) as { error?: string };
         const msg = errorBody.error ?? `Request failed (${res.status})`;
         setError(msg);
         setMessages(next); // drop empty assistant placeholder
@@ -186,7 +186,7 @@ export function ChatWidget() {
             'fixed z-50 bottom-20 right-4 md:bottom-6 md:right-6',
             'h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg',
             'flex items-center justify-center transition-transform hover:scale-105',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
           )}
         >
           <MessageSquare className="h-5 w-5" />
@@ -203,7 +203,7 @@ export function ChatWidget() {
             // Mobile: bottom sheet with safe area
             'inset-x-0 bottom-0 h-[85vh] rounded-t-2xl',
             // Desktop: floating panel bottom-right
-            'md:inset-auto md:bottom-6 md:right-6 md:w-[420px] md:h-[600px] md:rounded-2xl',
+            'md:inset-auto md:bottom-6 md:right-6 md:w-[420px] md:h-[600px] md:rounded-2xl'
           )}
         >
           <header className="flex items-center justify-between border-b border-border px-4 py-3">
@@ -251,7 +251,8 @@ export function ChatWidget() {
               <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
                 {messages.length === 0 && !error && (
                   <p className="text-xs text-muted-foreground">
-                    I can answer questions about what's on this page. Try "summarise my scoreboard" or "what should I focus on?".
+                    I can answer questions about what's on this page. Try "summarise my scoreboard"
+                    or "what should I focus on?".
                   </p>
                 )}
                 {messages.map((m, i) => (
@@ -275,7 +276,11 @@ export function ChatWidget() {
                     }
                   }}
                   rows={2}
-                  placeholder={configIsComplete(config) ? 'Ask about this page…' : 'Set up your provider in Settings first.'}
+                  placeholder={
+                    configIsComplete(config)
+                      ? 'Ask about this page…'
+                      : 'Set up your provider in Settings first.'
+                  }
                   className="resize-none text-sm"
                 />
                 <div className="flex justify-end gap-2">
@@ -307,7 +312,7 @@ function MessageBubble({ msg }: { msg: Message }) {
           'max-w-[85%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap break-words',
           isUser
             ? 'bg-primary text-primary-foreground rounded-br-sm'
-            : 'bg-muted text-foreground rounded-bl-sm',
+            : 'bg-muted text-foreground rounded-bl-sm'
         )}
       >
         {msg.content || (
@@ -346,10 +351,13 @@ function ChatSettings({ initial, onSave }: ChatSettingsProps) {
         const res = await fetch(url, {
           headers: { Authorization: `Bearer ${draft.apiKey}` },
         }).catch(() => null);
-        if (!res || !res.ok) continue;
+        if (!res?.ok) continue;
         const data = (await res.json()) as { data?: { id?: string }[] };
         if (Array.isArray(data.data)) {
-          result = data.data.map((m) => m.id).filter((x): x is string => !!x).sort();
+          result = data.data
+            .map((m) => m.id)
+            .filter((x): x is string => !!x)
+            .sort();
           break;
         }
       }
@@ -368,8 +376,8 @@ function ChatSettings({ initial, onSave }: ChatSettingsProps) {
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-4">
       <p className="text-xs text-muted-foreground">
-        Bring your own key. Settings are stored locally in this browser only.
-        The /api/chat proxy forwards the call without persisting anything server-side.
+        Bring your own key. Settings are stored locally in this browser only. The /api/chat proxy
+        forwards the call without persisting anything server-side.
       </p>
 
       <div className="space-y-1.5">
@@ -380,7 +388,10 @@ function ChatSettings({ initial, onSave }: ChatSettingsProps) {
           value={draft.provider ?? 'auto'}
           onChange={(e) => {
             const v = e.target.value;
-            setDraft({ ...draft, provider: v === 'auto' ? undefined : (v as 'openai' | 'anthropic') });
+            setDraft({
+              ...draft,
+              provider: v === 'auto' ? undefined : (v as 'openai' | 'anthropic'),
+            });
           }}
           className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
         >
@@ -436,7 +447,9 @@ function ChatSettings({ initial, onSave }: ChatSettingsProps) {
         </div>
         {models.length > 0 && (
           <datalist id="chat-model-options">
-            {models.map((m) => <option key={m} value={m} />)}
+            {models.map((m) => (
+              <option key={m} value={m} />
+            ))}
           </datalist>
         )}
         {modelsError && <p className="text-[11px] text-destructive">{modelsError}</p>}
@@ -444,12 +457,14 @@ function ChatSettings({ initial, onSave }: ChatSettingsProps) {
 
       <Button
         size="sm"
-        onClick={() => onSave({
-          ...draft,
-          endpointUrl: draft.endpointUrl.trim().replace(/\/+$/, ''),
-          apiKey: draft.apiKey.trim(),
-          model: draft.model.trim(),
-        })}
+        onClick={() =>
+          onSave({
+            ...draft,
+            endpointUrl: draft.endpointUrl.trim().replace(/\/+$/, ''),
+            apiKey: draft.apiKey.trim(),
+            model: draft.model.trim(),
+          })
+        }
         disabled={!configIsComplete(draft)}
       >
         Save

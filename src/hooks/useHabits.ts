@@ -58,7 +58,7 @@ export function useHabits() {
     if (user) {
       try {
         const habitsData = await apiFetch<HabitRow[]>('/api/habits');
-        const mappedHabits: Habit[] = (habitsData || []).map(h => ({
+        const mappedHabits: Habit[] = (habitsData || []).map((h) => ({
           id: h.id,
           title: h.title,
           target_type: h.target_type as 'target' | 'limit',
@@ -87,14 +87,16 @@ export function useHabits() {
           // Reload after migration
           const reloadedHabits = await apiFetch<HabitRow[]>('/api/habits');
           if (reloadedHabits) {
-            setHabits(reloadedHabits.map(h => ({
-              id: h.id,
-              title: h.title,
-              target_type: h.target_type as 'target' | 'limit',
-              track_type: h.track_type as 'count' | 'time',
-              frequency: h.frequency as 'daily' | 'weekly',
-              target_value: h.target_value,
-            })));
+            setHabits(
+              reloadedHabits.map((h) => ({
+                id: h.id,
+                title: h.title,
+                target_type: h.target_type as 'target' | 'limit',
+                track_type: h.track_type as 'count' | 'time',
+                frequency: h.frequency as 'daily' | 'weekly',
+                target_value: h.target_value,
+              }))
+            );
             localStorage.removeItem(HABITS_STORAGE_KEY);
           }
         }
@@ -105,7 +107,7 @@ export function useHabits() {
       // Load logs
       try {
         const logsData = await apiFetch<HabitLogRow[]>('/api/habit-logs');
-        const mappedLogs = (logsData || []).map(l => ({
+        const mappedLogs = (logsData || []).map((l) => ({
           id: l.id,
           habit_id: l.habit_id,
           date: l.date,
@@ -128,12 +130,16 @@ export function useHabits() {
           }
           const reloadedLogs = await apiFetch<HabitLogRow[]>('/api/habit-logs');
           if (reloadedLogs) {
-            setLogs(dedupeLogs(reloadedLogs.map(l => ({
-              id: l.id,
-              habit_id: l.habit_id,
-              date: l.date,
-              value: l.value,
-            }))));
+            setLogs(
+              dedupeLogs(
+                reloadedLogs.map((l) => ({
+                  id: l.id,
+                  habit_id: l.habit_id,
+                  date: l.date,
+                  value: l.value,
+                }))
+              )
+            );
             localStorage.removeItem(HABIT_LOGS_STORAGE_KEY);
           }
         }
@@ -164,171 +170,203 @@ export function useHabits() {
   }, [loadHabits]);
 
   // Add habit
-  const addHabit = useCallback(async (habit: Omit<Habit, 'id'>) => {
-    setIsSaving(true);
+  const addHabit = useCallback(
+    async (habit: Omit<Habit, 'id'>) => {
+      setIsSaving(true);
 
-    if (user) {
-      try {
-        const data = await apiFetch<HabitRow>('/api/habits', {
-          method: 'POST',
-          body: JSON.stringify({
-            title: habit.title,
-            target_type: habit.target_type,
-            track_type: habit.track_type,
-            frequency: habit.frequency,
-            target_value: habit.target_value,
-          }),
-        });
+      if (user) {
+        try {
+          const data = await apiFetch<HabitRow>('/api/habits', {
+            method: 'POST',
+            body: JSON.stringify({
+              title: habit.title,
+              target_type: habit.target_type,
+              track_type: habit.track_type,
+              frequency: habit.frequency,
+              target_value: habit.target_value,
+            }),
+          });
 
-        if (data) {
-          setHabits(prev => [...prev, {
-            id: data.id,
-            title: data.title,
-            target_type: data.target_type as 'target' | 'limit',
-            track_type: data.track_type as 'count' | 'time',
-            frequency: data.frequency as 'daily' | 'weekly',
-            target_value: data.target_value,
-          }]);
+          if (data) {
+            setHabits((prev) => [
+              ...prev,
+              {
+                id: data.id,
+                title: data.title,
+                target_type: data.target_type as 'target' | 'limit',
+                track_type: data.track_type as 'count' | 'time',
+                frequency: data.frequency as 'daily' | 'weekly',
+                target_value: data.target_value,
+              },
+            ]);
+          }
+        } catch (error) {
+          console.error('Failed to add habit:', error);
         }
-      } catch (error) {
-        console.error('Failed to add habit:', error);
+      } else {
+        const newHabit: Habit = { ...habit, id: crypto.randomUUID() };
+        setHabits((prev) => {
+          const next = [...prev, newHabit];
+          localStorage.setItem(HABITS_STORAGE_KEY, JSON.stringify(next));
+          return next;
+        });
       }
-    } else {
-      const newHabit: Habit = { ...habit, id: crypto.randomUUID() };
-      setHabits((prev) => {
-        const next = [...prev, newHabit];
-        localStorage.setItem(HABITS_STORAGE_KEY, JSON.stringify(next));
-        return next;
-      });
-    }
 
-    setIsSaving(false);
-  }, [user, habits]);
+      setIsSaving(false);
+    },
+    [user]
+  );
 
   // Update habit
-  const updateHabit = useCallback(async (id: string, updates: Partial<Omit<Habit, 'id'>>) => {
-    setIsSaving(true);
+  const updateHabit = useCallback(
+    async (id: string, updates: Partial<Omit<Habit, 'id'>>) => {
+      setIsSaving(true);
 
-    if (user) {
-      try {
-        await apiFetch('/api/habits', {
-          method: 'PATCH',
-          body: JSON.stringify({ id, ...updates }),
+      if (user) {
+        try {
+          await apiFetch('/api/habits', {
+            method: 'PATCH',
+            body: JSON.stringify({ id, ...updates }),
+          });
+          setHabits((prev) => prev.map((h) => (h.id === id ? { ...h, ...updates } : h)));
+        } catch (error) {
+          console.error('Failed to update habit:', error);
+        }
+      } else {
+        setHabits((prev) => {
+          const next = prev.map((habit) => (habit.id === id ? { ...habit, ...updates } : habit));
+          localStorage.setItem(HABITS_STORAGE_KEY, JSON.stringify(next));
+          return next;
         });
-        setHabits(prev => prev.map(h => h.id === id ? { ...h, ...updates } : h));
-      } catch (error) {
-        console.error('Failed to update habit:', error);
       }
-    } else {
-      setHabits((prev) => {
-        const next = prev.map((habit) => (habit.id === id ? { ...habit, ...updates } : habit));
-        localStorage.setItem(HABITS_STORAGE_KEY, JSON.stringify(next));
-        return next;
-      });
-    }
 
-    setIsSaving(false);
-  }, [user, habits]);
+      setIsSaving(false);
+    },
+    [user]
+  );
 
   // Delete habit
-  const deleteHabit = useCallback(async (id: string) => {
-    setIsSaving(true);
+  const deleteHabit = useCallback(
+    async (id: string) => {
+      setIsSaving(true);
 
-    if (user) {
-      try {
-        await apiFetch('/api/habits', {
-          method: 'DELETE',
-          body: JSON.stringify({ id }),
+      if (user) {
+        try {
+          await apiFetch('/api/habits', {
+            method: 'DELETE',
+            body: JSON.stringify({ id }),
+          });
+          setHabits((prev) => prev.filter((h) => h.id !== id));
+          setLogs((prev) => prev.filter((l) => l.habit_id !== id));
+        } catch (error) {
+          console.error('Failed to delete habit:', error);
+        }
+      } else {
+        setHabits((prev) => {
+          const next = prev.filter((habit) => habit.id !== id);
+          localStorage.setItem(HABITS_STORAGE_KEY, JSON.stringify(next));
+          return next;
         });
-        setHabits(prev => prev.filter(h => h.id !== id));
-        setLogs(prev => prev.filter(l => l.habit_id !== id));
-      } catch (error) {
-        console.error('Failed to delete habit:', error);
+        setLogs((prev) => {
+          const next = prev.filter((log) => log.habit_id !== id);
+          localStorage.setItem(HABIT_LOGS_STORAGE_KEY, JSON.stringify(next));
+          return next;
+        });
       }
-    } else {
-      setHabits((prev) => {
-        const next = prev.filter((habit) => habit.id !== id);
-        localStorage.setItem(HABITS_STORAGE_KEY, JSON.stringify(next));
-        return next;
-      });
-      setLogs((prev) => {
-        const next = prev.filter((log) => log.habit_id !== id);
-        localStorage.setItem(HABIT_LOGS_STORAGE_KEY, JSON.stringify(next));
-        return next;
-      });
-    }
 
-    setIsSaving(false);
-  }, [user, habits, logs]);
+      setIsSaving(false);
+    },
+    [user]
+  );
 
   // Log habit (upsert for the day)
-  const logHabit = useCallback(async (habitId: string, value: number, date: string) => {
-    setIsSaving(true);
+  const logHabit = useCallback(
+    async (habitId: string, value: number, date: string) => {
+      setIsSaving(true);
 
-    if (user) {
-      try {
-        const data = await apiFetch<HabitLogRow>('/api/habit-logs', {
-          method: 'POST',
-          body: JSON.stringify({ habit_id: habitId, date, value }),
-        });
-
-        if (data) {
-          setLogs(prev => {
-            const existing = prev.findIndex(l => l.habit_id === habitId && l.date === date);
-            if (existing >= 0) {
-              const updated = [...prev];
-              updated[existing] = { id: data.id, habit_id: data.habit_id, date: data.date, value: data.value };
-              return updated;
-            }
-            return [...prev, { id: data.id, habit_id: data.habit_id, date: data.date, value: data.value }];
+      if (user) {
+        try {
+          const data = await apiFetch<HabitLogRow>('/api/habit-logs', {
+            method: 'POST',
+            body: JSON.stringify({ habit_id: habitId, date, value }),
           });
-        }
-      } catch (error) {
-        console.error('Failed to log habit:', error);
-      }
-    } else {
-      setLogs((prev) => {
-        const existingIndex = prev.findIndex((log) => log.habit_id === habitId && log.date === date);
-        const next = existingIndex >= 0
-          ? prev.map((log, index) => (index === existingIndex ? { ...log, value } : log))
-          : [...prev, { id: crypto.randomUUID(), habit_id: habitId, date, value }];
-        localStorage.setItem(HABIT_LOGS_STORAGE_KEY, JSON.stringify(next));
-        return next;
-      });
-    }
 
-    setIsSaving(false);
-  }, [user, logs]);
+          if (data) {
+            setLogs((prev) => {
+              const existing = prev.findIndex((l) => l.habit_id === habitId && l.date === date);
+              if (existing >= 0) {
+                const updated = [...prev];
+                updated[existing] = {
+                  id: data.id,
+                  habit_id: data.habit_id,
+                  date: data.date,
+                  value: data.value,
+                };
+                return updated;
+              }
+              return [
+                ...prev,
+                { id: data.id, habit_id: data.habit_id, date: data.date, value: data.value },
+              ];
+            });
+          }
+        } catch (error) {
+          console.error('Failed to log habit:', error);
+        }
+      } else {
+        setLogs((prev) => {
+          const existingIndex = prev.findIndex(
+            (log) => log.habit_id === habitId && log.date === date
+          );
+          const next =
+            existingIndex >= 0
+              ? prev.map((log, index) => (index === existingIndex ? { ...log, value } : log))
+              : [...prev, { id: crypto.randomUUID(), habit_id: habitId, date, value }];
+          localStorage.setItem(HABIT_LOGS_STORAGE_KEY, JSON.stringify(next));
+          return next;
+        });
+      }
+
+      setIsSaving(false);
+    },
+    [user]
+  );
 
   // Get log value for a specific habit - handles daily/weekly frequency
-  const getLog = useCallback((habitId: string, date: string): number => {
-    const habit = habits.find(h => h.id === habitId);
-    if (!habit) return 0;
+  const getLog = useCallback(
+    (habitId: string, date: string): number => {
+      const habit = habits.find((h) => h.id === habitId);
+      if (!habit) return 0;
 
-    if (habit.frequency === 'daily') {
-      // For daily habits, just get today's log
-      const log = logs.find(l => l.habit_id === habitId && l.date === date);
-      return log?.value || 0;
-    } else {
-      // For weekly habits, use a rolling 7-day window (today + last 6 days).
-      const targetDate = parseISO(date);
-      const startDate = subDays(targetDate, 6);
+      if (habit.frequency === 'daily') {
+        // For daily habits, just get today's log
+        const log = logs.find((l) => l.habit_id === habitId && l.date === date);
+        return log?.value || 0;
+      } else {
+        // For weekly habits, use a rolling 7-day window (today + last 6 days).
+        const targetDate = parseISO(date);
+        const startDate = subDays(targetDate, 6);
 
-      const weekLogs = logs.filter(l => {
-        if (l.habit_id !== habitId) return false;
-        const logDate = parseISO(l.date);
-        return isWithinInterval(logDate, { start: startDate, end: targetDate });
-      });
+        const weekLogs = logs.filter((l) => {
+          if (l.habit_id !== habitId) return false;
+          const logDate = parseISO(l.date);
+          return isWithinInterval(logDate, { start: startDate, end: targetDate });
+        });
 
-      return weekLogs.reduce((sum, l) => sum + l.value, 0);
-    }
-  }, [logs, habits]);
+        return weekLogs.reduce((sum, l) => sum + l.value, 0);
+      }
+    },
+    [logs, habits]
+  );
 
   // Get today's log only (for incrementing/decrementing)
-  const getTodayLog = useCallback((habitId: string, date: string): number => {
-    const log = logs.find(l => l.habit_id === habitId && l.date === date);
-    return log?.value || 0;
-  }, [logs]);
+  const getTodayLog = useCallback(
+    (habitId: string, date: string): number => {
+      const log = logs.find((l) => l.habit_id === habitId && l.date === date);
+      return log?.value || 0;
+    },
+    [logs]
+  );
 
   return {
     habits,

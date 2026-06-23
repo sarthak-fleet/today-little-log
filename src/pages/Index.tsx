@@ -5,10 +5,10 @@ import { GuestNotice } from '@/components/GuestNotice';
 import { useAuth } from '@/hooks/useAuth';
 
 const Scoreboard = lazy(() =>
-  import('@/components/Scoreboard').then((m) => ({ default: m.Scoreboard })),
+  import('@/components/Scoreboard').then((m) => ({ default: m.Scoreboard }))
 );
 const WeeklyReflection = lazy(() =>
-  import('@/components/WeeklyReflection').then((m) => ({ default: m.WeeklyReflection })),
+  import('@/components/WeeklyReflection').then((m) => ({ default: m.WeeklyReflection }))
 );
 
 const Index = () => {

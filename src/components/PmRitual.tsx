@@ -21,7 +21,7 @@ export function PmRitual() {
     }
     // Same as AmRitual: only resync when the row identity changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [todayRow?.id]);
+  }, [todayRow?.id, todayRow.pm_wastes, todayRow.pm_wins, todayRow.pm_score, todayRow]);
 
   const done = !!(todayRow?.pm_wins || todayRow?.pm_wastes || todayRow?.pm_score);
 
@@ -53,7 +53,9 @@ export function PmRitual() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Won</label>
+          <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+            Won
+          </label>
           <Textarea
             value={wins}
             onChange={(e) => setWins(e.target.value)}
@@ -63,7 +65,9 @@ export function PmRitual() {
           />
         </div>
         <div className="space-y-1.5">
-          <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Wasted</label>
+          <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+            Wasted
+          </label>
           <Textarea
             value={wastes}
             onChange={(e) => setWastes(e.target.value)}
@@ -75,17 +79,23 @@ export function PmRitual() {
       </div>
 
       <div>
-        <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Score this day (1-10)</label>
+        <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+          Score this day (1-10)
+        </label>
         <div className="flex gap-1 mt-2">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
             <button
               key={n}
               onClick={() => setScore(n)}
-              className={`flex-1 h-9 rounded-md text-sm font-semibold transition-all border ${score === n
-                ? n >= 8 ? 'bg-emerald-500 text-white border-emerald-500'
-                  : n >= 5 ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-destructive text-destructive-foreground border-destructive'
-                : 'bg-muted/40 text-muted-foreground border-border hover:bg-muted'}`}
+              className={`flex-1 h-9 rounded-md text-sm font-semibold transition-all border ${
+                score === n
+                  ? n >= 8
+                    ? 'bg-emerald-500 text-white border-emerald-500'
+                    : n >= 5
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-destructive text-destructive-foreground border-destructive'
+                  : 'bg-muted/40 text-muted-foreground border-border hover:bg-muted'
+              }`}
             >
               {n}
             </button>
@@ -94,8 +104,18 @@ export function PmRitual() {
       </div>
 
       <div className="flex justify-end">
-        <Button size="sm" onClick={submit} disabled={!wins.trim() && !wastes.trim() && score == null}>
-          {saved ? <><Check className="h-4 w-4 mr-1" /> Saved</> : 'Close today'}
+        <Button
+          size="sm"
+          onClick={submit}
+          disabled={!wins.trim() && !wastes.trim() && score == null}
+        >
+          {saved ? (
+            <>
+              <Check className="h-4 w-4 mr-1" /> Saved
+            </>
+          ) : (
+            'Close today'
+          )}
         </Button>
       </div>
     </div>

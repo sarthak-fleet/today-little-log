@@ -40,20 +40,12 @@ const Auth = () => {
           <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-4">
             <Feather className="h-7 w-7 text-primary" />
           </div>
-          <h1 className="font-display font-semibold text-2xl text-foreground">
-            Today Little Log
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            A moment for reflection
-          </p>
+          <h1 className="font-display font-semibold text-2xl text-foreground">Today Little Log</h1>
+          <p className="text-sm text-muted-foreground mt-1">A moment for reflection</p>
         </div>
 
         {/* Google Sign In */}
-        <Button
-          onClick={handleGoogleSignIn}
-          variant="outline"
-          className="w-full h-12 text-base"
-        >
+        <Button onClick={handleGoogleSignIn} variant="outline" className="w-full h-12 text-base">
           <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
             <path
               fill="currentColor"

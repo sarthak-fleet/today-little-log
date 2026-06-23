@@ -5,7 +5,7 @@ export function JournalSkeleton() {
     <div className="max-w-3xl mx-auto px-4 py-6 md:py-8 space-y-8 animate-in fade-in duration-300">
       {/* Emotion logger placeholder */}
       <div className="flex gap-2">
-        {[1, 2, 3, 4, 5].map(i => (
+        {[1, 2, 3, 4, 5].map((i) => (
           <Skeleton key={i} className="h-10 w-16 rounded-lg" />
         ))}
       </div>
@@ -16,7 +16,7 @@ export function JournalSkeleton() {
       </div>
       {/* Past entries */}
       <div className="space-y-3">
-        {[1, 2, 3].map(i => (
+        {[1, 2, 3].map((i) => (
           <Skeleton key={i} className="h-24 w-full rounded-xl" />
         ))}
       </div>
@@ -33,7 +33,7 @@ export function HabitsSkeleton() {
         <Skeleton className="h-9 w-24 rounded-lg" />
       </div>
       {/* Habit cards */}
-      {[1, 2, 3].map(i => (
+      {[1, 2, 3].map((i) => (
         <div key={i} className="rounded-xl border border-border/50 p-5 space-y-4">
           <div className="flex items-start justify-between">
             <div className="space-y-2">
@@ -85,7 +85,7 @@ export function TasksSkeleton() {
       <Skeleton className="h-9 w-48 rounded-lg" />
       {/* Task rows */}
       <div className="space-y-1.5">
-        {[1, 2, 3, 4, 5].map(i => (
+        {[1, 2, 3, 4, 5].map((i) => (
           <div key={i} className="flex items-center gap-3 rounded-xl p-3.5">
             <Skeleton className="h-5 w-5 rounded-full shrink-0" />
             <div className="flex-1 space-y-1.5">
@@ -112,7 +112,9 @@ export function ScheduleSkeleton() {
         {Array.from({ length: 12 }, (_, i) => (
           <div key={i} className="flex items-center gap-3 py-2 border-t border-border/30">
             <Skeleton className="h-4 w-12 shrink-0" />
-            <Skeleton className={`h-8 rounded-lg ${i % 3 === 0 ? 'w-3/4' : i % 3 === 1 ? 'w-1/2' : 'w-0'}`} />
+            <Skeleton
+              className={`h-8 rounded-lg ${i % 3 === 0 ? 'w-3/4' : i % 3 === 1 ? 'w-1/2' : 'w-0'}`}
+            />
           </div>
         ))}
       </div>
@@ -132,7 +134,7 @@ export function RulesSkeleton() {
       </div>
       {/* Rule rows */}
       <div className="space-y-3">
-        {[1, 2, 3, 4, 5].map(i => (
+        {[1, 2, 3, 4, 5].map((i) => (
           <div key={i} className="flex items-center gap-3 p-4 rounded-lg border border-border/50">
             <Skeleton className="h-5 w-8 shrink-0" />
             <Skeleton className="h-4 flex-1" />

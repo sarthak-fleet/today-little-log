@@ -83,12 +83,19 @@ export function IdentitySetter({ compact = false, className = '' }: IdentitySett
               type="button"
               className="text-[11px] px-2 py-1 rounded-full bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
             >
-              {s.length > 28 ? s.slice(0, 28) + '…' : s}
+              {s.length > 28 ? `${s.slice(0, 28)}…` : s}
             </button>
           ))}
         </div>
         <div className="flex justify-end gap-2">
-          <Button variant="ghost" size="sm" onClick={() => { setEditing(false); setDraft(identity ?? ''); }}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setEditing(false);
+              setDraft(identity ?? '');
+            }}
+          >
             Cancel
           </Button>
           <Button size="sm" onClick={save} disabled={!draft.trim()}>
@@ -100,13 +107,17 @@ export function IdentitySetter({ compact = false, className = '' }: IdentitySett
   }
 
   return (
-    <div className={`group rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5 p-4 ${className}`}>
+    <div
+      className={`group rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5 p-4 ${className}`}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 text-primary text-[10px] font-semibold uppercase tracking-[0.25em]">
             <Sparkles className="h-3 w-3" /> Highest Self
           </div>
-          <p className={`mt-2 font-display font-medium text-foreground leading-snug ${compact ? 'text-sm' : 'text-base md:text-lg italic'}`}>
+          <p
+            className={`mt-2 font-display font-medium text-foreground leading-snug ${compact ? 'text-sm' : 'text-base md:text-lg italic'}`}
+          >
             {identity}
           </p>
         </div>

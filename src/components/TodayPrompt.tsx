@@ -1,8 +1,21 @@
 import { useState, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Check, Loader2, Pencil, X, Heart, DollarSign, Users, Briefcase, BookOpen, Sparkles, FolderKanban, ChevronDown } from 'lucide-react';
-import { type JournalEntry, type EntryType } from '@/hooks/useJournalEntries';
+import {
+  Check,
+  Loader2,
+  Pencil,
+  X,
+  Heart,
+  DollarSign,
+  Users,
+  Briefcase,
+  BookOpen,
+  Sparkles,
+  FolderKanban,
+  ChevronDown,
+} from 'lucide-react';
+import type { JournalEntry, EntryType } from '@/hooks/useJournalEntries';
 import { EntryEditor } from './EntryEditor';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
@@ -10,16 +23,51 @@ import { MOOD_META } from '@/lib/journalContent';
 
 const CATEGORIES = [
   { key: 'general', label: 'General', icon: BookOpen, placeholder: 'Anything on your mind...' },
-  { key: 'health', label: 'Health', icon: Heart, placeholder: 'Exercise, meals, sleep, mental health...' },
-  { key: 'finance', label: 'Finance', icon: DollarSign, placeholder: 'Spending, saving, investments...' },
-  { key: 'relationships', label: 'Relationships', icon: Users, placeholder: 'Family, friends, social interactions...' },
-  { key: 'career', label: 'Career', icon: Briefcase, placeholder: 'Work accomplishments, meetings, goals...' },
-  { key: 'knowledge', label: 'Knowledge', icon: BookOpen, placeholder: 'Learning, reading, courses...' },
-  { key: 'novelty', label: 'Novelty', icon: Sparkles, placeholder: 'New experiences, adventures, discoveries...' },
-  { key: 'projects', label: 'Projects', icon: FolderKanban, placeholder: 'Personal projects, hobbies, side work...' },
+  {
+    key: 'health',
+    label: 'Health',
+    icon: Heart,
+    placeholder: 'Exercise, meals, sleep, mental health...',
+  },
+  {
+    key: 'finance',
+    label: 'Finance',
+    icon: DollarSign,
+    placeholder: 'Spending, saving, investments...',
+  },
+  {
+    key: 'relationships',
+    label: 'Relationships',
+    icon: Users,
+    placeholder: 'Family, friends, social interactions...',
+  },
+  {
+    key: 'career',
+    label: 'Career',
+    icon: Briefcase,
+    placeholder: 'Work accomplishments, meetings, goals...',
+  },
+  {
+    key: 'knowledge',
+    label: 'Knowledge',
+    icon: BookOpen,
+    placeholder: 'Learning, reading, courses...',
+  },
+  {
+    key: 'novelty',
+    label: 'Novelty',
+    icon: Sparkles,
+    placeholder: 'New experiences, adventures, discoveries...',
+  },
+  {
+    key: 'projects',
+    label: 'Projects',
+    icon: FolderKanban,
+    placeholder: 'Personal projects, hobbies, side work...',
+  },
 ] as const;
 
-type CategoryKey = typeof CATEGORIES[number]['key'];
+type CategoryKey = (typeof CATEGORIES)[number]['key'];
 type CategoryContent = Record<CategoryKey, string>;
 
 const MIN_FILLED_CATEGORIES = 2;
@@ -66,10 +114,13 @@ const parseContent = (content?: string): CategoryContent => {
     const parsed = JSON.parse(content);
     if (typeof parsed === 'object' && parsed !== null) {
       // Only pick known category keys — excludes mood and future metadata
-      return CATEGORIES.reduce((acc, { key }) => {
-        acc[key] = typeof parsed[key] === 'string' ? parsed[key] : '';
-        return acc;
-      }, { ...empty });
+      return CATEGORIES.reduce(
+        (acc, { key }) => {
+          acc[key] = typeof parsed[key] === 'string' ? parsed[key] : '';
+          return acc;
+        },
+        { ...empty }
+      );
     }
   } catch {
     return { ...empty, general: content };
@@ -92,11 +143,11 @@ const parseMood = (content?: string): string => {
 };
 
 const getFilledCount = (content: CategoryContent): number => {
-  return Object.values(content).filter(v => v.trim().length > 0).length;
+  return Object.values(content).filter((v) => v.trim().length > 0).length;
 };
 
 const getFilledCategories = (content: CategoryContent) => {
-  return CATEGORIES.filter(cat => content[cat.key].trim().length > 0);
+  return CATEGORIES.filter((cat) => content[cat.key].trim().length > 0);
 };
 
 export function TodayPrompt({
@@ -121,7 +172,7 @@ export function TodayPrompt({
       setSelectedMood(parseMood(todayEntry.content));
       setIsEditing(false);
     }
-  }, [todayEntry?.content, todayEntry?.id]);
+  }, [todayEntry?.content]);
 
   const reflectionPrompt = DAILY_PROMPTS[new Date().getDay()];
 
@@ -146,7 +197,7 @@ export function TodayPrompt({
   };
 
   const updateCategory = (key: CategoryKey, value: string) => {
-    setContent(prev => ({ ...prev, [key]: value }));
+    setContent((prev) => ({ ...prev, [key]: value }));
   };
 
   const formatDate = () => {
@@ -176,7 +227,8 @@ export function TodayPrompt({
             </h1>
             {isEditing && (
               <p className="text-sm text-muted-foreground mt-2">
-                Fill at least {MIN_FILLED_CATEGORIES} categories ({filledCount}/{CATEGORIES.length} filled)
+                Fill at least {MIN_FILLED_CATEGORIES} categories ({filledCount}/{CATEGORIES.length}{' '}
+                filled)
               </p>
             )}
           </div>
@@ -186,12 +238,16 @@ export function TodayPrompt({
               {isEditing ? (
                 <>
                   <div className="mb-5 rounded-lg bg-muted/40 border border-border/50 px-4 py-3">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Reflect</p>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">
+                      Reflect
+                    </p>
                     <p className="text-sm text-foreground/80">{reflectionPrompt}</p>
                   </div>
 
                   <div className="mb-5">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">How are you feeling?</p>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
+                      How are you feeling?
+                    </p>
                     <div className="flex gap-2 flex-wrap">
                       {MOOD_KEYS.map((key) => {
                         const { emoji, label } = MOOD_META[key];
@@ -205,7 +261,7 @@ export function TodayPrompt({
                               'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors',
                               isSelected
                                 ? 'border-primary bg-primary/10 text-primary font-medium'
-                                : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground',
+                                : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground'
                             )}
                           >
                             <span>{emoji}</span>
@@ -233,12 +289,21 @@ export function TodayPrompt({
                     ))}
                   </div>
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <span className={`text-sm ${canSave ? 'text-primary' : 'text-muted-foreground'}`}>
-                      {canSave ? '✓ Ready to save' : `Fill ${MIN_FILLED_CATEGORIES - filledCount} more`}
+                    <span
+                      className={`text-sm ${canSave ? 'text-primary' : 'text-muted-foreground'}`}
+                    >
+                      {canSave
+                        ? '✓ Ready to save'
+                        : `Fill ${MIN_FILLED_CATEGORIES - filledCount} more`}
                     </span>
                     <div className="flex justify-end gap-2">
                       {todayEntry?.content && (
-                        <Button variant="ghost" onClick={handleCancelEdit} disabled={isSaving} className="gap-2">
+                        <Button
+                          variant="ghost"
+                          onClick={handleCancelEdit}
+                          disabled={isSaving}
+                          className="gap-2"
+                        >
                           <X className="h-4 w-4" />
                           Cancel
                         </Button>
@@ -266,7 +331,9 @@ export function TodayPrompt({
                   {selectedMood && MOOD_META[selectedMood] && (
                     <div className="mb-3 flex items-center gap-2">
                       <span className="text-base">{MOOD_META[selectedMood].emoji}</span>
-                      <span className="text-sm text-muted-foreground">{MOOD_META[selectedMood].label}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {MOOD_META[selectedMood].label}
+                      </span>
                     </div>
                   )}
                   <div className="space-y-2">
@@ -284,12 +351,15 @@ export function TodayPrompt({
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-xs text-muted-foreground max-w-[200px] truncate hidden sm:block">
-                                {content[key].slice(0, 50)}{content[key].length > 50 ? '...' : ''}
+                                {content[key].slice(0, 50)}
+                                {content[key].length > 50 ? '...' : ''}
                               </span>
-                              <ChevronDown className={cn(
-                                "h-4 w-4 text-muted-foreground transition-transform duration-200",
-                                openCategory === key && "rotate-180"
-                              )} />
+                              <ChevronDown
+                                className={cn(
+                                  'h-4 w-4 text-muted-foreground transition-transform duration-200',
+                                  openCategory === key && 'rotate-180'
+                                )}
+                              />
                             </div>
                           </CollapsibleTrigger>
                           <CollapsibleContent className="px-3 pb-3">
@@ -306,7 +376,9 @@ export function TodayPrompt({
                     )}
                   </div>
                   <div className="mt-4 flex items-center justify-between pt-3 border-t border-border/50">
-                    <span className={`text-sm font-sans transition-opacity duration-300 ${isSaved ? 'opacity-100 text-primary' : 'opacity-0'}`}>
+                    <span
+                      className={`text-sm font-sans transition-opacity duration-300 ${isSaved ? 'opacity-100 text-primary' : 'opacity-0'}`}
+                    >
                       ✓ Saved
                     </span>
                     <Button

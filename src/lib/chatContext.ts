@@ -17,16 +17,33 @@ interface StoredHabit {
   frequency: 'daily' | 'weekly';
   target_value: number;
 }
-interface StoredHabitLog { id: string; habit_id: string; date: string; value: number }
-interface StoredJournalEntry { id?: string; date?: string; content?: string; entry_type?: string }
-interface StoredFocusSession { startedAt?: string; durationMin?: number; taskTitle?: string; habitId?: string | null }
+interface StoredHabitLog {
+  id: string;
+  habit_id: string;
+  date: string;
+  value: number;
+}
+interface StoredJournalEntry {
+  id?: string;
+  date?: string;
+  content?: string;
+  entry_type?: string;
+}
+interface StoredFocusSession {
+  startedAt?: string;
+  durationMin?: number;
+  taskTitle?: string;
+  habitId?: string | null;
+}
 
 function readJSON<T>(key: string): T | null {
   if (typeof localStorage === 'undefined') return null;
   try {
     const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) as T : null;
-  } catch { return null; }
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
 }
 
 function safeText(selector: string): string | null {
@@ -121,26 +138,41 @@ const HISTORY_BUILDERS: ContextBuilder[] = [
 
 const ROUTE_BUILDERS: Record<string, ContextBuilder[]> = {
   '/': [
-    { title: 'Home', build: () => 'User is on the home page (hero + scoreboard + today journal entry).' },
+    {
+      title: 'Home',
+      build: () => 'User is on the home page (hero + scoreboard + today journal entry).',
+    },
     { title: 'Scoreboard', build: collectScoreboard },
     { title: 'Today entry', build: collectTodayEntry },
   ],
   '/habits': [
-    { title: 'Habits page', build: () => 'User is on the habits page where they add/log/edit daily habits.' },
+    {
+      title: 'Habits page',
+      build: () => 'User is on the habits page where they add/log/edit daily habits.',
+    },
   ],
   '/journal': [
-    { title: 'Journal page', build: () => 'User is on the journal page (daily entry + past entries list).' },
+    {
+      title: 'Journal page',
+      build: () => 'User is on the journal page (daily entry + past entries list).',
+    },
     { title: 'Today entry', build: collectTodayEntry },
   ],
   '/focus': [
-    { title: 'Timer', build: () => 'User is on the timer (focus) page. They can start a block linked to a time-tracked habit; elapsed minutes are logged to that habit on stop.' },
+    {
+      title: 'Timer',
+      build: () =>
+        'User is on the timer (focus) page. They can start a block linked to a time-tracked habit; elapsed minutes are logged to that habit on stop.',
+    },
   ],
   '/review': [
-    { title: 'Review', build: () => 'User is on the review page seeing their last 7 days of scoreboard, AM/PM rituals, and journal.' },
+    {
+      title: 'Review',
+      build: () =>
+        'User is on the review page seeing their last 7 days of scoreboard, AM/PM rituals, and journal.',
+    },
   ],
-  '/life': [
-    { title: 'Life', build: () => 'User is on the memento mori life-weeks page.' },
-  ],
+  '/life': [{ title: 'Life', build: () => 'User is on the memento mori life-weeks page.' }],
 };
 
 /**

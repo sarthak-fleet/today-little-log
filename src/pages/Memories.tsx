@@ -9,15 +9,8 @@ import { List, CalendarDays, Search, X, BookOpen } from 'lucide-react';
 const Memories = () => {
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [searchQuery, setSearchQuery] = useState('');
-  const {
-    entries,
-    getRecentEntries,
-    updateEntry,
-    deleteEntry,
-    isLoaded,
-    hasMore,
-    loadMore,
-  } = useJournalEntries();
+  const { entries, getRecentEntries, updateEntry, deleteEntry, isLoaded, hasMore, loadMore } =
+    useJournalEntries();
 
   const pastEntries = getRecentEntries(20);
 
@@ -85,7 +78,8 @@ const Memories = () => {
 
         {searchQuery && (
           <p className="text-sm text-muted-foreground">
-            Showing {viewMode === 'list' ? filteredPastEntries.length : filteredAllEntries.length} results for "{searchQuery}"
+            Showing {viewMode === 'list' ? filteredPastEntries.length : filteredAllEntries.length}{' '}
+            results for "{searchQuery}"
           </p>
         )}
 

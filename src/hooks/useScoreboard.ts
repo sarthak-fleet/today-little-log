@@ -3,7 +3,11 @@ import { apiFetch } from '@/lib/api';
 import { trackActivatedOnce, trackCoreAction } from '@/lib/analytics';
 import { useAuth } from './useAuth';
 import { endOfMonth, format, startOfMonth } from 'date-fns';
-import { getMonthlyScoreboardConfig, type MonthlyScoreboardEntryConfig, type MonthlyScoreboardItemConfig } from '@/config/monthlyScoreboards';
+import {
+  getMonthlyScoreboardConfig,
+  type MonthlyScoreboardEntryConfig,
+  type MonthlyScoreboardItemConfig,
+} from '@/config/monthlyScoreboards';
 import { categoryFromPosition } from '@/lib/scoreboardDefaults';
 
 export interface ScoreboardItem {
@@ -89,7 +93,9 @@ function writeGuestLocks(months: string[]) {
   }
 }
 
-function normalizeItem(item: Partial<ScoreboardItem> & { id: string; label: string }): ScoreboardItem {
+function normalizeItem(
+  item: Partial<ScoreboardItem> & { id: string; label: string }
+): ScoreboardItem {
   const position = Number(item.position ?? 0);
   return {
     id: item.id,
@@ -108,18 +114,23 @@ function normalizeItem(item: Partial<ScoreboardItem> & { id: string; label: stri
   };
 }
 
-function normalizeLog(log: Partial<ScoreboardLog> & { id: string; item_id: string; date: string }): ScoreboardLog {
+function normalizeLog(
+  log: Partial<ScoreboardLog> & { id: string; item_id: string; date: string }
+): ScoreboardLog {
   return {
     id: log.id,
     item_id: log.item_id,
     date: log.date,
     value_bool: Boolean(log.value_bool),
-    value_score: log.value_score === null || log.value_score === undefined ? null : Number(log.value_score),
+    value_score:
+      log.value_score === null || log.value_score === undefined ? null : Number(log.value_score),
     value_text: log.value_text ?? null,
   };
 }
 
-function normalizeDayNote(note: Partial<ScoreboardDayNote> & { id: string; date: string }): ScoreboardDayNote {
+function normalizeDayNote(
+  note: Partial<ScoreboardDayNote> & { id: string; date: string }
+): ScoreboardDayNote {
   return {
     id: note.id,
     score_month: note.score_month ?? note.date.slice(0, 7),
@@ -151,21 +162,24 @@ export function useScoreboard(month: string = format(new Date(), 'yyyy-MM')) {
   const { start: monthStart, end: monthEnd } = useMemo(() => monthBounds(month), [month]);
   const monthConfig = useMemo(() => getMonthlyScoreboardConfig(month), [month]);
   const trackingStartDate = monthConfig?.trackingStartDate ?? monthStart;
-  const configuredKeys = useMemo(() => new Set(monthConfig?.items.map((item) => item.key) ?? []), [monthConfig]);
+  const configuredKeys = useMemo(
+    () => new Set(monthConfig?.items.map((item) => item.key) ?? []),
+    [monthConfig]
+  );
   const usingGuestStorage = !user || storageMode === 'guest';
 
   const loadGuestState = useCallback(() => {
     const nextItems = syncConfiguredItemsForGuest(
       readGuest<ScoreboardItem>(ITEMS_KEY).map(normalizeItem),
       monthConfig?.items ?? [],
-      month,
+      month
     );
     const syncedGuest = syncConfiguredEntriesForGuest(
       nextItems,
       readGuest<ScoreboardLog>(LOGS_KEY).map(normalizeLog),
       readGuest<ScoreboardDayNote>(DAY_NOTES_KEY).map(normalizeDayNote),
       monthConfig?.seededEntries ?? [],
-      month,
+      month
     );
     setItems(nextItems);
     setLogs(syncedGuest.logs);
@@ -178,30 +192,47 @@ export function useScoreboard(month: string = format(new Date(), 'yyyy-MM')) {
     if (loading) return;
     if (user) {
       Promise.all([
-        apiFetch<ScoreboardItem[]>(`/api/scoreboard-items?month=${encodeURIComponent(month)}`).catch(() => []),
+        apiFetch<ScoreboardItem[]>(
+          `/api/scoreboard-items?month=${encodeURIComponent(month)}`
+        ).catch(() => []),
         apiFetch<ScoreboardLog[]>(`/api/scoreboard-logs?since=${monthStart}`).catch(() => []),
-        apiFetch<ScoreboardDayNote[]>(`/api/scoreboard-day-notes?month=${encodeURIComponent(month)}`).catch(() => []),
-        apiFetch<{ locked: boolean; published?: boolean }>(`/api/scoreboard-locks?month=${encodeURIComponent(month)}`).catch(() => ({ locked: false, published: false })),
-      ]).then(async ([nextItems, nextLogs, nextDayNotes, lock]) => {
-        const syncedItems = await syncConfiguredItemsForUser(
-          (nextItems ?? []).map(normalizeItem),
-          monthConfig?.items ?? [],
-          month,
-          Boolean(lock.locked),
-        );
-        setItems(syncedItems);
-        setLogs((nextLogs ?? []).map(normalizeLog).filter((log) => log.date >= monthStart && log.date <= monthEnd));
-        setDayNotes((nextDayNotes ?? []).map(normalizeDayNote).filter((note) => note.date >= monthStart && note.date <= monthEnd));
-        setStorageMode('api');
-        setLockedMonths((prev) => {
-          const rest = prev.filter((row) => row !== month);
-          return lock.locked ? [...rest, month] : rest;
-        });
-        setIsPublished(Boolean(lock.published));
-      }).catch(() => {
-        loadGuestState();
-        setIsPublished(false);
-      }).finally(() => setIsLoaded(true));
+        apiFetch<ScoreboardDayNote[]>(
+          `/api/scoreboard-day-notes?month=${encodeURIComponent(month)}`
+        ).catch(() => []),
+        apiFetch<{ locked: boolean; published?: boolean }>(
+          `/api/scoreboard-locks?month=${encodeURIComponent(month)}`
+        ).catch(() => ({ locked: false, published: false })),
+      ])
+        .then(async ([nextItems, nextLogs, nextDayNotes, lock]) => {
+          const syncedItems = await syncConfiguredItemsForUser(
+            (nextItems ?? []).map(normalizeItem),
+            monthConfig?.items ?? [],
+            month,
+            Boolean(lock.locked)
+          );
+          setItems(syncedItems);
+          setLogs(
+            (nextLogs ?? [])
+              .map(normalizeLog)
+              .filter((log) => log.date >= monthStart && log.date <= monthEnd)
+          );
+          setDayNotes(
+            (nextDayNotes ?? [])
+              .map(normalizeDayNote)
+              .filter((note) => note.date >= monthStart && note.date <= monthEnd)
+          );
+          setStorageMode('api');
+          setLockedMonths((prev) => {
+            const rest = prev.filter((row) => row !== month);
+            return lock.locked ? [...rest, month] : rest;
+          });
+          setIsPublished(Boolean(lock.published));
+        })
+        .catch(() => {
+          loadGuestState();
+          setIsPublished(false);
+        })
+        .finally(() => setIsLoaded(true));
       return;
     }
 
@@ -212,7 +243,9 @@ export function useScoreboard(month: string = format(new Date(), 'yyyy-MM')) {
 
   const activeItems = items
     .filter((item) => !item.archived && item.score_month === month)
-    .filter((item) => !monthConfig || (item.source_key !== null && configuredKeys.has(item.source_key)))
+    .filter(
+      (item) => !monthConfig || (item.source_key !== null && configuredKeys.has(item.source_key))
+    )
     .sort((a, b) => a.position - b.position);
 
   const monthLogs = logs.filter((log) => log.date >= monthStart && log.date <= monthEnd);
@@ -220,195 +253,228 @@ export function useScoreboard(month: string = format(new Date(), 'yyyy-MM')) {
   const todayLogs = monthLogs.filter((log) => log.date === today);
   const isLocked = lockedMonths.includes(month);
 
-  const logFor = useCallback((itemId: string, date: string = today): ScoreboardLog | undefined => (
-    monthLogs.find((log) => log.item_id === itemId && log.date === date)
-  ), [monthLogs, today]);
+  const logFor = useCallback(
+    (itemId: string, date: string = today): ScoreboardLog | undefined =>
+      monthLogs.find((log) => log.item_id === itemId && log.date === date),
+    [monthLogs, today]
+  );
 
-  const dayNoteFor = useCallback((date: string = today): ScoreboardDayNote | undefined => (
-    monthDayNotes.find((note) => note.date === date)
-  ), [monthDayNotes, today]);
+  const dayNoteFor = useCallback(
+    (date: string = today): ScoreboardDayNote | undefined =>
+      monthDayNotes.find((note) => note.date === date),
+    [monthDayNotes, today]
+  );
 
-  const addItem = useCallback(async ({ label, maxScore, criteria = '' }: ScoreboardItemInput) => {
-    if (isLocked || isPublished) return;
-    const trimmed = label.trim();
-    const boundedMax = Math.max(1, Math.round(Number(maxScore) || 1));
-    if (!trimmed) return;
-    const position = activeItems.length ? Math.max(...activeItems.map((item) => item.position)) + 1 : 0;
+  const addItem = useCallback(
+    async ({ label, maxScore, criteria = '' }: ScoreboardItemInput) => {
+      if (isLocked || isPublished) return;
+      const trimmed = label.trim();
+      const boundedMax = Math.max(1, Math.round(Number(maxScore) || 1));
+      if (!trimmed) return;
+      const position = activeItems.length
+        ? Math.max(...activeItems.map((item) => item.position)) + 1
+        : 0;
 
-    if (!usingGuestStorage) {
-      const created = await apiFetch<ScoreboardItem>('/api/scoreboard-items', {
-        method: 'POST',
-        body: JSON.stringify({
-          label: trimmed,
-          kind: 'score',
-          score_month: month,
-          max_score: boundedMax,
-          criteria: criteria.trim() || null,
-          position,
-        }),
+      if (!usingGuestStorage) {
+        const created = await apiFetch<ScoreboardItem>('/api/scoreboard-items', {
+          method: 'POST',
+          body: JSON.stringify({
+            label: trimmed,
+            kind: 'score',
+            score_month: month,
+            max_score: boundedMax,
+            criteria: criteria.trim() || null,
+            position,
+          }),
+        });
+        setItems((prev) => [...prev, normalizeItem(created)]);
+        return;
+      }
+
+      const created: ScoreboardItem = {
+        id: crypto.randomUUID(),
+        label: trimmed,
+        kind: 'score',
+        cadence: 'daily',
+        category: 'daily',
+        score_month: month,
+        source_key: null,
+        min_score: 0,
+        max_score: boundedMax,
+        ideal_score: boundedMax,
+        criteria: criteria.trim() || null,
+        position,
+        archived: false,
+      };
+      setItems((prev) => {
+        const next = [...prev, created];
+        writeGuest(ITEMS_KEY, next);
+        return next;
       });
-      setItems((prev) => [...prev, normalizeItem(created)]);
-      return;
-    }
+    },
+    [activeItems, isLocked, isPublished, month, usingGuestStorage]
+  );
 
-    const created: ScoreboardItem = {
-      id: crypto.randomUUID(),
-      label: trimmed,
-      kind: 'score',
-      cadence: 'daily',
-      category: 'daily',
-      score_month: month,
-      source_key: null,
-      min_score: 0,
-      max_score: boundedMax,
-      ideal_score: boundedMax,
-      criteria: criteria.trim() || null,
-      position,
-      archived: false,
-    };
-    setItems((prev) => {
-      const next = [...prev, created];
-      writeGuest(ITEMS_KEY, next);
-      return next;
-    });
-  }, [activeItems, isLocked, isPublished, month, usingGuestStorage]);
+  const updateItem = useCallback(
+    async (
+      id: string,
+      patch: Partial<Pick<ScoreboardItem, 'label' | 'max_score' | 'criteria' | 'archived'>>
+    ) => {
+      if (isLocked || isPublished) return;
+      const updates = {
+        ...patch,
+        label: patch.label?.trim(),
+        max_score:
+          patch.max_score === undefined
+            ? undefined
+            : Math.max(1, Math.round(Number(patch.max_score) || 1)),
+        criteria: patch.criteria === undefined ? undefined : patch.criteria?.trim() || null,
+      };
 
-  const updateItem = useCallback(async (
-    id: string,
-    patch: Partial<Pick<ScoreboardItem, 'label' | 'max_score' | 'criteria' | 'archived'>>,
-  ) => {
-    if (isLocked || isPublished) return;
-    const updates = {
-      ...patch,
-      label: patch.label?.trim(),
-      max_score: patch.max_score === undefined ? undefined : Math.max(1, Math.round(Number(patch.max_score) || 1)),
-      criteria: patch.criteria === undefined ? undefined : patch.criteria?.trim() || null,
-    };
+      if (!usingGuestStorage) {
+        const updated = await apiFetch<ScoreboardItem>('/api/scoreboard-items', {
+          method: 'POST',
+          body: JSON.stringify({ id, ...updates }),
+        });
+        setItems((prev) => prev.map((item) => (item.id === id ? normalizeItem(updated) : item)));
+        return;
+      }
 
-    if (!usingGuestStorage) {
-      const updated = await apiFetch<ScoreboardItem>('/api/scoreboard-items', {
-        method: 'POST',
-        body: JSON.stringify({ id, ...updates }),
+      setItems((prev) => {
+        const next = prev.map((item) =>
+          item.id === id ? normalizeItem({ ...item, ...updates }) : item
+        );
+        writeGuest(ITEMS_KEY, next);
+        return next;
       });
-      setItems((prev) => prev.map((item) => (item.id === id ? normalizeItem(updated) : item)));
-      return;
-    }
+    },
+    [isLocked, isPublished, usingGuestStorage]
+  );
 
-    setItems((prev) => {
-      const next = prev.map((item) => (item.id === id ? normalizeItem({ ...item, ...updates }) : item));
-      writeGuest(ITEMS_KEY, next);
-      return next;
-    });
-  }, [isLocked, isPublished, usingGuestStorage]);
-
-  const removeItem = useCallback(async (id: string) => {
-    if (isLocked || isPublished) return;
-    if (!usingGuestStorage) {
-      await fetch(`/api/scoreboard-items?id=${encodeURIComponent(id)}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-    }
-    setItems((prev) => {
-      const next = prev.filter((item) => item.id !== id);
-      if (usingGuestStorage) writeGuest(ITEMS_KEY, next);
-      return next;
-    });
-    setLogs((prev) => {
-      const next = prev.filter((log) => log.item_id !== id);
-      if (usingGuestStorage) writeGuest(LOGS_KEY, next);
-      return next;
-    });
-  }, [isLocked, isPublished, usingGuestStorage]);
-
-  const setLog = useCallback(async (
-    itemId: string,
-    patch: { value_score?: number | null; value_text?: string | null },
-    date: string = today,
-  ) => {
-    if (isLocked) return;
-    const item = activeItems.find((row) => row.id === itemId);
-    const rawScore = patch.value_score;
-    const score = rawScore === undefined || rawScore === null
-      ? rawScore
-      : Math.max(item?.min_score ?? 0, Math.min(item?.max_score ?? Number.MAX_SAFE_INTEGER, Math.round(Number(rawScore) || 0)));
-    const body = {
-      item_id: itemId,
-      date,
-      value_score: score,
-      value_text: patch.value_text,
-    };
-
-    // Analytics — core action: a score was logged. `activated` fires once,
-    // on the user's first logged score. Both are best-effort, never blocking.
-    if (score !== undefined && score !== null) {
-      trackActivatedOnce();
-      trackCoreAction('scoreboard_logged');
-    }
-
-    if (!usingGuestStorage) {
-      const saved = await apiFetch<ScoreboardLog>('/api/scoreboard-logs', {
-        method: 'POST',
-        body: JSON.stringify(body),
+  const removeItem = useCallback(
+    async (id: string) => {
+      if (isLocked || isPublished) return;
+      if (!usingGuestStorage) {
+        await fetch(`/api/scoreboard-items?id=${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        });
+      }
+      setItems((prev) => {
+        const next = prev.filter((item) => item.id !== id);
+        if (usingGuestStorage) writeGuest(ITEMS_KEY, next);
+        return next;
       });
       setLogs((prev) => {
-        const others = prev.filter((log) => !(log.item_id === itemId && log.date === date));
-        return [normalizeLog(saved), ...others];
+        const next = prev.filter((log) => log.item_id !== id);
+        if (usingGuestStorage) writeGuest(LOGS_KEY, next);
+        return next;
       });
-      return;
-    }
+    },
+    [isLocked, isPublished, usingGuestStorage]
+  );
 
-    setLogs((prev) => {
-      const others = prev.filter((log) => !(log.item_id === itemId && log.date === date));
-      const existing = prev.find((log) => log.item_id === itemId && log.date === date);
-      const merged: ScoreboardLog = {
-        id: existing?.id ?? crypto.randomUUID(),
+  const setLog = useCallback(
+    async (
+      itemId: string,
+      patch: { value_score?: number | null; value_text?: string | null },
+      date: string = today
+    ) => {
+      if (isLocked) return;
+      const item = activeItems.find((row) => row.id === itemId);
+      const rawScore = patch.value_score;
+      const score =
+        rawScore === undefined || rawScore === null
+          ? rawScore
+          : Math.max(
+              item?.min_score ?? 0,
+              Math.min(
+                item?.max_score ?? Number.MAX_SAFE_INTEGER,
+                Math.round(Number(rawScore) || 0)
+              )
+            );
+      const body = {
         item_id: itemId,
         date,
-        value_bool: (score ?? existing?.value_score ?? 0) > 0,
-        value_score: score ?? existing?.value_score ?? null,
-        value_text: patch.value_text ?? existing?.value_text ?? null,
+        value_score: score,
+        value_text: patch.value_text,
       };
-      const next = [merged, ...others];
-      writeGuest(LOGS_KEY, next);
-      return next;
-    });
-  }, [activeItems, isLocked, today, usingGuestStorage]);
 
-  const setLowScoreReason = useCallback(async (reason: string, date: string = today) => {
-    if (isLocked) return;
-    const body = {
-      score_month: month,
-      date,
-      low_score_reason: reason,
-    };
+      // Analytics — core action: a score was logged. `activated` fires once,
+      // on the user's first logged score. Both are best-effort, never blocking.
+      if (score !== undefined && score !== null) {
+        trackActivatedOnce();
+        trackCoreAction('scoreboard_logged');
+      }
 
-    if (!usingGuestStorage) {
-      const saved = await apiFetch<ScoreboardDayNote>('/api/scoreboard-day-notes', {
-        method: 'POST',
-        body: JSON.stringify(body),
+      if (!usingGuestStorage) {
+        const saved = await apiFetch<ScoreboardLog>('/api/scoreboard-logs', {
+          method: 'POST',
+          body: JSON.stringify(body),
+        });
+        setLogs((prev) => {
+          const others = prev.filter((log) => !(log.item_id === itemId && log.date === date));
+          return [normalizeLog(saved), ...others];
+        });
+        return;
+      }
+
+      setLogs((prev) => {
+        const others = prev.filter((log) => !(log.item_id === itemId && log.date === date));
+        const existing = prev.find((log) => log.item_id === itemId && log.date === date);
+        const merged: ScoreboardLog = {
+          id: existing?.id ?? crypto.randomUUID(),
+          item_id: itemId,
+          date,
+          value_bool: (score ?? existing?.value_score ?? 0) > 0,
+          value_score: score ?? existing?.value_score ?? null,
+          value_text: patch.value_text ?? existing?.value_text ?? null,
+        };
+        const next = [merged, ...others];
+        writeGuest(LOGS_KEY, next);
+        return next;
       });
-      setDayNotes((prev) => {
-        const others = prev.filter((note) => note.date !== date);
-        return [normalizeDayNote(saved), ...others];
-      });
-      return;
-    }
+    },
+    [activeItems, isLocked, today, usingGuestStorage]
+  );
 
-    setDayNotes((prev) => {
-      const others = prev.filter((note) => note.date !== date);
-      const existing = prev.find((note) => note.date === date);
-      const merged: ScoreboardDayNote = {
-        id: existing?.id ?? crypto.randomUUID(),
+  const setLowScoreReason = useCallback(
+    async (reason: string, date: string = today) => {
+      if (isLocked) return;
+      const body = {
         score_month: month,
         date,
-        low_score_reason: reason.trim() ? reason : null,
+        low_score_reason: reason,
       };
-      const next = [merged, ...others];
-      writeGuest(DAY_NOTES_KEY, next);
-      return next;
-    });
-  }, [isLocked, month, today, usingGuestStorage]);
+
+      if (!usingGuestStorage) {
+        const saved = await apiFetch<ScoreboardDayNote>('/api/scoreboard-day-notes', {
+          method: 'POST',
+          body: JSON.stringify(body),
+        });
+        setDayNotes((prev) => {
+          const others = prev.filter((note) => note.date !== date);
+          return [normalizeDayNote(saved), ...others];
+        });
+        return;
+      }
+
+      setDayNotes((prev) => {
+        const others = prev.filter((note) => note.date !== date);
+        const existing = prev.find((note) => note.date === date);
+        const merged: ScoreboardDayNote = {
+          id: existing?.id ?? crypto.randomUUID(),
+          score_month: month,
+          date,
+          low_score_reason: reason.trim() ? reason : null,
+        };
+        const next = [merged, ...others];
+        writeGuest(DAY_NOTES_KEY, next);
+        return next;
+      });
+    },
+    [isLocked, month, today, usingGuestStorage]
+  );
 
   const lockMonth = useCallback(async () => {
     if (isLocked) return;
@@ -486,13 +552,15 @@ async function syncConfiguredItemsForUser(
   existingItems: ScoreboardItem[],
   configuredItems: MonthlyScoreboardItemConfig[],
   month: string,
-  locked: boolean,
+  locked: boolean
 ): Promise<ScoreboardItem[]> {
   if (locked || configuredItems.length === 0) return existingItems;
 
   const nextItems = [...existingItems];
   for (const [index, configItem] of configuredItems.entries()) {
-    const matchIndex = nextItems.findIndex((item) => item.score_month === month && item.source_key === configItem.key);
+    const matchIndex = nextItems.findIndex(
+      (item) => item.score_month === month && item.source_key === configItem.key
+    );
     const existing = matchIndex >= 0 ? nextItems[matchIndex] : null;
     const payload = configuredItemPayload(configItem, month, index);
 
@@ -505,13 +573,14 @@ async function syncConfiguredItemsForUser(
       continue;
     }
 
-    const differs = existing.label !== payload.label
-      || existing.min_score !== payload.min_score
-      || existing.max_score !== payload.max_score
-      || existing.ideal_score !== payload.ideal_score
-      || (existing.criteria ?? '') !== payload.criteria
-      || existing.position !== payload.position
-      || existing.archived;
+    const differs =
+      existing.label !== payload.label ||
+      existing.min_score !== payload.min_score ||
+      existing.max_score !== payload.max_score ||
+      existing.ideal_score !== payload.ideal_score ||
+      (existing.criteria ?? '') !== payload.criteria ||
+      existing.position !== payload.position ||
+      existing.archived;
     if (!differs) continue;
 
     const updated = await apiFetch<ScoreboardItem>('/api/scoreboard-items', {
@@ -527,7 +596,7 @@ async function syncConfiguredItemsForUser(
 function syncConfiguredItemsForGuest(
   existingItems: ScoreboardItem[],
   configuredItems: MonthlyScoreboardItemConfig[],
-  month: string,
+  month: string
 ): ScoreboardItem[] {
   if (configuredItems.length === 0) return existingItems;
 
@@ -535,7 +604,9 @@ function syncConfiguredItemsForGuest(
   let changed = false;
   for (const [index, configItem] of configuredItems.entries()) {
     const id = `configured-${month}-${configItem.key}`;
-    const matchIndex = nextItems.findIndex((item) => item.id === id || (item.score_month === month && item.source_key === configItem.key));
+    const matchIndex = nextItems.findIndex(
+      (item) => item.id === id || (item.score_month === month && item.source_key === configItem.key)
+    );
     const payload = configuredItemPayload(configItem, month, index);
     const item: ScoreboardItem = {
       id,
@@ -556,13 +627,13 @@ function syncConfiguredItemsForGuest(
     if (matchIndex >= 0) {
       const existing = nextItems[matchIndex];
       if (
-        existing.label !== item.label
-        || existing.min_score !== item.min_score
-        || existing.max_score !== item.max_score
-        || existing.ideal_score !== item.ideal_score
-        || existing.criteria !== item.criteria
-        || existing.position !== item.position
-        || existing.archived
+        existing.label !== item.label ||
+        existing.min_score !== item.min_score ||
+        existing.max_score !== item.max_score ||
+        existing.ideal_score !== item.ideal_score ||
+        existing.criteria !== item.criteria ||
+        existing.position !== item.position ||
+        existing.archived
       ) {
         nextItems[matchIndex] = { ...existing, ...item };
         changed = true;
@@ -578,7 +649,11 @@ function syncConfiguredItemsForGuest(
   return nextItems;
 }
 
-function configuredItemPayload(configItem: MonthlyScoreboardItemConfig, month: string, index: number) {
+function configuredItemPayload(
+  configItem: MonthlyScoreboardItemConfig,
+  month: string,
+  index: number
+) {
   return {
     label: configItem.label,
     kind: 'score',
@@ -598,7 +673,7 @@ function syncConfiguredEntriesForGuest(
   existingLogs: ScoreboardLog[],
   existingDayNotes: ScoreboardDayNote[],
   configuredEntries: MonthlyScoreboardEntryConfig[],
-  month: string,
+  month: string
 ) {
   if (configuredEntries.length === 0) {
     return { logs: existingLogs, dayNotes: existingDayNotes };
@@ -607,7 +682,7 @@ function syncConfiguredEntriesForGuest(
   const itemBySourceKey = new Map(
     items
       .filter((item) => item.score_month === month && item.source_key)
-      .map((item) => [item.source_key as string, item]),
+      .map((item) => [item.source_key as string, item])
   );
 
   let logsChanged = false;
@@ -627,13 +702,15 @@ function syncConfiguredEntriesForGuest(
         value_text: configuredLog.valueText ?? null,
       };
 
-      const existingIndex = nextLogs.findIndex((log) => log.item_id === item.id && log.date === entry.date);
+      const existingIndex = nextLogs.findIndex(
+        (log) => log.item_id === item.id && log.date === entry.date
+      );
       if (existingIndex >= 0) {
         const existing = nextLogs[existingIndex];
         if (
-          existing.value_bool !== nextLog.value_bool
-          || existing.value_score !== nextLog.value_score
-          || existing.value_text !== nextLog.value_text
+          existing.value_bool !== nextLog.value_bool ||
+          existing.value_score !== nextLog.value_score ||
+          existing.value_text !== nextLog.value_text
         ) {
           nextLogs[existingIndex] = nextLog;
           logsChanged = true;
@@ -663,8 +740,8 @@ function syncConfiguredEntriesForGuest(
     if (existingIndex >= 0) {
       const existing = nextDayNotes[existingIndex];
       if (
-        existing.score_month !== nextDayNote.score_month
-        || existing.low_score_reason !== nextDayNote.low_score_reason
+        existing.score_month !== nextDayNote.score_month ||
+        existing.low_score_reason !== nextDayNote.low_score_reason
       ) {
         nextDayNotes[existingIndex] = nextDayNote;
         dayNotesChanged = true;

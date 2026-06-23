@@ -36,7 +36,7 @@ function daysBetween(a: string | null, b: string) {
   if (!a) return 0;
   return Math.max(
     0,
-    Math.round((+new Date(b + 'T00:00:00Z') - +new Date(a + 'T00:00:00Z')) / 86_400_000),
+    Math.round((+new Date(`${b}T00:00:00Z`) - +new Date(`${a}T00:00:00Z`)) / 86_400_000)
   );
 }
 
@@ -89,7 +89,7 @@ export function useUserStats() {
         });
       }
     },
-    [user],
+    [user]
   );
 
   return { stats, loaded, award };

@@ -17,20 +17,30 @@ function PsiSlider({ regret }: { regret: string }) {
 
   useEffect(() => {
     if (todayRow?.psi_score != null) setValue(todayRow.psi_score);
-  }, [todayRow?.id, todayRow?.psi_score]);
+  }, [todayRow?.psi_score]);
 
-  const tone = value >= 80 ? 'text-destructive'
-    : value >= 60 ? 'text-orange-600'
-    : value >= 40 ? 'text-primary'
-    : 'text-emerald-600';
+  const tone =
+    value >= 80
+      ? 'text-destructive'
+      : value >= 60
+        ? 'text-orange-600'
+        : value >= 40
+          ? 'text-primary'
+          : 'text-emerald-600';
 
   const aiScore = async () => {
-    if (!regret.trim()) { setErr('Write the regret line first so the model has something to score.'); return; }
+    if (!regret.trim()) {
+      setErr('Write the regret line first so the model has something to score.');
+      return;
+    }
     setErr(null);
     setLoading(true);
     const result = await scorePsi(regret);
     setLoading(false);
-    if (result.error) { setErr(result.error); return; }
+    if (result.error) {
+      setErr(result.error);
+      return;
+    }
     setValue(result.score);
     await save({ psi_score: result.score });
   };
@@ -48,7 +58,11 @@ function PsiSlider({ regret }: { regret: string }) {
             className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-primary hover:underline disabled:opacity-50"
             title="Score from the regret line using your AI key"
           >
-            {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+            {loading ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Sparkles className="h-3 w-3" />
+            )}
             AI score
           </button>
           <span className={`text-sm font-display font-bold tabular-nums ${tone}`}>{value}</span>
@@ -59,7 +73,7 @@ function PsiSlider({ regret }: { regret: string }) {
         min={0}
         max={100}
         value={value}
-        onChange={(e) => setValue(parseInt(e.target.value))}
+        onChange={(e) => setValue(parseInt(e.target.value, 10))}
         onMouseUp={() => save({ psi_score: value })}
         onTouchEnd={() => save({ psi_score: value })}
         className="w-full accent-primary"
@@ -92,15 +106,20 @@ export function AmRitual() {
     // Resync local state only when the row identity changes — content
     // edits (regret, intents) are user-driven and should not clobber.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [todayRow?.id]);
+  }, [todayRow?.id, todayRow]);
 
   const filledCount = intents.filter((i) => i.trim().length > 0).length;
-  const done = (todayRow?.am_intents?.filter((i) => i?.trim().length).length ?? 0) >= 1 || (todayRow?.am_regret?.length ?? 0) > 0;
+  const done =
+    (todayRow?.am_intents?.filter((i) => i?.trim().length).length ?? 0) >= 1 ||
+    (todayRow?.am_regret?.length ?? 0) > 0;
 
   if (!user) return null;
 
   const submit = async () => {
-    const trimmed = intents.map((i) => i.trim()).filter(Boolean).slice(0, MAX_INTENTS);
+    const trimmed = intents
+      .map((i) => i.trim())
+      .filter(Boolean)
+      .slice(0, MAX_INTENTS);
     const sleepNum = parseFloat(sleep);
     await save({
       am_intents: trimmed,
@@ -179,7 +198,13 @@ export function AmRitual() {
           {filledCount}/{MAX_INTENTS} intents · +10 XP on first save
         </span>
         <Button size="sm" onClick={submit} disabled={!filledCount && !regret.trim() && !sleep}>
-          {saved ? <><Check className="h-4 w-4 mr-1" /> Saved</> : 'Commit today'}
+          {saved ? (
+            <>
+              <Check className="h-4 w-4 mr-1" /> Saved
+            </>
+          ) : (
+            'Commit today'
+          )}
         </Button>
       </div>
     </div>

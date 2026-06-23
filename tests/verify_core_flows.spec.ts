@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 async function collectErrors(page: Page): Promise<string[]> {
   const errs: string[] = [];
@@ -6,7 +6,12 @@ async function collectErrors(page: Page): Promise<string[]> {
   page.on('console', (m) => {
     if (m.type() === 'error') {
       const t = m.text();
-      if (/401|404|Unauthorized|Failed to fetch|Failed to preconnect|posthog|ERR_|net::|vite|react-refresh/i.test(t)) return;
+      if (
+        /401|404|Unauthorized|Failed to fetch|Failed to preconnect|posthog|ERR_|net::|vite|react-refresh/i.test(
+          t
+        )
+      )
+        return;
       errs.push(`console.error: ${t}`);
     }
   });
@@ -20,7 +25,10 @@ test.describe('habits — guest lifecycle', () => {
     await expect(page.getByRole('heading', { name: /Repetition/i })).toBeVisible();
 
     // Add
-    await page.getByRole('button', { name: /Add Item/i }).first().click();
+    await page
+      .getByRole('button', { name: /Add Item/i })
+      .first()
+      .click();
     await page.getByLabel(/Title/i).fill('Drink water');
     await page.getByRole('button', { name: /Create item/i }).click();
     await expect(page.getByText('Drink water')).toBeVisible();
@@ -107,7 +115,9 @@ test('/journal embeds Habits but not Timer', async ({ page }) => {
   expect(errs).toEqual([]);
 });
 
-test('score matrix surfaces editability + the "habits + rituals + everything" framing', async ({ page }) => {
+test('score matrix surfaces editability + the "habits + rituals + everything" framing', async ({
+  page,
+}) => {
   const errs = await collectErrors(page);
   await page.goto('/');
   await expect(page.getByText(/Habits, rituals & everything/i)).toBeVisible();

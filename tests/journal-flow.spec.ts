@@ -14,7 +14,9 @@ test('journal daily entry flow — guest', async ({ page }) => {
 
   await page.getByRole('button', { name: /calendar/i }).click();
   await expect(page.getByRole('heading', { name: /calendar view/i })).toBeVisible();
-  await expect(page.locator('p.text-journal-ink').filter({ hasText: 'Morning run and good sleep' })).toBeVisible();
+  await expect(
+    page.locator('p.text-journal-ink').filter({ hasText: 'Morning run and good sleep' })
+  ).toBeVisible();
 });
 
 test('review page renders recap surfaces', async ({ page }) => {

@@ -4,7 +4,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { CalendarDays, Lock, Pencil, Plus, Trash2, Trophy } from 'lucide-react';
 import { eachDayOfInterval, endOfMonth, format, isAfter, isToday, startOfMonth } from 'date-fns';
@@ -100,9 +110,10 @@ function calculatedScore(item: ScoreboardItem, inputs: ScoreInputs): number {
       const hours = numberInput(inputs, 'hours');
       const wakeMinutes = timeToMinutes(inputs.wakeTime);
       const sleepScore = Math.max(0, 7 - Math.ceil(Math.max(0, 7 - hours) / 0.5));
-      const wakeScore = wakeMinutes === null
-        ? 0
-        : Math.max(0, 7 - Math.ceil(Math.max(0, wakeMinutes - 6 * 60) / 30));
+      const wakeScore =
+        wakeMinutes === null
+          ? 0
+          : Math.max(0, 7 - Math.ceil(Math.max(0, wakeMinutes - 6 * 60) / 30));
       return clampScore(item, sleepScore + wakeScore);
     }
     case 'steps':
@@ -110,7 +121,9 @@ function calculatedScore(item: ScoreboardItem, inputs: ScoreInputs): number {
     case 'focus-hours':
       return clampScore(item, numberInput(inputs, 'hours') * 3);
     case 'exercise': {
-      const count = ['stretch', 'cardio', 'strength'].filter((key) => boolInput(inputs, key)).length;
+      const count = ['stretch', 'cardio', 'strength'].filter((key) =>
+        boolInput(inputs, key)
+      ).length;
       return count === 0 ? 0 : count === 1 ? 5 : count === 2 ? 8 : 10;
     }
     case 'journal-daily-tick':
@@ -119,8 +132,24 @@ function calculatedScore(item: ScoreboardItem, inputs: ScoreInputs): number {
       const protein = numberInput(inputs, 'protein') >= 100 ? 3 : 0;
       const fiber = numberInput(inputs, 'fiber') >= 20 ? 2 : 0;
       const windowHours = numberInput(inputs, 'windowHours');
-      const windowScore = windowHours <= 0 ? 0 : windowHours <= 6 ? 4 : windowHours <= 8 ? 3 : windowHours <= 10 ? 2 : 0;
-      const junkPenalty = inputs.junk === 'minor' ? -1 : inputs.junk === 'moderate' ? -2 : inputs.junk === 'major' ? -3 : 0;
+      const windowScore =
+        windowHours <= 0
+          ? 0
+          : windowHours <= 6
+            ? 4
+            : windowHours <= 8
+              ? 3
+              : windowHours <= 10
+                ? 2
+                : 0;
+      const junkPenalty =
+        inputs.junk === 'minor'
+          ? -1
+          : inputs.junk === 'moderate'
+            ? -2
+            : inputs.junk === 'major'
+              ? -3
+              : 0;
       return clampScore(item, protein + fiber + windowScore + junkPenalty);
     }
     case 'connections':
@@ -178,7 +207,9 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
   } = useScoreboard(currentMonth);
 
   const scoringMatrixRef = useRef<HTMLElement>(null);
-  const [editorState, setEditorState] = useState<{ mode: 'add' } | { mode: 'edit'; item: ScoreboardItem } | null>(null);
+  const [editorState, setEditorState] = useState<
+    { mode: 'add' } | { mode: 'edit'; item: ScoreboardItem } | null
+  >(null);
 
   const days = useMemo(() => {
     const now = new Date();
@@ -224,23 +255,25 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
   const showRecoveryBanner = !readOnly && isLoaded && missedDays > 0 && todayLogs.length === 0;
 
   const monthMaxSoFar = idealToday * elapsedDays.length;
-  const monthTotalSoFar = elapsedDays.reduce((sum, day) => sum + (totalsByDate.get(format(day, 'yyyy-MM-dd')) ?? 0), 0);
+  const monthTotalSoFar = elapsedDays.reduce(
+    (sum, day) => sum + (totalsByDate.get(format(day, 'yyyy-MM-dd')) ?? 0),
+    0
+  );
   const monthPercent = monthMaxSoFar > 0 ? Math.round((monthTotalSoFar / monthMaxSoFar) * 100) : 0;
   const currentItemIds = new Set(items.map((item) => item.id));
-  const loggedTodayCount = todayLogs.filter((log) => (
-    currentItemIds.has(log.item_id)
-    && (
-      (log.value_score !== null && log.value_score !== undefined)
-      || Boolean(log.value_text?.trim())
-    )
-  )).length;
+  const loggedTodayCount = todayLogs.filter(
+    (log) =>
+      currentItemIds.has(log.item_id) &&
+      ((log.value_score !== null && log.value_score !== undefined) ||
+        Boolean(log.value_text?.trim()))
+  ).length;
   const remainingToday = Math.max(0, items.length - loggedTodayCount);
   const todayProgress = Math.max(0, Math.min(100, todayPercent));
   const monthProgress = Math.max(0, Math.min(100, monthPercent));
 
   const submitLockMonth = async () => {
     const confirmed = window.confirm(
-      `Lock ${format(new Date(), 'MMMM yyyy')}? You will not be able to edit tasks, criteria, notes, or scores for this month after locking.`,
+      `Lock ${format(new Date(), 'MMMM yyyy')}? You will not be able to edit tasks, criteria, notes, or scores for this month after locking.`
     );
     if (!confirmed) return;
     await lockMonth();
@@ -252,14 +285,16 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
       return;
     }
     const confirmed = window.confirm(
-      `Publish your ${format(new Date(), 'MMMM yyyy')} matrix? Once published you can log scores but the row list, max scores, and rules are frozen until next month.`,
+      `Publish your ${format(new Date(), 'MMMM yyyy')} matrix? Once published you can log scores but the row list, max scores, and rules are frozen until next month.`
     );
     if (!confirmed) return;
     await publishConfig();
   };
 
   const submitUnpublish = async () => {
-    const confirmed = window.confirm('Unlock the matrix for editing again? You can republish anytime.');
+    const confirmed = window.confirm(
+      'Unlock the matrix for editing again? You can republish anytime.'
+    );
     if (!confirmed) return;
     await unpublishConfig();
   };
@@ -275,7 +310,8 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
                 Today's scoreboard
               </div>
               <h1 className="mt-2 text-4xl font-display font-extrabold tracking-tight text-foreground md:text-5xl">
-                {todayTotal}<span className="text-muted-foreground">/{idealToday}</span>
+                {todayTotal}
+                <span className="text-muted-foreground">/{idealToday}</span>
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
                 {format(new Date(), 'EEEE, MMMM d')} · {todayPercent}% of ideal · peak {peakToday}
@@ -292,7 +328,11 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
 
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             <ProgressTile label="Today" value={`${todayPercent}%`} progress={todayProgress} />
-            <ProgressTile label="Month to date" value={`${monthPercent}%`} progress={monthProgress} />
+            <ProgressTile
+              label="Month to date"
+              value={`${monthPercent}%`}
+              progress={monthProgress}
+            />
           </div>
         </div>
 
@@ -343,7 +383,9 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
       {showRecoveryBanner && (
         <section className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 md:p-5">
           <p className="text-sm font-semibold text-foreground">
-            {missedDays === 1 ? 'One day went unlogged — no big deal.' : `${missedDays} days went unlogged — that's okay.`}
+            {missedDays === 1
+              ? 'One day went unlogged — no big deal.'
+              : `${missedDays} days went unlogged — that's okay.`}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
             Streaks break. The only day that matters right now is today.
@@ -352,14 +394,19 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
             variant="default"
             size="sm"
             className="mt-3"
-            onClick={() => scoringMatrixRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+            onClick={() =>
+              scoringMatrixRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }
           >
             Write today ↓
           </Button>
         </section>
       )}
 
-      <section ref={scoringMatrixRef} className="rounded-lg border border-border bg-card p-4 shadow-soft md:p-5">
+      <section
+        ref={scoringMatrixRef}
+        className="rounded-lg border border-border bg-card p-4 shadow-soft md:p-5"
+      >
         <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div>
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -418,13 +465,15 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
 
         {!readOnly && !isLocked && isPublished && (
           <div className="mb-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-800 dark:text-emerald-200">
-            Matrix is published for {format(new Date(), 'MMMM')}. The row list is frozen — focus on logging daily scores.
+            Matrix is published for {format(new Date(), 'MMMM')}. The row list is frozen — focus on
+            logging daily scores.
           </div>
         )}
 
         {isLocked && (
           <div className="mb-5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-800 dark:text-emerald-200">
-            Locked months are immutable. To set a new precedence, use next month and create a fresh scoring matrix.
+            Locked months are immutable. To set a new precedence, use next month and create a fresh
+            scoring matrix.
           </div>
         )}
 
@@ -461,67 +510,73 @@ export function Scoreboard({ readOnly = false }: ScoreboardProps) {
 
       {!readOnly && (
         <section className="rounded-lg border border-border bg-card p-4 shadow-soft md:p-5">
-        <div className="mb-4 flex items-center gap-2">
-          <CalendarDays className="h-4 w-4 text-primary" />
-          <h2 className="font-display text-xl font-bold text-foreground">Month view</h2>
-        </div>
-        <div className="grid grid-cols-7 gap-1 sm:gap-2">
-          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
-            <div key={`${day}-${index}`} className="text-center text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-              {day}
-            </div>
-          ))}
-          {Array.from({ length: days[0].getDay() }, (_, index) => (
-            <div key={`blank-${index}`} />
-          ))}
-          {days.map((day) => {
-            const date = format(day, 'yyyy-MM-dd');
-            const total = totalsByDate.get(date) ?? 0;
-            const reason = reasonByDate.get(date);
-            const future = isAfter(day, new Date());
-            const notCounted = date < trackingStartDate;
-            const percent = idealToday > 0 ? Math.round((total / idealToday) * 100) : 0;
-            return (
+          <div className="mb-4 flex items-center gap-2">
+            <CalendarDays className="h-4 w-4 text-primary" />
+            <h2 className="font-display text-xl font-bold text-foreground">Month view</h2>
+          </div>
+          <div className="grid grid-cols-7 gap-1 sm:gap-2">
+            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
               <div
-                key={date}
-                title={reason ? `${date}: ${reason}` : date}
-                className={`min-h-16 rounded-lg border p-1.5 sm:min-h-20 sm:p-2 transition-colors ${
-                  isToday(day)
-                    ? 'border-primary bg-primary/10'
-                    : future || notCounted
-                    ? 'border-border bg-muted/20 text-muted-foreground'
-                    : percent >= 80
-                    ? 'border-emerald-500/40 bg-emerald-500/10'
-                    : percent >= 50
-                    ? 'border-amber-500/40 bg-amber-500/10'
-                    : 'border-border bg-background'
-                }`}
+                key={`${day}-${index}`}
+                className="text-center text-[10px] font-semibold uppercase tracking-widest text-muted-foreground"
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold">{format(day, 'd')}</span>
-                  {!future && !notCounted && idealToday > 0 && <span className="text-[10px] text-muted-foreground">{percent}%</span>}
-                </div>
-                {!future && notCounted && (
-                  <div className="mt-2 text-[9px] font-semibold uppercase tracking-widest text-muted-foreground sm:mt-4 sm:text-[10px]">
-                    Not counted
-                  </div>
-                )}
-                {!future && !notCounted && (
-                  <>
-                    <div className="mt-2 text-xs font-display font-bold tabular-nums sm:mt-4 sm:text-sm">
-                      {total}<span className="text-muted-foreground">/{idealToday}</span>
-                    </div>
-                    {reason && (
-                      <div className="mt-1 truncate text-[10px] text-muted-foreground">
-                        Reason noted
-                      </div>
-                    )}
-                  </>
-                )}
+                {day}
               </div>
-            );
-          })}
-        </div>
+            ))}
+            {Array.from({ length: days[0].getDay() }, (_, index) => (
+              <div key={`blank-${index}`} />
+            ))}
+            {days.map((day) => {
+              const date = format(day, 'yyyy-MM-dd');
+              const total = totalsByDate.get(date) ?? 0;
+              const reason = reasonByDate.get(date);
+              const future = isAfter(day, new Date());
+              const notCounted = date < trackingStartDate;
+              const percent = idealToday > 0 ? Math.round((total / idealToday) * 100) : 0;
+              return (
+                <div
+                  key={date}
+                  title={reason ? `${date}: ${reason}` : date}
+                  className={`min-h-16 rounded-lg border p-1.5 sm:min-h-20 sm:p-2 transition-colors ${
+                    isToday(day)
+                      ? 'border-primary bg-primary/10'
+                      : future || notCounted
+                        ? 'border-border bg-muted/20 text-muted-foreground'
+                        : percent >= 80
+                          ? 'border-emerald-500/40 bg-emerald-500/10'
+                          : percent >= 50
+                            ? 'border-amber-500/40 bg-amber-500/10'
+                            : 'border-border bg-background'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold">{format(day, 'd')}</span>
+                    {!future && !notCounted && idealToday > 0 && (
+                      <span className="text-[10px] text-muted-foreground">{percent}%</span>
+                    )}
+                  </div>
+                  {!future && notCounted && (
+                    <div className="mt-2 text-[9px] font-semibold uppercase tracking-widest text-muted-foreground sm:mt-4 sm:text-[10px]">
+                      Not counted
+                    </div>
+                  )}
+                  {!future && !notCounted && (
+                    <>
+                      <div className="mt-2 text-xs font-display font-bold tabular-nums sm:mt-4 sm:text-sm">
+                        {total}
+                        <span className="text-muted-foreground">/{idealToday}</span>
+                      </div>
+                      {reason && (
+                        <div className="mt-1 truncate text-[10px] text-muted-foreground">
+                          Reason noted
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </section>
       )}
 
@@ -561,7 +616,12 @@ function ScoreItemEditor({
   const canSubmit = trimmed.length > 0;
 
   return (
-    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{state.mode === 'add' ? 'Add row' : `Edit "${initial?.label}"`}</DialogTitle>
@@ -586,7 +646,9 @@ function ScoreItemEditor({
               value={maxScore}
               onChange={(event) => setMaxScore(event.target.value)}
             />
-            <p className="text-[11px] text-muted-foreground">Daily score will be clamped between 0 and {parsedMax}.</p>
+            <p className="text-[11px] text-muted-foreground">
+              Daily score will be clamped between 0 and {parsedMax}.
+            </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="score-criteria">Scoring rule (optional)</Label>
@@ -600,7 +662,9 @@ function ScoreItemEditor({
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="ghost" onClick={onClose}>Cancel</Button>
+            <Button variant="ghost" onClick={onClose}>
+              Cancel
+            </Button>
             <Button
               disabled={!canSubmit}
               onClick={() => onSubmit({ label: trimmed, maxScore: parsedMax, criteria })}
@@ -614,11 +678,21 @@ function ScoreItemEditor({
   );
 }
 
-function ProgressTile({ label, value, progress }: { label: string; value: string; progress: number }) {
+function ProgressTile({
+  label,
+  value,
+  progress,
+}: {
+  label: string;
+  value: string;
+  progress: number;
+}) {
   return (
     <div className="rounded-lg border border-border bg-background p-3">
       <div className="flex items-center justify-between gap-3">
-        <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</div>
+        <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+          {label}
+        </div>
         <div className="font-display text-sm font-bold text-foreground">{value}</div>
       </div>
       <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
@@ -677,7 +751,9 @@ function ScoreRow({
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="font-display text-base font-semibold text-foreground">{item.label}</h3>
             <span className="rounded-md bg-muted px-2 py-0.5 text-[11px] font-mono text-muted-foreground">
-              {item.ideal_score === item.max_score ? `/${item.max_score}` : `/${item.ideal_score} ideal`}
+              {item.ideal_score === item.max_score
+                ? `/${item.max_score}`
+                : `/${item.ideal_score} ideal`}
             </span>
             {!readOnly && !isLocked && (onEdit || onRemove) && (
               <span className="ml-auto flex items-center gap-1">
@@ -708,7 +784,8 @@ function ScoreRow({
                       <AlertDialogHeader>
                         <AlertDialogTitle>Remove row?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          This removes "{item.label}" from the matrix along with all of its logged scores. Can't be undone.
+                          This removes "{item.label}" from the matrix along with all of its logged
+                          scores. Can't be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -726,7 +803,9 @@ function ScoreRow({
               <summary className="cursor-pointer text-xs font-semibold uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground">
                 Scoring rule
               </summary>
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{item.criteria}</p>
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
+                {item.criteria}
+              </p>
             </details>
           )}
         </div>
@@ -758,17 +837,13 @@ function ScoreRow({
       </div>
 
       {autoInputs && !readOnly && (
-        <ScoreInputsForm
-          item={item}
-          inputs={inputs}
-          isLocked={isLocked}
-          onChange={updateInputs}
-        />
+        <ScoreInputsForm item={item} inputs={inputs} isLocked={isLocked} onChange={updateInputs} />
       )}
 
       {autoInputs && !readOnly && !entryNote && score !== null && score !== undefined && (
         <div className="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2 text-xs text-amber-800 dark:text-amber-200">
-          This row has an older manual score. Enter raw inputs to replace it with an automatic score.
+          This row has an older manual score. Enter raw inputs to replace it with an automatic
+          score.
         </div>
       )}
 
@@ -807,10 +882,23 @@ function ScoreInputsForm({
       return (
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
           <Field label="Sleep hours">
-            <Input disabled={isLocked} type="number" min="0" step="0.5" value={String(inputs.hours ?? '')} onChange={(event) => onChange({ hours: event.target.value })} placeholder="7" />
+            <Input
+              disabled={isLocked}
+              type="number"
+              min="0"
+              step="0.5"
+              value={String(inputs.hours ?? '')}
+              onChange={(event) => onChange({ hours: event.target.value })}
+              placeholder="7"
+            />
           </Field>
           <Field label="Wake-up time">
-            <Input disabled={isLocked} type="time" value={String(inputs.wakeTime ?? '')} onChange={(event) => onChange({ wakeTime: event.target.value })} />
+            <Input
+              disabled={isLocked}
+              type="time"
+              value={String(inputs.wakeTime ?? '')}
+              onChange={(event) => onChange({ wakeTime: event.target.value })}
+            />
           </Field>
         </div>
       );
@@ -818,7 +906,15 @@ function ScoreInputsForm({
       return (
         <div className="mt-2">
           <Field label="Steps">
-            <Input disabled={isLocked} type="number" min="0" step="100" value={String(inputs.steps ?? '')} onChange={(event) => onChange({ steps: event.target.value })} placeholder="10000" />
+            <Input
+              disabled={isLocked}
+              type="number"
+              min="0"
+              step="100"
+              value={String(inputs.steps ?? '')}
+              onChange={(event) => onChange({ steps: event.target.value })}
+              placeholder="10000"
+            />
           </Field>
         </div>
       );
@@ -826,7 +922,15 @@ function ScoreInputsForm({
       return (
         <div className="mt-2">
           <Field label="Focus hours">
-            <Input disabled={isLocked} type="number" min="0" step="0.25" value={String(inputs.hours ?? '')} onChange={(event) => onChange({ hours: event.target.value })} placeholder="6" />
+            <Input
+              disabled={isLocked}
+              type="number"
+              min="0"
+              step="0.25"
+              value={String(inputs.hours ?? '')}
+              onChange={(event) => onChange({ hours: event.target.value })}
+              placeholder="6"
+            />
           </Field>
         </div>
       );
@@ -844,18 +948,47 @@ function ScoreInputsForm({
         />
       );
     case 'journal-daily-tick':
-      return <CheckGrid options={[['done', 'Journal + daily ticking done']]} inputs={inputs} isLocked={isLocked} onChange={onChange} />;
+      return (
+        <CheckGrid
+          options={[['done', 'Journal + daily ticking done']]}
+          inputs={inputs}
+          isLocked={isLocked}
+          onChange={onChange}
+        />
+      );
     case 'diet':
       return (
         <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           <Field label="Protein grams">
-            <Input disabled={isLocked} type="number" min="0" value={String(inputs.protein ?? '')} onChange={(event) => onChange({ protein: event.target.value })} placeholder="100" />
+            <Input
+              disabled={isLocked}
+              type="number"
+              min="0"
+              value={String(inputs.protein ?? '')}
+              onChange={(event) => onChange({ protein: event.target.value })}
+              placeholder="100"
+            />
           </Field>
           <Field label="Fiber grams">
-            <Input disabled={isLocked} type="number" min="0" value={String(inputs.fiber ?? '')} onChange={(event) => onChange({ fiber: event.target.value })} placeholder="20" />
+            <Input
+              disabled={isLocked}
+              type="number"
+              min="0"
+              value={String(inputs.fiber ?? '')}
+              onChange={(event) => onChange({ fiber: event.target.value })}
+              placeholder="20"
+            />
           </Field>
           <Field label="Eating window hours">
-            <Input disabled={isLocked} type="number" min="0" step="0.5" value={String(inputs.windowHours ?? '')} onChange={(event) => onChange({ windowHours: event.target.value })} placeholder="8" />
+            <Input
+              disabled={isLocked}
+              type="number"
+              min="0"
+              step="0.5"
+              value={String(inputs.windowHours ?? '')}
+              onChange={(event) => onChange({ windowHours: event.target.value })}
+              placeholder="8"
+            />
           </Field>
           <Field label="Junk food">
             <select
@@ -873,11 +1006,32 @@ function ScoreInputsForm({
         </div>
       );
     case 'connections':
-      return <CheckGrid options={[['done', 'Intentional connection done']]} inputs={inputs} isLocked={isLocked} onChange={onChange} />;
+      return (
+        <CheckGrid
+          options={[['done', 'Intentional connection done']]}
+          inputs={inputs}
+          isLocked={isLocked}
+          onChange={onChange}
+        />
+      );
     case 'adult-content':
-      return <CheckGrid options={[['consumed', 'Adult content consumed']]} inputs={inputs} isLocked={isLocked} onChange={onChange} />;
+      return (
+        <CheckGrid
+          options={[['consumed', 'Adult content consumed']]}
+          inputs={inputs}
+          isLocked={isLocked}
+          onChange={onChange}
+        />
+      );
     case 'creatine-supplements':
-      return <CheckGrid options={[['done', 'Creatine / supplements done']]} inputs={inputs} isLocked={isLocked} onChange={onChange} />;
+      return (
+        <CheckGrid
+          options={[['done', 'Creatine / supplements done']]}
+          inputs={inputs}
+          isLocked={isLocked}
+          onChange={onChange}
+        />
+      );
     case 'hygiene':
       return (
         <CheckGrid
@@ -894,7 +1048,15 @@ function ScoreInputsForm({
       return (
         <div className="mt-2">
           <Field label="Sitting entertainment hours">
-            <Input disabled={isLocked} type="number" min="0" step="0.25" value={String(inputs.hours ?? '')} onChange={(event) => onChange({ hours: event.target.value })} placeholder="1" />
+            <Input
+              disabled={isLocked}
+              type="number"
+              min="0"
+              step="0.25"
+              value={String(inputs.hours ?? '')}
+              onChange={(event) => onChange({ hours: event.target.value })}
+              placeholder="1"
+            />
           </Field>
         </div>
       );
@@ -902,7 +1064,15 @@ function ScoreInputsForm({
       return (
         <div className="mt-2">
           <Field label="Social media minutes">
-            <Input disabled={isLocked} type="number" min="0" step="5" value={String(inputs.minutes ?? '')} onChange={(event) => onChange({ minutes: event.target.value })} placeholder="30" />
+            <Input
+              disabled={isLocked}
+              type="number"
+              min="0"
+              step="5"
+              value={String(inputs.minutes ?? '')}
+              onChange={(event) => onChange({ minutes: event.target.value })}
+              placeholder="30"
+            />
           </Field>
         </div>
       );
@@ -934,7 +1104,10 @@ function CheckGrid({
   return (
     <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
       {options.map(([key, label]) => (
-        <label key={key} className="flex min-h-9 items-center gap-2 rounded-lg border border-border bg-card px-3 text-sm text-foreground">
+        <label
+          key={key}
+          className="flex min-h-9 items-center gap-2 rounded-lg border border-border bg-card px-3 text-sm text-foreground"
+        >
           <input
             disabled={isLocked}
             type="checkbox"

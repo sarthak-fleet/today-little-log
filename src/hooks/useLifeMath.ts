@@ -73,7 +73,10 @@ function compute(dob: string | null, now: Date): LifeMath {
   const wakeEnd = new Date(now);
   wakeEnd.setHours(SLEEP_HOUR, 0, 0, 0);
   const wakingSpanMin = Math.floor((wakeEnd.getTime() - wakeStart.getTime()) / MS_PER_MIN);
-  const wakingMinutesElapsed = Math.max(0, Math.min(wakingSpanMin, Math.floor((now.getTime() - wakeStart.getTime()) / MS_PER_MIN)));
+  const wakingMinutesElapsed = Math.max(
+    0,
+    Math.min(wakingSpanMin, Math.floor((now.getTime() - wakeStart.getTime()) / MS_PER_MIN))
+  );
   const wakingMinutesLeft = Math.max(0, wakingSpanMin - wakingMinutesElapsed);
   const isInsideWakingWindow = now >= wakeStart && now <= wakeEnd;
   const isEndOfDayCrunch = isInsideWakingWindow && wakingMinutesLeft < 120;
