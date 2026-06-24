@@ -2,7 +2,7 @@
   "name": "today-little-log",
   "private": true,
   "version": "0.0.0",
-  "packageManager": "pnpm@11.0.8",
+  "packageManager": "pnpm@10.33.2",
   "type": "module",
   "engines": {
     "node": ">=22.19.0"
