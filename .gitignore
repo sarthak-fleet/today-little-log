@@ -43,6 +43,9 @@ api/*.ts.bak
 test-results/
 playwright-report/
 
+# Vitest coverage
+coverage/
+
 # fallow cache
 .fallow/
 cache.bin

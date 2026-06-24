@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
     "test": "playwright test",
+    "test:coverage": "vitest run --coverage --passWithNoTests",
     "preview": "vite preview",
     "prepare": "husky",
     "deploy": "pnpm build && wrangler pages deploy dist/ --project-name=today-little-log",
@@ -69,9 +70,11 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react-swc": "^4.3.0",
+    "@vitest/coverage-v8": "^4.1.9",
     "drizzle-kit": "^0.31.10",
     "esbuild": "^0.28.0",
     "husky": "^9.1.7",
+    "jsdom": "^29.1.1",
     "knip": "^6.6.3",
     "lightningcss": "latest",
     "lint-staged": "^16.4.0",
@@ -79,6 +82,7 @@
     "tailwindcss": "^4.2.4",
     "typescript": "^6.0.3",
     "vite": "^8.0.10",
+    "vitest": "^4.1.9",
     "wrangler": "^4.85.0"
   },
   "lint-staged": {
