@@ -86,6 +86,6 @@
     "wrangler": "^4.85.0"
   },
   "lint-staged": {
-    "*.{ts,tsx}": "biome check --no-warn-ignored"
+    "*.{ts,tsx}": "biome check"
   }
 }
