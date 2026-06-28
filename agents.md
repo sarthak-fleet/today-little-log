@@ -51,7 +51,7 @@ pnpm dev        # vite (localhost:8080)
 pnpm build      # vite build → dist/
 pnpm preview    # vite preview
 pnpm test:e2e   # playwright
-pnpm lint       # eslint
+pnpm lint       # biome check .
 pnpm run deploy # vite build + wrangler pages deploy dist/
 ```
 
